@@ -1,4 +1,5 @@
 import type { RankingRow, StatView } from './types';
+import type { Snapshot } from '../schema/index';
 
 export interface CsvMeta {
   source: string;
@@ -49,4 +50,43 @@ export function toCsv(rows: StatView[] | RankingRow[], meta: CsvMeta): string {
     ];
   });
   return `\uFEFF${[...comments, headers.map(csvCell).join(','), ...data.map((row) => row.map(csvCell).join(','))].join('\r\n')}\r\n`;
+}
+
+export function snapshotToCsv(snapshot: Snapshot): string {
+  const headers = [
+    'year',
+    'regionCode',
+    'regionNameKo',
+    'regionNameEn',
+    'schoolLevel',
+    'studentType',
+    'multiculturalStudentCount',
+    'totalStudentCount',
+    'multiculturalStudentRateComputed',
+    'multiculturalStudentRatePublished',
+    'notes',
+  ];
+  const comments = [
+    '# 출처: e-나라지표 F008403 + KOSIS DT_1963003_002·003·004·009',
+    `# 기준연도: ${snapshot.coverage.years.join(', ')}`,
+    `# 계산식: ${snapshot.rateFormula}`,
+  ];
+  const rows = snapshot.records.map((record) =>
+    [
+      record.year,
+      record.regionCode,
+      record.regionNameKo,
+      record.regionNameEn,
+      record.schoolLevel,
+      record.studentType,
+      record.multiculturalStudentCount,
+      record.totalStudentCount,
+      record.multiculturalStudentRateComputed,
+      record.multiculturalStudentRatePublished,
+      record.notes.join(' | '),
+    ]
+      .map(csvCell)
+      .join(','),
+  );
+  return `\uFEFF${[...comments, headers.map(csvCell).join(','), ...rows].join('\r\n')}\r\n`;
 }

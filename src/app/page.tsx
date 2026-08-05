@@ -11,38 +11,18 @@ import { PageShell } from '@/components/layout/PageShell';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ko } from '@/content/ko';
-import {
-  selectAvailableYears,
-  selectByRegion,
-  selectNational,
-  selectRanking,
-  selectRegionDetail,
-  selectSourceMeta,
-  selectTrend,
-} from '@/lib/data/selectors';
+import { selectAvailableYears, selectSourceMeta } from '@/lib/data/selectors';
 import { loadSnapshot } from '@/lib/data/snapshot';
 import { REGION_BY_CODE, REGION_ORDER } from '@/lib/constants/regions';
-import type { MetricKey, RankingMetric, RegionCode, SchoolLevel } from '@/lib/schema';
-import { DashboardClient, type DashboardPayload } from './dashboard-client';
+import type { RegionScope, SchoolLevel } from '@/lib/schema';
+import {
+  DashboardClient,
+  type CompactRecord,
+  type DashboardPayload,
+} from './dashboard-client';
 
 const GEO_ATTRIBUTION =
   '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형 · 가공: vuski/admdongkor — CC BY 4.0';
-
-function viewKey(year: number, level: SchoolLevel): string {
-  return `${year}|${level}`;
-}
-
-function rankingKey(year: number, level: SchoolLevel, metric: RankingMetric): string {
-  return `${year}|${level}|${metric}`;
-}
-
-function trendKey(level: SchoolLevel, metric: MetricKey): string {
-  return `${level}|${metric}`;
-}
-
-function detailKey(year: number, level: SchoolLevel, regionCode: RegionCode): string {
-  return `${year}|${level}|${regionCode}`;
-}
 
 function formattedDate(value: string): string {
   return new Intl.DateTimeFormat('ko-KR', {
@@ -70,31 +50,32 @@ function sourcePanelSources() {
 function buildPayload(snapshot: ReturnType<typeof loadSnapshot>): DashboardPayload {
   const years = selectAvailableYears();
   const levels: SchoolLevel[] = ['all', 'elementary', 'middle', 'high', 'other'];
-  const metrics: MetricKey[] = ['count', 'rate'];
-  const rankingMetrics: RankingMetric[] = ['count', 'rate', 'deltaAbs', 'deltaPct'];
-  const national: DashboardPayload['national'] = {};
-  const regional: DashboardPayload['regional'] = {};
-  const rankings: DashboardPayload['rankings'] = {};
-  const trends: DashboardPayload['trends'] = {};
-  const details: DashboardPayload['details'] = {};
-
-  years.forEach((year) => {
-    levels.forEach((level) => {
-      national[viewKey(year, level)] = selectNational(year, level);
-      regional[viewKey(year, level)] = selectByRegion(year, level);
-      rankingMetrics.forEach((metric) => {
-        rankings[rankingKey(year, level, metric)] = selectRanking(year, level, metric);
-      });
-      REGION_ORDER.forEach((regionCode) => {
-        details[detailKey(year, level, regionCode)] = selectRegionDetail(regionCode, year, level);
-      });
-    });
-  });
-
-  levels.forEach((level) => {
-    metrics.forEach((metric) => {
-      trends[trendKey(level, metric)] = selectTrend(['KR', ...REGION_ORDER], level, metric);
-    });
+  const dataRegionCodes: RegionScope[] = ['KR', ...REGION_ORDER];
+  const noteSets: string[][] = [];
+  const noteIndexes = new Map<string, number>();
+  const records: CompactRecord[] = snapshot.records.map((record) => {
+    const yearIndex = years.indexOf(record.year);
+    const regionIndex = dataRegionCodes.indexOf(record.regionCode);
+    const levelIndex = levels.indexOf(record.schoolLevel);
+    if (yearIndex < 0 || regionIndex < 0 || levelIndex < 0) {
+      throw new Error('화면용 데이터 차원 인덱스를 만들 수 없습니다.');
+    }
+    const noteKey = JSON.stringify(record.notes);
+    let noteIndex = noteIndexes.get(noteKey);
+    if (noteIndex === undefined) {
+      noteIndex = noteSets.length;
+      noteIndexes.set(noteKey, noteIndex);
+      noteSets.push([...record.notes]);
+    }
+    return [
+      yearIndex,
+      regionIndex,
+      levelIndex,
+      record.multiculturalStudentCount,
+      record.totalStudentCount,
+      record.multiculturalStudentRateComputed,
+      noteIndex,
+    ];
   });
 
   return {
@@ -105,19 +86,11 @@ function buildPayload(snapshot: ReturnType<typeof loadSnapshot>): DashboardPaylo
     regionLabels: Object.fromEntries(
       REGION_ORDER.map((code) => [code, REGION_BY_CODE[code].officialKo]),
     ),
-    national,
-    regional,
-    rankings,
-    trends,
-    details,
+    records,
+    noteSets,
     sources: sourcePanelSources(),
     retrievedAtLabel: formattedDate(snapshot.retrievedAt),
     rateFormula: ko.sources.formulaValue,
-    fullCsv: readFileSync(
-      join(process.cwd(), 'data/snapshots/multicultural-students.v1.csv'),
-      'utf8',
-    ),
-    fullJson: JSON.stringify(snapshot, null, 2),
     dictionary: readFileSync(join(process.cwd(), 'docs/data-dictionary-draft.md'), 'utf8'),
   };
 }

@@ -157,11 +157,41 @@ pnpm start                # out/ 로컬 서빙
 
 ## 11. 배포
 
-정적 사이트입니다. `out/` 디렉터리를 그대로 배포합니다 (Vercel · Cloudflare Pages · GitHub Pages 등).
+**GitHub Pages로 자동 배포**됩니다. `main` 브랜치에 푸시하면 `.github/workflows/deploy.yml`이 실행됩니다.
 
-- **런타임 환경변수 없음.** CI 시크릿에도 배포용 키가 필요하지 않습니다
-- `KOSIS_API_KEY`는 데이터 갱신을 CI에서 돌릴 때만 필요합니다
+```
+push → typecheck → lint → test → data:validate → build → 비밀정보 스캔 → Pages 배포
+```
+
+**검증 게이트가 배포를 막습니다.** `data:validate`가 실패하면 오염된 데이터가 공개되지 않습니다.
+
+### 최초 설정
+
+1. 저장소 **Settings → Pages → Source**를 **GitHub Actions**로 설정
+2. `main`에 푸시하면 자동 배포
+
+### 경로 설정
+
+프로젝트 페이지(`username.github.io/k-mosaic/`)는 경로 접두사가 필요합니다. 워크플로가 저장소 이름으로 자동 주입합니다.
+
+```yaml
+env:
+  NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+```
+
+- **사용자 페이지**(`username.github.io`)나 **커스텀 도메인**으로 바꾸려면 이 환경변수를 제거하세요
+- 커스텀 도메인은 `public/CNAME` 파일을 추가합니다
+- `public/.nojekyll`이 Jekyll의 `_next/` 무시를 차단합니다 — **삭제하지 마세요**
+
+### 보안
+
+- **런타임 환경변수 없음.** 배포 워크플로에 `KOSIS_API_KEY`가 필요하지 않습니다
+- 키는 데이터 갱신(로컬 `pnpm data:refresh`)에만 씁니다
 - **`.next/`를 캐시·업로드하지 마세요** — 빌드 캐시에 환경 스냅숏이 들어갈 수 있습니다
+
+### 다른 플랫폼
+
+`out/` 디렉터리를 그대로 올리면 됩니다 (Vercel · Cloudflare Pages · Netlify 등). 이 경우 `NEXT_PUBLIC_BASE_PATH`는 비웁니다.
 
 ---
 
@@ -205,8 +235,8 @@ pnpm start                # out/ 로컬 서빙
 | 시·군·구 단위 | ❌ 시도가 최소 단위 |
 | 유치원·특수학교 | ❌ 이 통계의 모수에 없음 ([DL-004](docs/decision-log.md)) |
 | 시도별 2019년 이전 | ❌ 2020년부터 제공 |
-| 조사 기준일 | ⚠️ 미확인 — 화면에 "미확인"으로 표시 |
-| 잠정치/확정치 구분 | ⚠️ 미확인 |
+| 조사 기준일 | ✅ **매년 4월 1일** ([data-audit.md §10.2](docs/data-audit.md)) |
+| 잠정치/확정치 구분 | ⚠️ 출처가 구분을 제공하지 않음 — 화면에 "미확인" |
 | 2025년 공표 비율 | ⚠️ 정수 반올림 — 직접 계산값 사용 |
 
 ---

@@ -66,6 +66,21 @@ function buildSourceMeta(snapshot: Snapshot): SourceMeta[] | null {
     existsSync(resolve(ROOT, `data/raw/kosis-${source.tblId}.json`)),
   );
   if (!existsSync(enaraPath) || !hasRawDenominators) return null;
+
+  // 교육기본통계의 조사 기준일은 매년 4월 1일이다.
+  //   근거: 한국교육개발원 「2025년 교육기본통계 조사 결과 발표」 보도자료 — "2025. 4. 1." 기준
+  //         (docs/data-audit.md §10.2)
+  //   단, 학업중단율 등 일부 항목은 기준일이 다르다. K-MOSAIC 이 쓰는 학생 수·다문화학생 수는
+  //   4월 1일 기준이다.
+  // 연도마다 기준일이 다르므로 스냅숏의 최신 수록연도를 기준으로 산출한다.
+  const latestYear = Math.max(...snapshot.coverage.years);
+  const referenceDate = `${latestYear}-04-01`;
+
+  // 잠정치/확정치 구분은 출처가 제공하지 않는다 (docs/data-audit.md §10.3).
+  // 전수 행정조사라 잠정 단계가 없을 것으로 보이나 출처가 명시하지 않았으므로 단정하지 않고
+  // null 을 유지한다. 화면에는 "미확인"으로 표시된다.
+  const isProvisional = null;
+
   const numerator = {
     role: 'numerator' as const,
     provider: 'e-나라지표 (국가지표체계)',
@@ -77,8 +92,8 @@ function buildSourceMeta(snapshot: Snapshot): SourceMeta[] | null {
     sourceUrl: 'https://www.index.go.kr/unify/idx-info.do?idxCd=F0084',
     retrievedAt: rawRetrievedAt(enaraPath, snapshot.retrievedAt),
     lastChangedAt: null,
-    referenceDate: null,
-    isProvisional: null,
+    referenceDate,
+    isProvisional,
   } satisfies SourceMeta;
   const denominator = DENOMINATOR_SOURCES.map(
     (source) =>
@@ -96,8 +111,8 @@ function buildSourceMeta(snapshot: Snapshot): SourceMeta[] | null {
           snapshot.retrievedAt,
         ),
         lastChangedAt: rawLastChangedAt(resolve(ROOT, `data/raw/kosis-${source.tblId}.json`)),
-        referenceDate: null,
-        isProvisional: null,
+        referenceDate,
+        isProvisional,
       }) satisfies SourceMeta,
   );
   const metadata = [numerator, ...denominator];

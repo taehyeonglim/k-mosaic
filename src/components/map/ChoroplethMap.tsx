@@ -11,7 +11,11 @@ import {
   type ChartDataTableRow,
 } from '@/components/charts/ChartDataTable';
 import { ko } from '@/content/ko';
-import { createKoreaProjection, toD3Winding } from '@/lib/visualization/projection';
+import {
+  createKoreaProjectionLayout,
+  splitKoreaGeo,
+  toD3Winding,
+} from '@/lib/visualization/projection';
 import type { ColorScale } from '@/lib/visualization/scale';
 
 const GEO_SOURCE_ATTRIBUTION = '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형';
@@ -36,12 +40,13 @@ interface Dimensions {
   height: number;
 }
 
-const INITIAL_DIMENSIONS: Dimensions = { width: 720, height: 490 };
+const INITIAL_DIMENSIONS: Dimensions = { width: 720, height: 760 };
 
 function dimensionsForWidth(width: number): Dimensions {
+  const safeWidth = Math.max(1, width);
   return {
-    width: Math.max(1, width),
-    height: Math.max(280, Math.min(560, width * 0.68)),
+    width: safeWidth,
+    height: Math.max(280, Math.min(900, safeWidth + 40)),
   };
 }
 
@@ -65,6 +70,7 @@ export function ChoroplethMap({
   const mapId = useId().replaceAll(':', '');
   const patternId = `map-missing-${mapId}`;
   const tooltipId = `map-tooltip-${mapId}`;
+  const insetNoticeId = `map-inset-notice-${mapId}`;
 
   useEffect(() => {
     const element = containerRef.current;
@@ -92,6 +98,7 @@ export function ChoroplethMap({
   // d3-geo 는 시계 방향 외곽 링을 기대한다 (RFC 7946 과 반대).
   // 변환하지 않으면 각 지역 path 에 clipExtent 사각형이 덧붙어 지도가 통째로 덮인다.
   const d3Geo = useMemo(() => toD3Winding(geo), [geo]);
+  const geoParts = useMemo(() => splitKoreaGeo(d3Geo), [d3Geo]);
 
   const features = useMemo(
     () =>
@@ -102,15 +109,30 @@ export function ChoroplethMap({
       }),
     [d3Geo],
   );
+  const mainFeatureByCode = useMemo(
+    () =>
+      new Map(
+        geoParts.main.features.map((feature) => [feature.properties?.regionCode ?? '', feature]),
+      ),
+    [geoParts],
+  );
   const dataByCode = useMemo(
     () => new Map(data.map((item) => [item.regionCode, item.value])),
     [data],
   );
-  const projection = useMemo(
-    () => createKoreaProjection(d3Geo, dimensions.width, dimensions.height),
+  const projectionLayout = useMemo(
+    () => createKoreaProjectionLayout(d3Geo, dimensions.width, dimensions.height),
     [dimensions, d3Geo],
   );
-  const pathGenerator = useMemo(() => geoPath(projection), [projection]);
+  const pathGenerator = useMemo(() => geoPath(projectionLayout.main), [projectionLayout.main]);
+  const insetPathGenerator = useMemo(
+    () => (projectionLayout.inset === null ? null : geoPath(projectionLayout.inset)),
+    [projectionLayout.inset],
+  );
+  const insetFeatureCodes = useMemo(
+    () => new Set(geoParts.inset.features.map((feature) => feature.properties?.regionCode ?? '')),
+    [geoParts],
+  );
   const activeRegion = hoveredRegion ?? focusedRegion;
   const activeFeature = features.find((feature) => feature.properties?.regionCode === activeRegion);
   const activeCode = activeFeature?.properties?.regionCode ?? null;
@@ -157,6 +179,7 @@ export function ChoroplethMap({
         viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
         role="group"
         aria-label={metricLabel}
+        aria-describedby={projectionLayout.insetBox === null ? undefined : insetNoticeId}
       >
         <defs>
           <pattern
@@ -183,9 +206,13 @@ export function ChoroplethMap({
             const rank = ranks[code] ?? null;
             const selected = selectedRegion === code;
             const focused = focusedRegion === code;
-            const pathData = pathGenerator(feature) ?? '';
+            const mainFeature = mainFeatureByCode.get(code);
+            const pathData = mainFeature === undefined ? '' : (pathGenerator(mainFeature) ?? '');
             const ariaValue = value === null ? missingLabel : formatValue(value);
             const ariaRank = rank === null ? missingLabel : rank;
+            const insetNote = insetFeatureCodes.has(code)
+              ? ', 울릉도·독도는 실제 위치가 아닌 인셋으로 표시'
+              : '';
 
             return (
               <g key={code}>
@@ -193,7 +220,7 @@ export function ChoroplethMap({
                   d={pathData}
                   tabIndex={0}
                   role="button"
-                  aria-label={`${label}, ${metricLabel}: ${ariaValue}, ${ko.filters.year} ${year}, ${ko.ranking.rank} ${ariaRank}`}
+                  aria-label={`${label}, ${metricLabel}: ${ariaValue}, ${ko.filters.year} ${year}, ${ko.ranking.rank} ${ariaRank}${insetNote}`}
                   aria-pressed={selected}
                   aria-describedby={activeCode === code ? tooltipId : undefined}
                   fill={value === null ? `url(#${patternId})` : scale.color(value)}
@@ -226,6 +253,58 @@ export function ChoroplethMap({
             );
           })}
         </g>
+        {projectionLayout.insetBox !== null && insetPathGenerator !== null ? (
+          <g
+            role="group"
+            aria-label="울릉도·독도 인셋 — 실제 위치가 아닌 확대 표현입니다."
+            pointerEvents="none"
+          >
+            <desc id={insetNoticeId}>
+              울릉도와 독도는 본토와 실제 위치 관계를 유지한 지도가 아니라, 식별을 위한 인셋으로
+              확대해 표시합니다.
+            </desc>
+            <rect
+              x={projectionLayout.insetBox.x}
+              y={projectionLayout.insetBox.y}
+              width={projectionLayout.insetBox.width}
+              height={projectionLayout.insetBox.height}
+              rx="4"
+              fill="var(--km-color-surface, white)"
+              stroke="var(--km-color-border, currentColor)"
+              strokeWidth="1.2"
+              strokeDasharray="4 3"
+            />
+            <text
+              x={projectionLayout.insetBox.x + 8}
+              y={projectionLayout.insetBox.y + 15}
+              fill="var(--km-color-text, currentColor)"
+              fontSize="11"
+              fontWeight="600"
+            >
+              <tspan x={projectionLayout.insetBox.x + 8} dy="0">
+                도서 인셋
+              </tspan>
+              <tspan x={projectionLayout.insetBox.x + 8} dy="13">
+                실제 위치 아님
+              </tspan>
+            </text>
+            {geoParts.inset.features.map((feature) => {
+              const code = feature.properties?.regionCode ?? '';
+              const value = dataByCode.get(code) ?? null;
+              const insetPath = insetPathGenerator(feature) ?? '';
+              return (
+                <path
+                  key={`inset-${code}`}
+                  d={insetPath}
+                  fill={value === null ? `url(#${patternId})` : scale.color(value)}
+                  stroke="var(--km-color-border, currentColor)"
+                  strokeWidth="1"
+                  aria-hidden="true"
+                />
+              );
+            })}
+          </g>
+        ) : null}
       </svg>
 
       {activeCode !== null ? (

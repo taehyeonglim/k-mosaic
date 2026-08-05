@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ko } from '@/content/ko';
-import { toCsv } from '@/lib/data/csv';
+import { snapshotToCsv, toCsv } from '@/lib/data/csv';
 import type {
   LevelStatView,
   RankingRow,
@@ -36,7 +36,9 @@ import {
   schoolLevelSchema,
   type MetricKey,
   type RegionCode,
+  type RegionScope,
   type SchoolLevel,
+  type Snapshot,
 } from '@/lib/schema';
 import { formatCount, formatRate } from '@/lib/visualization/format';
 import { createCountScale, createRateScale } from '@/lib/visualization/scale';
@@ -55,11 +57,8 @@ export interface DashboardPayload {
   levels: SchoolLevel[];
   regionCodes: RegionCode[];
   regionLabels: Record<string, string>;
-  national: Record<string, StatView | null>;
-  regional: Record<string, StatView[]>;
-  rankings: Record<string, RankingRow[]>;
-  trends: Record<string, TrendSeries[]>;
-  details: Record<string, RegionDetail | null>;
+  records: CompactRecord[];
+  noteSets: string[][];
   sources: {
     role: string;
     provider: string;
@@ -74,10 +73,18 @@ export interface DashboardPayload {
   }[];
   retrievedAtLabel: string;
   rateFormula: string;
-  fullCsv: string;
-  fullJson: string;
   dictionary: string;
 }
+
+export type CompactRecord = readonly [
+  yearIndex: number,
+  regionIndex: number,
+  levelIndex: number,
+  count: number | null,
+  totalStudents: number | null,
+  rate: number | null,
+  notesIndex: number,
+];
 
 interface DashboardClientProps {
   payload: DashboardPayload;
@@ -96,22 +103,6 @@ interface FilterUpdates {
   level?: SchoolLevel;
   metric?: MetricKey;
   regions?: RegionCode[];
-}
-
-function viewKey(year: number, level: SchoolLevel): string {
-  return `${year}|${level}`;
-}
-
-function rankingKey(year: number, level: SchoolLevel, metric: RankingTableMetric): string {
-  return `${year}|${level}|${metric}`;
-}
-
-function trendKey(level: SchoolLevel, metric: MetricKey): string {
-  return `${level}|${metric}`;
-}
-
-function detailKey(year: number, level: SchoolLevel, regionCode: RegionCode): string {
-  return `${year}|${level}|${regionCode}`;
 }
 
 function difference(current: number | null, previous: number | null): number | null {
@@ -146,6 +137,236 @@ function readFilters(searchParams: URLSearchParams, years: number[]): FilterStat
     regions,
     hasTooManyRegions: parsedRegions.length > 3,
   };
+}
+
+interface CompactIndex {
+  years: ReadonlyMap<number, number>;
+  regions: ReadonlyMap<RegionScope, number>;
+  levels: ReadonlyMap<SchoolLevel, number>;
+  records: ReadonlyMap<string, CompactRecord>;
+  noteSets: readonly string[][];
+}
+
+interface DashboardSelectors {
+  selectView(year: number, regionCode: RegionScope, level: SchoolLevel): StatView;
+  selectNational(year: number, level: SchoolLevel): StatView | null;
+  selectByRegion(year: number, level: SchoolLevel): StatView[];
+  selectRanking(year: number, level: SchoolLevel, metric: RankingTableMetric): RankingRow[];
+  selectTrend(codes: RegionScope[], level: SchoolLevel, metric: MetricKey): TrendSeries[];
+  selectRegionDetail(code: RegionCode, year: number, level: SchoolLevel): RegionDetail | null;
+}
+
+function compactRecordKey(yearIndex: number, regionIndex: number, levelIndex: number): string {
+  return `${yearIndex}|${regionIndex}|${levelIndex}`;
+}
+
+function createCompactIndex(payload: DashboardPayload): CompactIndex {
+  const dataRegionCodes: RegionScope[] = ['KR', ...payload.regionCodes];
+  return {
+    years: new Map(payload.years.map((year, index) => [year, index] as const)),
+    regions: new Map(dataRegionCodes.map((regionCode, index) => [regionCode, index] as const)),
+    levels: new Map(payload.levels.map((level, index) => [level, index] as const)),
+    records: new Map(
+      payload.records.map((record) => [
+        compactRecordKey(record[0], record[1], record[2]),
+        record,
+      ] as const),
+    ),
+    noteSets: payload.noteSets,
+  };
+}
+
+function recordAt(
+  index: CompactIndex,
+  year: number,
+  regionCode: RegionScope,
+  level: SchoolLevel,
+): CompactRecord | undefined {
+  const yearIndex = index.years.get(year);
+  const regionIndex = index.regions.get(regionCode);
+  const levelIndex = index.levels.get(level);
+  if (yearIndex === undefined || regionIndex === undefined || levelIndex === undefined) {
+    return undefined;
+  }
+  return index.records.get(compactRecordKey(yearIndex, regionIndex, levelIndex));
+}
+
+function regionNameKo(regionCode: RegionScope, regionLabels: Record<string, string>): string {
+  return regionCode === 'KR' ? '전국' : (regionLabels[regionCode] ?? regionCode);
+}
+
+function emptyView(regionCode: RegionScope, regionLabels: Record<string, string>): StatView {
+  return {
+    regionCode,
+    regionNameKo: regionNameKo(regionCode, regionLabels),
+    count: null,
+    totalStudents: null,
+    rate: null,
+    isMissing: true,
+  };
+}
+
+function toView(
+  record: CompactRecord | undefined,
+  regionCode: RegionScope,
+  regionLabels: Record<string, string>,
+): StatView {
+  if (record === undefined) return emptyView(regionCode, regionLabels);
+  return {
+    regionCode,
+    regionNameKo: regionNameKo(regionCode, regionLabels),
+    count: record[3],
+    totalStudents: record[4],
+    rate: record[5],
+    isMissing: record[3] === null || record[5] === null,
+  };
+}
+
+function round4(value: number): number {
+  return Number(value.toFixed(4));
+}
+
+function createDashboardSelectors(
+  payload: DashboardPayload,
+  index: CompactIndex,
+): DashboardSelectors {
+  function selectView(year: number, regionCode: RegionScope, level: SchoolLevel): StatView {
+    return toView(recordAt(index, year, regionCode, level), regionCode, payload.regionLabels);
+  }
+
+  function selectNational(year: number, level: SchoolLevel): StatView | null {
+    const record = recordAt(index, year, 'KR', level);
+    return record === undefined ? null : toView(record, 'KR', payload.regionLabels);
+  }
+
+  function selectByRegion(year: number, level: SchoolLevel): StatView[] {
+    return payload.regionCodes.map((regionCode) => selectView(year, regionCode, level));
+  }
+
+  function valueForMetric(
+    year: number,
+    regionCode: RegionCode,
+    level: SchoolLevel,
+    metric: RankingTableMetric,
+  ): number | null {
+    const current = recordAt(index, year, regionCode, level);
+    if (current === undefined) return null;
+    if (metric === 'count') return current[3];
+    if (metric === 'rate') return current[5];
+    const previous = recordAt(index, year - 1, regionCode, level);
+    if (previous === undefined || current[3] === null || previous[3] === null) return null;
+    if (metric === 'deltaAbs') return current[3] - previous[3];
+    if (previous[3] === 0) return null;
+    return (current[3] / previous[3] - 1) * 100;
+  }
+
+  function selectRanking(
+    year: number,
+    level: SchoolLevel,
+    metric: RankingTableMetric,
+  ): RankingRow[] {
+    const candidates = payload.regionCodes
+      .flatMap((regionCode) => {
+        const value = valueForMetric(year, regionCode, level, metric);
+        return value === null ? [] : [{ regionCode, value: round4(value) }];
+      })
+      .sort(
+        (left, right) =>
+          right.value - left.value || left.regionCode.localeCompare(right.regionCode),
+      );
+
+    return candidates.map((candidate, index) => {
+      const previous = candidates[index - 1];
+      const next = candidates[index + 1];
+      const isTied = previous?.value === candidate.value || next?.value === candidate.value;
+      return {
+        rank: candidates.findIndex((entry) => entry.value === candidate.value) + 1,
+        regionCode: candidate.regionCode,
+        regionNameKo: regionNameKo(candidate.regionCode, payload.regionLabels),
+        value: candidate.value,
+        isTied,
+      };
+    });
+  }
+
+  function selectTrend(
+    codes: RegionScope[],
+    level: SchoolLevel,
+    metric: MetricKey,
+  ): TrendSeries[] {
+    return codes.map((regionCode) => ({
+      regionCode,
+      regionNameKo: regionNameKo(regionCode, payload.regionLabels),
+      points: payload.years.map((year) => {
+        const record = recordAt(index, year, regionCode, level);
+        return {
+          year,
+          value:
+            record === undefined ? null : metric === 'count' ? record[3] : record[5],
+        };
+      }),
+    }));
+  }
+
+  function selectRegionDetail(
+    code: RegionCode,
+    year: number,
+    level: SchoolLevel,
+  ): RegionDetail | null {
+    const current = recordAt(index, year, code, level);
+    if (current === undefined) return null;
+    const national = recordAt(index, year, 'KR', level);
+    const previous = recordAt(index, year - 1, code, level);
+    const rankRow = selectRanking(year, level, 'count').find((row) => row.regionCode === code);
+    const deltaAbs =
+      current[3] !== null && previous !== undefined && previous[3] !== null
+        ? current[3] - previous[3]
+        : null;
+    const deltaPct =
+      deltaAbs !== null &&
+      previous !== undefined &&
+      previous[3] !== null &&
+      previous[3] !== 0
+        ? round4((deltaAbs / previous[3]) * 100)
+        : null;
+    const byLevel: LevelStatView[] = (['elementary', 'middle', 'high', 'other'] as const).map(
+      (schoolLevel) => ({
+        ...toView(recordAt(index, year, code, schoolLevel), code, payload.regionLabels),
+        schoolLevel,
+      }),
+    );
+    const trend = selectTrend([code], level, 'count')[0]?.points ?? [];
+    return {
+      regionCode: code,
+      nameKo: regionNameKo(code, payload.regionLabels),
+      count: current[3],
+      rate: current[5],
+      rank: rankRow?.rank ?? null,
+      diffFromNational:
+        current[5] !== null && national !== undefined && national[5] !== null
+          ? round4(current[5] - national[5])
+          : null,
+      deltaAbs,
+      deltaPct,
+      byLevel,
+      trend,
+      notes: [...(index.noteSets[current[6]] ?? [])],
+    };
+  }
+
+  return {
+    selectView,
+    selectNational,
+    selectByRegion,
+    selectRanking,
+    selectTrend,
+    selectRegionDetail,
+  };
+}
+
+async function loadFullSnapshot(): Promise<Snapshot> {
+  const snapshotModule = await import('../../data/snapshots/multicultural-students.v1.json');
+  return snapshotModule.default as Snapshot;
 }
 
 function triggerDownload(content: string, filename: string, mimeType: string): void {
@@ -187,26 +408,31 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     [pathname, router, searchString],
   );
 
+  const compactIndex = useMemo(() => createCompactIndex(payload), [payload]);
+  const selectors = useMemo(
+    () => createDashboardSelectors(payload, compactIndex),
+    [compactIndex, payload],
+  );
   const currentViews = useMemo(
-    () => payload.regional[viewKey(filters.year, filters.level)] ?? [],
-    [filters.level, filters.year, payload.regional],
+    () => selectors.selectByRegion(filters.year, filters.level),
+    [filters.level, filters.year, selectors],
   );
   const currentNational = useMemo(
-    () => payload.national[viewKey(filters.year, filters.level)] ?? null,
-    [filters.level, filters.year, payload.national],
+    () => selectors.selectNational(filters.year, filters.level),
+    [filters.level, filters.year, selectors],
   );
   const previousNational = useMemo(
-    () => payload.national[viewKey(filters.year - 1, filters.level)] ?? null,
-    [filters.level, filters.year, payload.national],
+    () => selectors.selectNational(filters.year - 1, filters.level),
+    [filters.level, filters.year, selectors],
   );
   const firstYear = payload.years[0] ?? filters.year;
   const firstNational = useMemo(
-    () => payload.national[viewKey(firstYear, filters.level)] ?? null,
-    [firstYear, filters.level, payload.national],
+    () => selectors.selectNational(firstYear, filters.level),
+    [firstYear, filters.level, selectors],
   );
   const currentRanking = useMemo(
-    () => payload.rankings[rankingKey(filters.year, filters.level, filters.metric)] ?? [],
-    [filters.level, filters.metric, filters.year, payload.rankings],
+    () => selectors.selectRanking(filters.year, filters.level, filters.metric),
+    [filters.level, filters.metric, filters.year, selectors],
   );
   const rankingByCode = useMemo<Map<string, RankingRow>>(
     () => new Map(currentRanking.map((row): [string, RankingRow] => [row.regionCode, row])),
@@ -244,7 +470,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     const metrics: RankingTableMetric[] = ['count', 'rate', 'deltaAbs', 'deltaPct'];
     return Object.fromEntries(
       metrics.map((rankingMetric) => {
-        const rows = payload.rankings[rankingKey(filters.year, filters.level, rankingMetric)] ?? [];
+        const rows = selectors.selectRanking(filters.year, filters.level, rankingMetric);
         const rowsByCode = new Map(rows.map((row): [string, RankingRow] => [row.regionCode, row]));
         return [
           rankingMetric,
@@ -258,7 +484,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
         ];
       }),
     ) as Record<RankingTableMetric, RankingTableRow[]>;
-  }, [currentViews, filters.level, filters.year, payload.rankings]);
+  }, [currentViews, filters.level, filters.year, selectors]);
   const rankingRows = useMemo(
     () => rankingRowsByMetric[filters.metric],
     [filters.metric, rankingRowsByMetric],
@@ -272,17 +498,17 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     () =>
       selectedRegion === null
         ? null
-        : (payload.details[detailKey(filters.year, filters.level, selectedRegion)] ?? null),
-    [filters.level, filters.year, payload.details, selectedRegion],
+        : selectors.selectRegionDetail(selectedRegion, filters.year, filters.level),
+    [filters.level, filters.year, selectedRegion, selectors],
   );
   const selectedPrevious = useMemo(
     () =>
       selectedRegion === null
         ? null
-        : ((payload.regional[viewKey(filters.year - 1, filters.level)] ?? []).find(
+        : selectors.selectByRegion(filters.year - 1, filters.level).find(
             (view) => view.regionCode === selectedRegion,
-          ) ?? null),
-    [filters.level, filters.year, payload.regional, selectedRegion],
+          ) ?? null,
+    [filters.level, filters.year, selectedRegion, selectors],
   );
   const selectedDetailData = useMemo<RegionDetailData | null>(() => {
     if (selectedDetail === null) return null;
@@ -326,8 +552,8 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     selectedPrevious,
   ]);
   const trendSeries = useMemo(
-    () => payload.trends[trendKey(filters.level, filters.metric)] ?? [],
-    [filters.level, filters.metric, payload.trends],
+    () => selectors.selectTrend(['KR', ...payload.regionCodes], filters.level, filters.metric),
+    [filters.level, filters.metric, payload.regionCodes, selectors],
   );
   const nationwideTrend = useMemo(
     () => trendSeries.filter((series) => series.regionCode === 'KR'),
@@ -388,15 +614,19 @@ export function DashboardClient({ payload }: DashboardClientProps) {
   }
 
   function downloadAllCsv(): void {
-    triggerDownload(payload.fullCsv, 'k-mosaic-full.csv', 'text/csv;charset=utf-8');
+    void loadFullSnapshot().then((snapshot) => {
+      triggerDownload(snapshotToCsv(snapshot), 'k-mosaic-full.csv', 'text/csv;charset=utf-8');
+    });
   }
 
   function downloadAllJson(): void {
-    triggerDownload(
-      payload.fullJson,
-      'multicultural-students.v1.json',
-      'application/json;charset=utf-8',
-    );
+    void loadFullSnapshot().then((snapshot) => {
+      triggerDownload(
+        JSON.stringify(snapshot, null, 2),
+        'multicultural-students.v1.json',
+        'application/json;charset=utf-8',
+      );
+    });
   }
 
   function downloadDictionary(): void {

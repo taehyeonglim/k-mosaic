@@ -13,7 +13,7 @@
       "sourceUrl": "https://www.index.go.kr/unify/idx-info.do?idxCd=F0084",
       "retrievedAt": "2026-08-05T09:24:23.257Z",
       "lastChangedAt": null,
-      "referenceDate": null,
+      "referenceDate": "2025-04-01",
       "isProvisional": null
     },
     {
@@ -27,7 +27,7 @@
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
       "retrievedAt": "2026-08-05T09:24:26.461Z",
       "lastChangedAt": "2025-10-31",
-      "referenceDate": null,
+      "referenceDate": "2025-04-01",
       "isProvisional": null
     },
     {
@@ -41,7 +41,7 @@
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
       "retrievedAt": "2026-08-05T09:24:28.287Z",
       "lastChangedAt": "2025-10-31",
-      "referenceDate": null,
+      "referenceDate": "2025-04-01",
       "isProvisional": null
     },
     {
@@ -55,7 +55,7 @@
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
       "retrievedAt": "2026-08-05T09:24:32.224Z",
       "lastChangedAt": "2025-10-31",
-      "referenceDate": null,
+      "referenceDate": "2025-04-01",
       "isProvisional": null
     },
     {
@@ -69,7 +69,7 @@
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
       "retrievedAt": "2026-08-05T09:24:33.896Z",
       "lastChangedAt": "2025-10-31",
-      "referenceDate": null,
+      "referenceDate": "2025-04-01",
       "isProvisional": null
     }
   ]
