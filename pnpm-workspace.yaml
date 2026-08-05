@@ -1,0 +1,13 @@
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+# pnpm 11 은 설치 관련 설정을 이 파일에서 읽는다 (package.json / .npmrc 아님).
+#
+# onlyBuiltDependencies: postinstall 스크립트 실행을 허용할 패키지 화이트리스트.
+#   기본값은 "전부 차단"이며, 공급망 공격 표면을 줄이기 위한 장치다.
+#   아래 두 개만 명시 허용한다 — 둘 다 플랫폼별 네이티브 바이너리를 연결해야 동작한다.
+#     esbuild       : tsx / vitest 가 사용하는 번들러
+#     unrs-resolver : ESLint 의 TypeScript 경로 해석기
+onlyBuiltDependencies:
+  - esbuild
+  - unrs-resolver

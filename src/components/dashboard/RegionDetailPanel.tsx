@@ -1,0 +1,151 @@
+import { ko } from '@/content/ko';
+import { TrendChart } from '@/components/charts/TrendChart';
+import { formatCount, formatDelta, formatRate } from '@/lib/visualization/format';
+import {
+  SchoolLevelBreakdown,
+  type SchoolLevelBreakdownItem,
+} from '@/components/charts/SchoolLevelBreakdown';
+
+export interface RegionDetailData {
+  regionCode: string;
+  label: string;
+  year: number;
+  currentCount: number | null;
+  currentRate: number | null;
+  nationwideValue: {
+    count: number | null;
+    rate: number | null;
+  };
+  nationwideRank: number | null;
+  nationwideDifference: {
+    count: number | null;
+    rate: number | null;
+  };
+  yearChange: {
+    count: number | null;
+    rate: number | null;
+  };
+  schoolLevels: SchoolLevelBreakdownItem[];
+  trend?: { year: number; value: number | null }[];
+  notes?: string[];
+}
+
+export interface RegionDetailPanelProps {
+  detail: RegionDetailData;
+  onClose(): void;
+  nationalLabel: string;
+}
+
+function formatCountDelta(value: number | null): string {
+  const formatted = formatDelta(value, ko.missing.value);
+  return value === null ? formatted : `${formatted}명`;
+}
+
+function formatRateDelta(value: number | null): string {
+  const formatted = formatDelta(value, ko.missing.value);
+  return value === null ? formatted : `${formatted}%`;
+}
+
+export function RegionDetailPanel({ detail, onClose, nationalLabel }: RegionDetailPanelProps) {
+  return (
+    <aside className="space-y-5" aria-labelledby="region-detail-title">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-small text-[var(--km-color-text-muted)]">{detail.year}</p>
+          <h2 id="region-detail-title" className="text-xl font-medium">
+            {detail.label}
+          </h2>
+        </div>
+        <button type="button" className="btn btn-ghost" aria-label={detail.label} onClick={onClose}>
+          ×
+        </button>
+      </div>
+
+      <dl className="viz-grid">
+        <div className="card viz-stat">
+          <dt className="text-small text-[var(--km-color-text-muted)]">
+            {ko.regionDetail.currentCount}
+          </dt>
+          <dd className="viz-stat-value tabular-nums">
+            {formatCount(detail.currentCount, ko.missing.value)}
+          </dd>
+        </div>
+        <div className="card viz-stat">
+          <dt className="text-small text-[var(--km-color-text-muted)]">
+            {ko.regionDetail.currentRate}
+          </dt>
+          <dd className="viz-stat-value tabular-nums">
+            {formatRate(detail.currentRate, ko.missing.value)}
+          </dd>
+        </div>
+        <div className="card viz-stat">
+          <dt className="text-small text-[var(--km-color-text-muted)]">
+            {ko.regionDetail.nationwideRank}
+          </dt>
+          <dd className="viz-stat-value tabular-nums">
+            {detail.nationwideRank === null ? ko.missing.value : detail.nationwideRank}
+          </dd>
+        </div>
+      </dl>
+
+      <dl className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <dt>{nationalLabel}</dt>
+          <dd className="tabular-nums">
+            {formatCount(detail.nationwideValue.count, ko.missing.value)} ·{' '}
+            {formatRate(detail.nationwideValue.rate, ko.missing.value)}
+          </dd>
+        </div>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <dt>{ko.regionDetail.nationwideDifference}</dt>
+          <dd className="tabular-nums">
+            {formatCountDelta(detail.nationwideDifference.count)} ·{' '}
+            {formatRateDelta(detail.nationwideDifference.rate)}
+          </dd>
+        </div>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <dt>{ko.regionDetail.yearChange}</dt>
+          <dd className="tabular-nums">
+            {formatCountDelta(detail.yearChange.count)} · {formatRateDelta(detail.yearChange.rate)}
+          </dd>
+        </div>
+      </dl>
+
+      <section className="space-y-2" aria-labelledby="school-level-breakdown-title">
+        <h3 id="school-level-breakdown-title" className="font-medium">
+          {ko.regionDetail.schoolLevelComposition}
+        </h3>
+        <SchoolLevelBreakdown
+          items={detail.schoolLevels}
+          formatCount={(value) => formatCount(value, ko.missing.value)}
+          formatRate={(value) => formatRate(value, ko.missing.value)}
+        />
+      </section>
+
+      {detail.trend && detail.trend.length > 0 ? (
+        <section className="space-y-2" aria-labelledby="region-detail-trend-title">
+          <h3 id="region-detail-trend-title" className="font-medium">
+            {ko.trend.title}
+          </h3>
+          <TrendChart
+            series={[{ regionCode: detail.regionCode, label: detail.label, points: detail.trend }]}
+            metric="count"
+            formatValue={(value) => formatCount(value, ko.missing.value)}
+          />
+        </section>
+      ) : null}
+
+      {detail.notes && detail.notes.length > 0 ? (
+        <ul className="list-disc space-y-1 pl-5">
+          {detail.notes.map((note, index) => (
+            <li key={`${index}-${note}`}>{note}</li>
+          ))}
+        </ul>
+      ) : null}
+
+      <p className="text-small text-[var(--km-color-text-muted)]">
+        {ko.regionDetail.studentTypeUnavailable}
+      </p>
+    </aside>
+  );
+}

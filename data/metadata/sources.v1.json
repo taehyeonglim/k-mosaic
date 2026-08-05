@@ -1,37 +1,76 @@
 {
-  "retrievedAt": "2026-08-05T08:22:12.275Z",
-  "numerator": {
-    "provider": "e-나라지표 (국가지표체계)",
-    "indicatorCode": "F0084",
-    "tableCode": "F008403",
-    "tableNameKo": "시도별 다문화학생 수 및 다문화학생 비율",
-    "originOrganization": "교육부·한국교육개발원 「교육기본통계」",
-    "url": "https://www.index.go.kr/unify/idx-info.do?idxCd=F0084",
-    "accessMethod": "HTML 파싱 (OpenAPI 미제공)"
-  },
-  "denominator": {
-    "provider": "KOSIS 국가통계포털 OpenAPI",
-    "orgId": "334",
-    "orgNameKo": "한국교육개발원",
-    "statisticsNameKo": "교육기본통계",
-    "accessMethod": "KOSIS OpenAPI statisticsParameterData.do",
-    "tables": {
-      "elementary": {
-        "tblId": "DT_1963003_002",
-        "nameKo": "초등학교 개황"
-      },
-      "middle": {
-        "tblId": "DT_1963003_003",
-        "nameKo": "중학교 개황"
-      },
-      "high": {
-        "tblId": "DT_1963003_004",
-        "nameKo": "고등학교 개황"
-      },
-      "other": {
-        "tblId": "DT_1963003_009",
-        "nameKo": "각종학교 개황"
-      }
+  "schemaVersion": 1,
+  "retrievedAt": "2026-08-05T09:24:23.257Z",
+  "sources": [
+    {
+      "role": "numerator",
+      "provider": "e-나라지표 (국가지표체계)",
+      "organization": "교육부·한국교육개발원",
+      "statisticsName": "교육기본통계",
+      "tableId": "F008403",
+      "tableName": "시도별 다문화학생 수 및 다문화학생 비율",
+      "accessMethod": "html-parse",
+      "sourceUrl": "https://www.index.go.kr/unify/idx-info.do?idxCd=F0084",
+      "retrievedAt": "2026-08-05T09:24:23.257Z",
+      "lastChangedAt": null,
+      "referenceDate": null,
+      "isProvisional": null
+    },
+    {
+      "role": "denominator",
+      "provider": "KOSIS 국가통계포털 OpenAPI",
+      "organization": "한국교육개발원",
+      "statisticsName": "교육기본통계",
+      "tableId": "DT_1963003_002",
+      "tableName": "초등학교 개황",
+      "accessMethod": "openapi",
+      "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
+      "retrievedAt": "2026-08-05T09:24:26.461Z",
+      "lastChangedAt": "2025-10-31",
+      "referenceDate": null,
+      "isProvisional": null
+    },
+    {
+      "role": "denominator",
+      "provider": "KOSIS 국가통계포털 OpenAPI",
+      "organization": "한국교육개발원",
+      "statisticsName": "교육기본통계",
+      "tableId": "DT_1963003_003",
+      "tableName": "중학교 개황",
+      "accessMethod": "openapi",
+      "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
+      "retrievedAt": "2026-08-05T09:24:28.287Z",
+      "lastChangedAt": "2025-10-31",
+      "referenceDate": null,
+      "isProvisional": null
+    },
+    {
+      "role": "denominator",
+      "provider": "KOSIS 국가통계포털 OpenAPI",
+      "organization": "한국교육개발원",
+      "statisticsName": "교육기본통계",
+      "tableId": "DT_1963003_004",
+      "tableName": "고등학교 개황",
+      "accessMethod": "openapi",
+      "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
+      "retrievedAt": "2026-08-05T09:24:32.224Z",
+      "lastChangedAt": "2025-10-31",
+      "referenceDate": null,
+      "isProvisional": null
+    },
+    {
+      "role": "denominator",
+      "provider": "KOSIS 국가통계포털 OpenAPI",
+      "organization": "한국교육개발원",
+      "statisticsName": "교육기본통계",
+      "tableId": "DT_1963003_009",
+      "tableName": "각종학교 개황",
+      "accessMethod": "openapi",
+      "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
+      "retrievedAt": "2026-08-05T09:24:33.896Z",
+      "lastChangedAt": "2025-10-31",
+      "referenceDate": null,
+      "isProvisional": null
     }
-  }
+  ]
 }

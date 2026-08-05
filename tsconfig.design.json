@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/components/layout/**/*",
+    "src/components/ui/**/*",
+    "src/content/**/*",
+    "src/lib/schema/**/*",
+    "src/lib/constants/**/*"
+  ]
+}

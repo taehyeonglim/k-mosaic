@@ -1,0 +1,55 @@
+{
+  "name": "k-mosaic",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.11.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "KOSIS_API_KEY= next build",
+    "start": "serve out",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test --pass-with-no-tests",
+    "mcp:inspect": "tsx scripts/inspect-mcp.ts",
+    "data:discover": "tsx scripts/discover-tables.ts",
+    "data:fetch": "tsx scripts/fetch-multicultural-stats.ts && tsx scripts/fetch-total-students.ts",
+    "data:normalize": "tsx scripts/normalize-stats.ts",
+    "data:validate": "tsx scripts/validate-stats.ts",
+    "data:build": "tsx scripts/build-public-dataset.ts",
+    "data:refresh": "tsx scripts/refresh-data.ts"
+  },
+  "dependencies": {
+    "d3-geo": "3.1.1",
+    "d3-scale": "4.0.2",
+    "d3-scale-chromatic": "3.1.0",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "recharts": "3.10.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/d3-geo": "3.1.1",
+    "@types/d3-scale": "4.0.9",
+    "@types/d3-scale-chromatic": "3.1.0",
+    "@types/node": "26.1.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.0",
+    "postcss": "8.5.25",
+    "prettier": "3.9.6",
+    "serve": "14.2.6",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.5",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}

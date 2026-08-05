@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/components/map/**/*",
+    "src/components/charts/**/*",
+    "src/components/dashboard/**/*",
+    "src/components/ui/**/*",
+    "src/lib/visualization/**/*",
+    "src/lib/schema/**/*",
+    "src/lib/constants/**/*",
+    "src/content/**/*"
+  ]
+}
