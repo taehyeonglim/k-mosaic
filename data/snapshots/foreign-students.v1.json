@@ -1,0 +1,868 @@
+{
+  "schemaVersion": 1,
+  "retrievedAt": "2026-08-05T12:11:09.602Z",
+  "coverage": {
+    "years": [
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "nationwideYears": [
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "regionCount": 17
+  },
+  "rateFormula": "foreignStudentRateComputed = foreignStudentCount / enrolledStudentCount * 100",
+  "records": [
+    {
+      "year": 2022,
+      "regionCode": "KR",
+      "regionNameKo": "전국",
+      "regionNameEn": "Korea (nationwide)",
+      "foreignStudentCount": 127278,
+      "enrolledStudentCount": 2962190,
+      "foreignStudentRateComputed": 4.2968,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "11",
+      "regionNameKo": "서울특별시",
+      "regionNameEn": "Seoul",
+      "foreignStudentCount": 52163,
+      "enrolledStudentCount": 915511,
+      "foreignStudentRateComputed": 5.6977,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "26",
+      "regionNameKo": "부산광역시",
+      "regionNameEn": "Busan",
+      "foreignStudentCount": 8101,
+      "enrolledStudentCount": 223336,
+      "foreignStudentRateComputed": 3.6273,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "27",
+      "regionNameKo": "대구광역시",
+      "regionNameEn": "Daegu",
+      "foreignStudentCount": 4265,
+      "enrolledStudentCount": 116885,
+      "foreignStudentRateComputed": 3.6489,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "28",
+      "regionNameKo": "인천광역시",
+      "regionNameEn": "Incheon",
+      "foreignStudentCount": 2087,
+      "enrolledStudentCount": 70844,
+      "foreignStudentRateComputed": 2.9459,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "29",
+      "regionNameKo": "광주광역시",
+      "regionNameEn": "Gwangju",
+      "foreignStudentCount": 4300,
+      "enrolledStudentCount": 109615,
+      "foreignStudentRateComputed": 3.9228,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "30",
+      "regionNameKo": "대전광역시",
+      "regionNameEn": "Daejeon",
+      "foreignStudentCount": 7348,
+      "enrolledStudentCount": 143874,
+      "foreignStudentRateComputed": 5.1072,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "31",
+      "regionNameKo": "울산광역시",
+      "regionNameEn": "Ulsan",
+      "foreignStudentCount": 965,
+      "enrolledStudentCount": 34001,
+      "foreignStudentRateComputed": 2.8382,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "36",
+      "regionNameKo": "세종특별자치시",
+      "regionNameEn": "Sejong",
+      "foreignStudentCount": 964,
+      "enrolledStudentCount": 22259,
+      "foreignStudentRateComputed": 4.3308,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "41",
+      "regionNameKo": "경기도",
+      "regionNameEn": "Gyeonggi",
+      "foreignStudentCount": 18979,
+      "enrolledStudentCount": 425936,
+      "foreignStudentRateComputed": 4.4558,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "42",
+      "regionNameKo": "강원특별자치도",
+      "regionNameEn": "Gangwon",
+      "foreignStudentCount": 2699,
+      "enrolledStudentCount": 108207,
+      "foreignStudentRateComputed": 2.4943,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "43",
+      "regionNameKo": "충청북도",
+      "regionNameEn": "Chungbuk",
+      "foreignStudentCount": 2638,
+      "enrolledStudentCount": 115330,
+      "foreignStudentRateComputed": 2.2873,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "44",
+      "regionNameKo": "충청남도",
+      "regionNameEn": "Chungnam",
+      "foreignStudentCount": 7047,
+      "enrolledStudentCount": 182216,
+      "foreignStudentRateComputed": 3.8674,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "45",
+      "regionNameKo": "전북특별자치도",
+      "regionNameEn": "Jeonbuk",
+      "foreignStudentCount": 5705,
+      "enrolledStudentCount": 119457,
+      "foreignStudentRateComputed": 4.7758,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "46",
+      "regionNameKo": "전라남도",
+      "regionNameEn": "Jeonnam",
+      "foreignStudentCount": 2190,
+      "enrolledStudentCount": 62832,
+      "foreignStudentRateComputed": 3.4855,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "47",
+      "regionNameKo": "경상북도",
+      "regionNameEn": "Gyeongbuk",
+      "foreignStudentCount": 4970,
+      "enrolledStudentCount": 184132,
+      "foreignStudentRateComputed": 2.6992,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "48",
+      "regionNameKo": "경상남도",
+      "regionNameEn": "Gyeongnam",
+      "foreignStudentCount": 1773,
+      "enrolledStudentCount": 101089,
+      "foreignStudentRateComputed": 1.7539,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2022,
+      "regionCode": "50",
+      "regionNameKo": "제주특별자치도",
+      "regionNameEn": "Jeju",
+      "foreignStudentCount": 1084,
+      "enrolledStudentCount": 26666,
+      "foreignStudentRateComputed": 4.0651,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "KR",
+      "regionNameKo": "전국",
+      "regionNameEn": "Korea (nationwide)",
+      "foreignStudentCount": 127278,
+      "enrolledStudentCount": 2962190,
+      "foreignStudentRateComputed": 4.2968,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "11",
+      "regionNameKo": "서울특별시",
+      "regionNameEn": "Seoul",
+      "foreignStudentCount": 52163,
+      "enrolledStudentCount": 915511,
+      "foreignStudentRateComputed": 5.6977,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "26",
+      "regionNameKo": "부산광역시",
+      "regionNameEn": "Busan",
+      "foreignStudentCount": 8101,
+      "enrolledStudentCount": 223336,
+      "foreignStudentRateComputed": 3.6273,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "27",
+      "regionNameKo": "대구광역시",
+      "regionNameEn": "Daegu",
+      "foreignStudentCount": 4265,
+      "enrolledStudentCount": 116885,
+      "foreignStudentRateComputed": 3.6489,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "28",
+      "regionNameKo": "인천광역시",
+      "regionNameEn": "Incheon",
+      "foreignStudentCount": 2087,
+      "enrolledStudentCount": 70844,
+      "foreignStudentRateComputed": 2.9459,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "29",
+      "regionNameKo": "광주광역시",
+      "regionNameEn": "Gwangju",
+      "foreignStudentCount": 4300,
+      "enrolledStudentCount": 109615,
+      "foreignStudentRateComputed": 3.9228,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "30",
+      "regionNameKo": "대전광역시",
+      "regionNameEn": "Daejeon",
+      "foreignStudentCount": 7348,
+      "enrolledStudentCount": 143874,
+      "foreignStudentRateComputed": 5.1072,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "31",
+      "regionNameKo": "울산광역시",
+      "regionNameEn": "Ulsan",
+      "foreignStudentCount": 965,
+      "enrolledStudentCount": 34001,
+      "foreignStudentRateComputed": 2.8382,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "36",
+      "regionNameKo": "세종특별자치시",
+      "regionNameEn": "Sejong",
+      "foreignStudentCount": 964,
+      "enrolledStudentCount": 22259,
+      "foreignStudentRateComputed": 4.3308,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "41",
+      "regionNameKo": "경기도",
+      "regionNameEn": "Gyeonggi",
+      "foreignStudentCount": 18979,
+      "enrolledStudentCount": 425936,
+      "foreignStudentRateComputed": 4.4558,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "42",
+      "regionNameKo": "강원특별자치도",
+      "regionNameEn": "Gangwon",
+      "foreignStudentCount": 2699,
+      "enrolledStudentCount": 108207,
+      "foreignStudentRateComputed": 2.4943,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "43",
+      "regionNameKo": "충청북도",
+      "regionNameEn": "Chungbuk",
+      "foreignStudentCount": 2638,
+      "enrolledStudentCount": 115330,
+      "foreignStudentRateComputed": 2.2873,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "44",
+      "regionNameKo": "충청남도",
+      "regionNameEn": "Chungnam",
+      "foreignStudentCount": 7047,
+      "enrolledStudentCount": 182216,
+      "foreignStudentRateComputed": 3.8674,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "45",
+      "regionNameKo": "전북특별자치도",
+      "regionNameEn": "Jeonbuk",
+      "foreignStudentCount": 5705,
+      "enrolledStudentCount": 119457,
+      "foreignStudentRateComputed": 4.7758,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "46",
+      "regionNameKo": "전라남도",
+      "regionNameEn": "Jeonnam",
+      "foreignStudentCount": 2190,
+      "enrolledStudentCount": 62832,
+      "foreignStudentRateComputed": 3.4855,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "47",
+      "regionNameKo": "경상북도",
+      "regionNameEn": "Gyeongbuk",
+      "foreignStudentCount": 4970,
+      "enrolledStudentCount": 184132,
+      "foreignStudentRateComputed": 2.6992,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "48",
+      "regionNameKo": "경상남도",
+      "regionNameEn": "Gyeongnam",
+      "foreignStudentCount": 1773,
+      "enrolledStudentCount": 101089,
+      "foreignStudentRateComputed": 1.7539,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2023,
+      "regionCode": "50",
+      "regionNameKo": "제주특별자치도",
+      "regionNameEn": "Jeju",
+      "foreignStudentCount": 1084,
+      "enrolledStudentCount": 26666,
+      "foreignStudentRateComputed": 4.0651,
+      "notes": [
+        "출처에서 2022년과 값이 동일함 — 확인 필요"
+      ]
+    },
+    {
+      "year": 2024,
+      "regionCode": "KR",
+      "regionNameKo": "전국",
+      "regionNameEn": "Korea (nationwide)",
+      "foreignStudentCount": 163211,
+      "enrolledStudentCount": 2882060,
+      "foreignStudentRateComputed": 5.663,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "11",
+      "regionNameKo": "서울특별시",
+      "regionNameEn": "Seoul",
+      "foreignStudentCount": 55001,
+      "enrolledStudentCount": 865983,
+      "foreignStudentRateComputed": 6.3513,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "26",
+      "regionNameKo": "부산광역시",
+      "regionNameEn": "Busan",
+      "foreignStudentCount": 11529,
+      "enrolledStudentCount": 208380,
+      "foreignStudentRateComputed": 5.5327,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "27",
+      "regionNameKo": "대구광역시",
+      "regionNameEn": "Daegu",
+      "foreignStudentCount": 3819,
+      "enrolledStudentCount": 112054,
+      "foreignStudentRateComputed": 3.4082,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "28",
+      "regionNameKo": "인천광역시",
+      "regionNameEn": "Incheon",
+      "foreignStudentCount": 3674,
+      "enrolledStudentCount": 82208,
+      "foreignStudentRateComputed": 4.4692,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "29",
+      "regionNameKo": "광주광역시",
+      "regionNameEn": "Gwangju",
+      "foreignStudentCount": 3946,
+      "enrolledStudentCount": 100551,
+      "foreignStudentRateComputed": 3.9244,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "30",
+      "regionNameKo": "대전광역시",
+      "regionNameEn": "Daejeon",
+      "foreignStudentCount": 8607,
+      "enrolledStudentCount": 139557,
+      "foreignStudentRateComputed": 6.1674,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "31",
+      "regionNameKo": "울산광역시",
+      "regionNameEn": "Ulsan",
+      "foreignStudentCount": 838,
+      "enrolledStudentCount": 32568,
+      "foreignStudentRateComputed": 2.5731,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "36",
+      "regionNameKo": "세종특별자치시",
+      "regionNameEn": "Sejong",
+      "foreignStudentCount": 943,
+      "enrolledStudentCount": 21895,
+      "foreignStudentRateComputed": 4.3069,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "41",
+      "regionNameKo": "경기도",
+      "regionNameEn": "Gyeonggi",
+      "foreignStudentCount": 31710,
+      "enrolledStudentCount": 467610,
+      "foreignStudentRateComputed": 6.7813,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "42",
+      "regionNameKo": "강원특별자치도",
+      "regionNameEn": "Gangwon",
+      "foreignStudentCount": 5402,
+      "enrolledStudentCount": 103616,
+      "foreignStudentRateComputed": 5.2135,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "43",
+      "regionNameKo": "충청북도",
+      "regionNameEn": "Chungbuk",
+      "foreignStudentCount": 6558,
+      "enrolledStudentCount": 110655,
+      "foreignStudentRateComputed": 5.9265,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "44",
+      "regionNameKo": "충청남도",
+      "regionNameEn": "Chungnam",
+      "foreignStudentCount": 8828,
+      "enrolledStudentCount": 170276,
+      "foreignStudentRateComputed": 5.1845,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "45",
+      "regionNameKo": "전북특별자치도",
+      "regionNameEn": "Jeonbuk",
+      "foreignStudentCount": 5698,
+      "enrolledStudentCount": 110921,
+      "foreignStudentRateComputed": 5.137,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "46",
+      "regionNameKo": "전라남도",
+      "regionNameEn": "Jeonnam",
+      "foreignStudentCount": 3485,
+      "enrolledStudentCount": 57354,
+      "foreignStudentRateComputed": 6.0763,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "47",
+      "regionNameKo": "경상북도",
+      "regionNameEn": "Gyeongbuk",
+      "foreignStudentCount": 10175,
+      "enrolledStudentCount": 178905,
+      "foreignStudentRateComputed": 5.6874,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "48",
+      "regionNameKo": "경상남도",
+      "regionNameEn": "Gyeongnam",
+      "foreignStudentCount": 2184,
+      "enrolledStudentCount": 95464,
+      "foreignStudentRateComputed": 2.2878,
+      "notes": []
+    },
+    {
+      "year": 2024,
+      "regionCode": "50",
+      "regionNameKo": "제주특별자치도",
+      "regionNameEn": "Jeju",
+      "foreignStudentCount": 814,
+      "enrolledStudentCount": 24063,
+      "foreignStudentRateComputed": 3.3828,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "KR",
+      "regionNameKo": "전국",
+      "regionNameEn": "Korea (nationwide)",
+      "foreignStudentCount": 202852,
+      "enrolledStudentCount": 2903195,
+      "foreignStudentRateComputed": 6.9872,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "11",
+      "regionNameKo": "서울특별시",
+      "regionNameEn": "Seoul",
+      "foreignStudentCount": 61111,
+      "enrolledStudentCount": 876622,
+      "foreignStudentRateComputed": 6.9712,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "26",
+      "regionNameKo": "부산광역시",
+      "regionNameEn": "Busan",
+      "foreignStudentCount": 15266,
+      "enrolledStudentCount": 208723,
+      "foreignStudentRateComputed": 7.314,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "27",
+      "regionNameKo": "대구광역시",
+      "regionNameEn": "Daegu",
+      "foreignStudentCount": 4813,
+      "enrolledStudentCount": 112283,
+      "foreignStudentRateComputed": 4.2865,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "28",
+      "regionNameKo": "인천광역시",
+      "regionNameEn": "Incheon",
+      "foreignStudentCount": 4204,
+      "enrolledStudentCount": 82630,
+      "foreignStudentRateComputed": 5.0877,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "29",
+      "regionNameKo": "광주광역시",
+      "regionNameEn": "Gwangju",
+      "foreignStudentCount": 4708,
+      "enrolledStudentCount": 99670,
+      "foreignStudentRateComputed": 4.7236,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "30",
+      "regionNameKo": "대전광역시",
+      "regionNameEn": "Daejeon",
+      "foreignStudentCount": 9678,
+      "enrolledStudentCount": 139857,
+      "foreignStudentRateComputed": 6.9199,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "31",
+      "regionNameKo": "울산광역시",
+      "regionNameEn": "Ulsan",
+      "foreignStudentCount": 959,
+      "enrolledStudentCount": 32772,
+      "foreignStudentRateComputed": 2.9263,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "36",
+      "regionNameKo": "세종특별자치시",
+      "regionNameEn": "Sejong",
+      "foreignStudentCount": 1125,
+      "enrolledStudentCount": 22281,
+      "foreignStudentRateComputed": 5.0491,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "41",
+      "regionNameKo": "경기도",
+      "regionNameEn": "Gyeonggi",
+      "foreignStudentCount": 39781,
+      "enrolledStudentCount": 475470,
+      "foreignStudentRateComputed": 8.3667,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "42",
+      "regionNameKo": "강원특별자치도",
+      "regionNameEn": "Gangwon",
+      "foreignStudentCount": 7025,
+      "enrolledStudentCount": 104293,
+      "foreignStudentRateComputed": 6.7358,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "43",
+      "regionNameKo": "충청북도",
+      "regionNameEn": "Chungbuk",
+      "foreignStudentCount": 11013,
+      "enrolledStudentCount": 113948,
+      "foreignStudentRateComputed": 9.6649,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "44",
+      "regionNameKo": "충청남도",
+      "regionNameEn": "Chungnam",
+      "foreignStudentCount": 10142,
+      "enrolledStudentCount": 168528,
+      "foreignStudentRateComputed": 6.018,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "45",
+      "regionNameKo": "전북특별자치도",
+      "regionNameEn": "Jeonbuk",
+      "foreignStudentCount": 7710,
+      "enrolledStudentCount": 110602,
+      "foreignStudentRateComputed": 6.9709,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "46",
+      "regionNameKo": "전라남도",
+      "regionNameEn": "Jeonnam",
+      "foreignStudentCount": 4678,
+      "enrolledStudentCount": 56143,
+      "foreignStudentRateComputed": 8.3323,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "47",
+      "regionNameKo": "경상북도",
+      "regionNameEn": "Gyeongbuk",
+      "foreignStudentCount": 16754,
+      "enrolledStudentCount": 181786,
+      "foreignStudentRateComputed": 9.2163,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "48",
+      "regionNameKo": "경상남도",
+      "regionNameEn": "Gyeongnam",
+      "foreignStudentCount": 3026,
+      "enrolledStudentCount": 94453,
+      "foreignStudentRateComputed": 3.2037,
+      "notes": []
+    },
+    {
+      "year": 2025,
+      "regionCode": "50",
+      "regionNameKo": "제주특별자치도",
+      "regionNameEn": "Jeju",
+      "foreignStudentCount": 859,
+      "enrolledStudentCount": 23134,
+      "foreignStudentRateComputed": 3.7131,
+      "notes": []
+    }
+  ],
+  "nationwide": [
+    {
+      "year": 2018,
+      "scope": "nationwide",
+      "degreeAndTraining": 142205,
+      "degreeOnly": 86036
+    },
+    {
+      "year": 2019,
+      "scope": "nationwide",
+      "degreeAndTraining": 160165,
+      "degreeOnly": 100215
+    },
+    {
+      "year": 2020,
+      "scope": "nationwide",
+      "degreeAndTraining": 153695,
+      "degreeOnly": 113003
+    },
+    {
+      "year": 2021,
+      "scope": "nationwide",
+      "degreeAndTraining": 152281,
+      "degreeOnly": 120018
+    },
+    {
+      "year": 2022,
+      "scope": "nationwide",
+      "degreeAndTraining": 166892,
+      "degreeOnly": 124803
+    },
+    {
+      "year": 2023,
+      "scope": "nationwide",
+      "degreeAndTraining": 181842,
+      "degreeOnly": 129240
+    },
+    {
+      "year": 2024,
+      "scope": "nationwide",
+      "degreeAndTraining": 208962,
+      "degreeOnly": 145778
+    },
+    {
+      "year": 2025,
+      "scope": "nationwide",
+      "degreeAndTraining": 253434,
+      "degreeOnly": 179190
+    }
+  ]
+}

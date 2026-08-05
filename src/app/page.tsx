@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ExtendedFeatureCollection as FeatureCollection } from 'd3-geo';
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { Suspense } from 'react';
 
 import geoJson from '../../public/geo/sido.geo.json';
@@ -122,7 +123,13 @@ export default function Page() {
       />
       <PageShell>
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Link
+              className="btn inline-flex"
+              href="/foreign-students/"
+            >
+              {ko.foreignStudents.mainLink}
+            </Link>
             <ThemeToggle />
           </div>
           <Suspense fallback={<DashboardFallback />}>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "retrievedAt": "2026-08-05T09:24:23.257Z",
+  "retrievedAt": "2026-08-05T12:11:09.602Z",
   "sources": [
     {
       "role": "numerator",
@@ -69,6 +69,34 @@
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
       "retrievedAt": "2026-08-05T09:24:33.896Z",
       "lastChangedAt": "2025-10-31",
+      "referenceDate": "2025-04-01",
+      "isProvisional": null
+    },
+    {
+      "role": "denominator",
+      "provider": "KOSIS 국가통계포털 OpenAPI",
+      "organization": "한국교육개발원",
+      "statisticsName": "교육기본통계",
+      "tableId": "DT_1963003_010_S",
+      "tableName": "고등교육기관 개황 (하반기)",
+      "accessMethod": "openapi",
+      "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
+      "retrievedAt": "2026-08-05T12:11:09.602Z",
+      "lastChangedAt": "2025-12-17",
+      "referenceDate": "2025-04-01",
+      "isProvisional": null
+    },
+    {
+      "role": "numerator",
+      "provider": "e-나라지표 (국가지표체계)",
+      "organization": "교육부·한국교육개발원",
+      "statisticsName": "유학생 현황",
+      "tableId": "153401",
+      "tableName": "유학생 현황 (대학(학위+연수)·대학(학위))",
+      "accessMethod": "html-parse",
+      "sourceUrl": "https://www.index.go.kr/unity/potal/eNara/sub/showStblGams3.do?stts_cd=153401&idx_cd=1534&freq=Y&period=N",
+      "retrievedAt": "2026-08-05T12:11:09.602Z",
+      "lastChangedAt": null,
       "referenceDate": "2025-04-01",
       "isProvisional": null
     }

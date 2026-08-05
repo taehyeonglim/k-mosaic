@@ -634,3 +634,5 @@ export function validateSnapshot(s: Snapshot): ValidationReport {
     results,
   };
 }
+
+export { validateForeignSnapshot } from './foreign';
