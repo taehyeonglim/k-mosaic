@@ -1,0 +1,37 @@
+{
+  "retrievedAt": "2026-08-05T08:22:12.275Z",
+  "numerator": {
+    "provider": "e-나라지표 (국가지표체계)",
+    "indicatorCode": "F0084",
+    "tableCode": "F008403",
+    "tableNameKo": "시도별 다문화학생 수 및 다문화학생 비율",
+    "originOrganization": "교육부·한국교육개발원 「교육기본통계」",
+    "url": "https://www.index.go.kr/unify/idx-info.do?idxCd=F0084",
+    "accessMethod": "HTML 파싱 (OpenAPI 미제공)"
+  },
+  "denominator": {
+    "provider": "KOSIS 국가통계포털 OpenAPI",
+    "orgId": "334",
+    "orgNameKo": "한국교육개발원",
+    "statisticsNameKo": "교육기본통계",
+    "accessMethod": "KOSIS OpenAPI statisticsParameterData.do",
+    "tables": {
+      "elementary": {
+        "tblId": "DT_1963003_002",
+        "nameKo": "초등학교 개황"
+      },
+      "middle": {
+        "tblId": "DT_1963003_003",
+        "nameKo": "중학교 개황"
+      },
+      "high": {
+        "tblId": "DT_1963003_004",
+        "nameKo": "고등학교 개황"
+      },
+      "other": {
+        "tblId": "DT_1963003_009",
+        "nameKo": "각종학교 개황"
+      }
+    }
+  }
+}
