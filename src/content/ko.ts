@@ -230,6 +230,11 @@ export const ko = {
       '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형 · 가공: vuski/admdongkor — CC BY 4.0',
     ethicsNote: '개인을 식별할 수 없는 시도 단위 집계 통계만 다룹니다.',
   },
+  footer: {
+    repoLabel: 'GitHub 저장소',
+    developerLabel: '개발',
+    externalLinkHint: '(새 창)',
+  },
   errors: {
     generic: '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
     dataLoad: '데이터를 불러오지 못했습니다.',
