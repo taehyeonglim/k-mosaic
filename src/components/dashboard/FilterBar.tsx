@@ -91,10 +91,10 @@ export function FilterBar({
 
         <fieldset className="space-y-1">
           <legend className="form-label">{ko.filters.metric}</legend>
-          <div className="viz-row" role="group" aria-label={ko.filters.metric}>
+          <div className="inline-flex" role="group" aria-label={ko.filters.metric}>
             <button
               type="button"
-              className="btn"
+              className="btn rounded-r-none"
               aria-pressed={metric === 'count'}
               onClick={() => onMetricChange('count')}
             >
@@ -102,7 +102,7 @@ export function FilterBar({
             </button>
             <button
               type="button"
-              className="btn"
+              className="btn -ml-px rounded-l-none"
               aria-pressed={metric === 'rate'}
               onClick={() => onMetricChange('rate')}
             >
@@ -113,11 +113,16 @@ export function FilterBar({
       </div>
 
       <fieldset className="space-y-2" aria-describedby="region-selection-note">
-        <legend className="form-label">{ko.filters.regions}</legend>
-        <p id="region-selection-note" className="text-small text-[var(--km-color-text-muted)]">
-          {ko.filters.maxRegions}
-        </p>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <legend className="form-label inline-flex flex-row flex-wrap items-baseline gap-2">
+          {ko.filters.regions}
+          <span
+            id="region-selection-note"
+            className="text-small font-normal text-[var(--km-color-text-muted)]"
+          >
+            {ko.filters.maxRegions}
+          </span>
+        </legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {regions.map((region) => {
             const inputId = `filter-region-${region.value}`;
             return (

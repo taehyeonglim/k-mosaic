@@ -137,18 +137,19 @@ export default function ForeignStudentsPage() {
             <p className="max-w-4xl text-sm leading-6">{ko.foreignStudents.populationNotice}</p>
           </section>
 
-          <nav aria-label={ko.foreignStudents.navigationLabel}>
+          <nav
+            aria-label={ko.foreignStudents.navigationLabel}
+            className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
+          >
             <Link
-              className="text-accent-strong underline decoration-accent/50 underline-offset-4 hover:decoration-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              className="btn inline-flex"
               href="/"
             >
               {ko.foreignStudents.backToOverview}
             </Link>
+            <ThemeToggle />
           </nav>
 
-          <div className="flex justify-end">
-            <ThemeToggle />
-          </div>
           <Suspense fallback={<ForeignStudentsFallback />}>
             <ForeignStudentsClient payload={payload} />
           </Suspense>

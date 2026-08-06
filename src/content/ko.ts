@@ -106,6 +106,7 @@ export const ko = {
     numeratorProvider: 'e-나라지표 (분자)',
     denominatorProvider: 'KOSIS 국가통계포털 OpenAPI (분모)',
     originalLinks: '원자료 링크',
+    originalLinkAction: '원자료 링크 ↗',
     numeratorLink: 'e-나라지표 원자료',
     denominatorLink: 'KOSIS 원자료',
     numeratorUrl: 'https://www.index.go.kr/unify/idx-info.do?idxCd=F0084',

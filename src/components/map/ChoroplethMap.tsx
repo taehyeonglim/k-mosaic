@@ -40,13 +40,13 @@ interface Dimensions {
   height: number;
 }
 
-const INITIAL_DIMENSIONS: Dimensions = { width: 720, height: 760 };
+const INITIAL_DIMENSIONS: Dimensions = { width: 720, height: 634 };
 
 function dimensionsForWidth(width: number): Dimensions {
   const safeWidth = Math.max(1, width);
   return {
     width: safeWidth,
-    height: Math.max(280, Math.min(900, safeWidth + 40)),
+    height: Math.max(280, Math.min(900, safeWidth * 0.88)),
   };
 }
 

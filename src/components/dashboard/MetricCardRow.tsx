@@ -1,4 +1,5 @@
-import { formatCount, formatDelta, formatRate } from '@/lib/visualization/format';
+import { DeltaValue } from '@/components/ui/DeltaValue';
+import { MetricValue } from '@/components/ui/MetricValue';
 import { ko } from '@/content/ko';
 
 export interface MetricCardItem {
@@ -9,26 +10,11 @@ export interface MetricCardItem {
   delta?: number | null;
   deltaPct?: number | null;
   note?: string;
+  display?: 'metric' | 'delta';
 }
 
 export interface MetricCardRowProps {
   items: MetricCardItem[];
-}
-
-function formatMetricValue(item: MetricCardItem): string {
-  return item.unit === 'count'
-    ? formatCount(item.value, ko.missing.value)
-    : formatRate(item.value, ko.missing.value);
-}
-
-function formatPercentDelta(value: number | null): string {
-  const formatted = formatDelta(value, ko.missing.value);
-  return value === null ? formatted : `${formatted}%`;
-}
-
-function formatAbsoluteDelta(value: number | null, unit: MetricCardItem['unit']): string {
-  const formatted = formatDelta(value, ko.missing.value);
-  return value === null ? formatted : `${formatted}${unit === 'count' ? '명' : '%'}`;
 }
 
 export function MetricCardRow({ items }: MetricCardRowProps) {
@@ -37,12 +23,29 @@ export function MetricCardRow({ items }: MetricCardRowProps) {
       {items.map((item) => (
         <article className="card viz-stat" data-key={item.key} data-unit={item.unit} key={item.key}>
           <p className="text-small text-[var(--km-color-text-muted)]">{item.label}</p>
-          <p className="viz-stat-value tabular-nums">{formatMetricValue(item)}</p>
-          {item.delta !== undefined || item.deltaPct !== undefined ? (
-            <p className="tabular-nums">
-              {item.delta !== undefined ? formatAbsoluteDelta(item.delta, item.unit) : null}
-              {item.delta !== undefined && item.deltaPct !== undefined ? ' · ' : null}
-              {item.deltaPct !== undefined ? formatPercentDelta(item.deltaPct) : null}
+          <div className="viz-stat-value">
+            {item.display === 'delta' ? (
+              <DeltaValue
+                delta={item.delta !== undefined ? item.delta : item.value}
+                deltaPct={item.deltaPct !== undefined ? item.deltaPct : null}
+                unit={item.unit}
+              />
+            ) : (
+              <MetricValue
+                value={item.value}
+                unit={item.unit}
+                size="lg"
+                missingLabel={ko.missing.ariaLabel}
+              />
+            )}
+          </div>
+          {item.display !== 'delta' && (item.delta !== undefined || item.deltaPct !== undefined) ? (
+            <p className="text-small">
+              <DeltaValue
+                delta={item.delta !== undefined ? item.delta : null}
+                deltaPct={item.deltaPct !== undefined ? item.deltaPct : null}
+                unit={item.unit}
+              />
             </p>
           ) : null}
           {item.note ? (

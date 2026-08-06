@@ -1,5 +1,4 @@
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable';
-import { VisuallyHidden } from '@/components/ui/VisuallyHidden';
 import { ko } from '@/content/ko';
 import type { ReactNode } from 'react';
 
@@ -41,5 +40,5 @@ export function ChartDataTable({
     />
   );
 
-  return visuallyHidden ? <VisuallyHidden>{table}</VisuallyHidden> : table;
+  return visuallyHidden ? <div className="sr-only">{table}</div> : table;
 }

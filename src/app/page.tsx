@@ -123,7 +123,10 @@ export default function Page() {
       />
       <PageShell>
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <nav
+            aria-label={ko.foreignStudents.navigationLabel}
+            className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
+          >
             <Link
               className="btn inline-flex"
               href="/foreign-students/"
@@ -131,7 +134,7 @@ export default function Page() {
               {ko.foreignStudents.mainLink}
             </Link>
             <ThemeToggle />
-          </div>
+          </nav>
           <Suspense fallback={<DashboardFallback />}>
             <DashboardClient payload={payload} />
           </Suspense>

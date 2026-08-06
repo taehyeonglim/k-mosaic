@@ -8,7 +8,7 @@ export interface BadgeProps {
 const toneClassNames = {
   neutral: 'border-border bg-surface-muted text-text',
   info: 'border-accent/45 bg-accent/10 text-accent-strong',
-  caution: 'border-quality-note/55 bg-quality-note/10 text-quality-note',
+  caution: 'viz-badge',
 } satisfies Record<BadgeProps['tone'], string>;
 
 export function Badge({ tone, children }: BadgeProps) {

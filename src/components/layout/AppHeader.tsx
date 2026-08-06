@@ -24,7 +24,7 @@ export function AppHeader({
 
   return (
     <header className="border-b border-border bg-surface">
-      <div className="relative mx-auto flex w-full max-w-[1440px] min-w-0 flex-col gap-5 px-4 py-5 sm:px-6 sm:py-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
+      <div className="relative mx-auto flex w-full max-w-[1440px] min-w-0 flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
         <div className="relative min-w-0 pr-8">
           <div
             aria-hidden="true"
@@ -37,35 +37,31 @@ export function AppHeader({
             <span className="size-2 rounded-[var(--km-radius-sm)] bg-accent/45" />
             <span className="size-2 rounded-[var(--km-radius-sm)] bg-accent" />
           </div>
-          <h1 className="break-words text-xl font-semibold tracking-[0.08em] text-text sm:text-2xl">
+          <h1 className="break-words text-xl font-semibold leading-tight tracking-[0.08em] text-text sm:text-2xl">
             {brandName}
           </h1>
-          <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-text-muted">
+          <p className="mt-1 max-w-2xl break-words text-sm leading-5 text-text-muted">
             {brandSubtitle}
           </p>
         </div>
 
-        <dl className="grid min-w-0 grid-cols-1 gap-3 text-sm sm:grid-cols-3 sm:gap-5 lg:min-w-[30rem]">
-          <div className="min-w-0 border-l-2 border-accent/45 pl-3">
-            <dt className="text-text-muted">{ko.overview.referenceYear}</dt>
-            <dd className="mt-1 font-semibold tabular-nums text-text">{yearLabel}</dd>
-          </div>
-          <div className="min-w-0 border-l-2 border-border pl-3">
-            <dt className="text-text-muted">{ko.overview.updatedAt}</dt>
-            <dd className="mt-1 break-words font-medium tabular-nums text-text">{lastUpdated}</dd>
-          </div>
-          <div className="min-w-0 border-l-2 border-border pl-3">
-            <dt className="text-text-muted">{ko.nav.sources}</dt>
-            <dd className="mt-1 min-w-0 break-words font-medium">
-              <a
-                className="break-words text-accent-strong underline decoration-accent/50 underline-offset-4 hover:decoration-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                href={sourceHref}
-              >
-                {sourceLabel}
-              </a>
-            </dd>
-          </div>
-        </dl>
+        {/* dl 의 div 그룹은 dt+dd 만 담아야 axe definition-list 규칙을 통과한다.
+            구분점(·)은 DOM 노드가 아닌 CSS 의사요소로, 링크는 dl 밖 형제로 둔다. */}
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-small lg:max-w-[42rem] lg:justify-end">
+          <dl className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <div className="flex min-w-0 items-baseline gap-1.5 after:ml-1.5 after:text-text-muted after:content-['·']">
+              <dt className="text-text-muted">{ko.overview.referenceYear}</dt>
+              <dd className="font-semibold tabular-nums text-text">{yearLabel}</dd>
+            </div>
+            <div className="flex min-w-0 items-baseline gap-1.5 after:ml-1.5 after:text-text-muted after:content-['·']">
+              <dt className="text-text-muted">{ko.overview.updatedAt}</dt>
+              <dd className="break-words font-semibold tabular-nums text-text">{lastUpdated}</dd>
+            </div>
+          </dl>
+          <a className="btn btn-ghost min-w-0 max-w-full break-words" href={sourceHref}>
+            {sourceLabel}
+          </a>
+        </div>
       </div>
     </header>
   );

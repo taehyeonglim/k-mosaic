@@ -5,6 +5,7 @@ import {
   SchoolLevelBreakdown,
   type SchoolLevelBreakdownItem,
 } from '@/components/charts/SchoolLevelBreakdown';
+import { MetricValue } from '@/components/ui/MetricValue';
 
 export interface RegionDetailData {
   regionCode: string;
@@ -66,16 +67,26 @@ export function RegionDetailPanel({ detail, onClose, nationalLabel }: RegionDeta
           <dt className="text-small text-[var(--km-color-text-muted)]">
             {ko.regionDetail.currentCount}
           </dt>
-          <dd className="viz-stat-value tabular-nums">
-            {formatCount(detail.currentCount, ko.missing.value)}
+          <dd className="viz-stat-value">
+            <MetricValue
+              value={detail.currentCount}
+              unit="count"
+              size="md"
+              missingLabel={ko.missing.ariaLabel}
+            />
           </dd>
         </div>
         <div className="card viz-stat">
           <dt className="text-small text-[var(--km-color-text-muted)]">
             {ko.regionDetail.currentRate}
           </dt>
-          <dd className="viz-stat-value tabular-nums">
-            {formatRate(detail.currentRate, ko.missing.value)}
+          <dd className="viz-stat-value">
+            <MetricValue
+              value={detail.currentRate}
+              unit="percent"
+              size="md"
+              missingLabel={ko.missing.ariaLabel}
+            />
           </dd>
         </div>
         <div className="card viz-stat">
@@ -83,7 +94,11 @@ export function RegionDetailPanel({ detail, onClose, nationalLabel }: RegionDeta
             {ko.regionDetail.nationwideRank}
           </dt>
           <dd className="viz-stat-value tabular-nums">
-            {detail.nationwideRank === null ? ko.missing.value : detail.nationwideRank}
+            {detail.nationwideRank === null ? (
+              <span aria-label={ko.missing.ariaLabel}>{ko.missing.value}</span>
+            ) : (
+              detail.nationwideRank
+            )}
           </dd>
         </div>
       </dl>

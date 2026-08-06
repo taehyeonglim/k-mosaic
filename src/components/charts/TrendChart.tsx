@@ -147,22 +147,39 @@ export function TrendChart({ series, metric, formatValue, annotations = [] }: Tr
 
   return (
     <section className="space-y-3" aria-label={chartLabel}>
+      <ul className="flex flex-wrap justify-end gap-x-4 gap-y-2 text-small" aria-label={chartLabel}>
+        {displayedSeries.map((item, index) => {
+          const color = SERIES_COLORS[index] ?? SERIES_COLORS[0];
+          return (
+            <li className="flex items-center gap-1.5" key={item.regionCode}>
+              <LegendMarker shape={markerShape(index)} color={color} />
+              <span>{item.label}</span>
+            </li>
+          );
+        })}
+      </ul>
+
       <div className="h-[320px] w-full min-w-0" role="img" aria-label={ko.filters.metrics[metric]}>
         <ResponsiveContainer width="100%" height="100%" minHeight={280}>
-          <LineChart data={chartData} margin={{ top: 20, right: 16, bottom: 12, left: 12 }}>
-            <CartesianGrid stroke="var(--km-color-border)" strokeDasharray="3 3" vertical={false} />
+          <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 12, left: 8 }}>
+            <CartesianGrid
+              stroke="var(--km-color-border)"
+              strokeDasharray="3 3"
+              strokeOpacity={0.3}
+              vertical={false}
+            />
             <XAxis
               dataKey="year"
               type="number"
               domain={['dataMin', 'dataMax']}
-              tick={{ fill: 'var(--km-color-text-muted)' }}
+              tick={{ fill: 'var(--km-color-text-muted)', fontSize: 12 }}
               tickLine={{ stroke: 'var(--km-color-border)' }}
               axisLine={{ stroke: 'var(--km-color-border)' }}
             />
             <YAxis
               domain={[0, 'auto']}
               tickFormatter={(value) => formatValue(value as number)}
-              tick={{ fill: 'var(--km-color-text-muted)' }}
+              tick={{ fill: 'var(--km-color-text-muted)', fontSize: 12 }}
               tickLine={{ stroke: 'var(--km-color-border)' }}
               axisLine={{ stroke: 'var(--km-color-border)' }}
               width={72}
@@ -209,18 +226,6 @@ export function TrendChart({ series, metric, formatValue, annotations = [] }: Tr
           </LineChart>
         </ResponsiveContainer>
       </div>
-
-      <ul className="flex flex-wrap gap-x-4 gap-y-2" aria-label={chartLabel}>
-        {displayedSeries.map((item, index) => {
-          const color = SERIES_COLORS[index] ?? SERIES_COLORS[0];
-          return (
-            <li className="flex items-center gap-1.5" key={item.regionCode}>
-              <LegendMarker shape={markerShape(index)} color={color} />
-              <span>{item.label}</span>
-            </li>
-          );
-        })}
-      </ul>
 
       <ChartDataTable caption={chartLabel} columns={tableColumns} rows={tableRows} visuallyHidden />
     </section>

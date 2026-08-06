@@ -22,23 +22,25 @@ function segmentsFor(scale: ColorScale, kind: MapLegendProps['kind']): LegendSeg
 
   if (kind === 'quantile') {
     return Array.from({ length: boundaries.length - 1 }, (_, index) => {
-      const lower = boundaries[index];
-      const upper = boundaries[index + 1];
-      return lower === undefined || upper === undefined
+      const first = boundaries[index];
+      const second = boundaries[index + 1];
+      return first === undefined || second === undefined
         ? null
         : {
-            lower,
-            upper,
-            sample: lower === upper ? lower : (lower + upper) / 2,
+            lower: Math.min(first, second),
+            upper: Math.max(first, second),
+            sample: (first + second) / 2,
           };
     }).filter((segment): segment is LegendSegment => segment !== null);
   }
 
-  const lower = boundaries[0];
-  const upper = boundaries[boundaries.length - 1];
-  if (lower === undefined || upper === undefined) {
+  const first = boundaries[0];
+  const last = boundaries[boundaries.length - 1];
+  if (first === undefined || last === undefined) {
     return [];
   }
+  const lower = Math.min(first, last);
+  const upper = Math.max(first, last);
 
   return Array.from({ length: 7 }, (_, index) => {
     const start = lower + ((upper - lower) * index) / 7;
@@ -57,25 +59,28 @@ export function MapLegend({ scale, metricLabel, formatValue, missingLabel, kind 
   return (
     <div className="space-y-2" aria-label={metricLabel}>
       <div className="font-medium">{metricLabel}</div>
-      <ol className="flex flex-wrap gap-x-3 gap-y-2" aria-label={metricLabel}>
+      <ol
+        className="grid min-w-0 grid-cols-[repeat(7,minmax(0,1fr))_auto] items-start gap-y-2"
+        aria-label={metricLabel}
+      >
         {segments.map((segment, index) => (
-          <li
-            className="flex items-center gap-1.5"
-            key={`${segment.lower}-${segment.upper}-${index}`}
-          >
+          <li className="min-w-0" key={`${segment.lower}-${segment.upper}-${index}`}>
             <span
-              className="inline-block h-4 w-4 shrink-0 rounded-sm border border-[var(--km-color-border)]"
+              className={`block h-3 border border-[var(--km-color-border)] ${index === 0 ? 'rounded-l-sm' : '-ml-px'} ${index === segments.length - 1 ? 'rounded-r-sm' : ''}`}
               style={{ backgroundColor: scale.color(segment.sample) }}
               aria-hidden="true"
             />
-            <span className="text-small tabular-nums">
+            <span className="mt-1 block break-all text-center text-small leading-tight tabular-nums">
               {formatValue(segment.lower)}
-              <span aria-hidden="true">–</span>
+              <span>–</span>
               {formatValue(segment.upper)}
             </span>
           </li>
         ))}
-        <li className="flex items-center gap-1.5">
+        <li
+          className="ml-3 flex min-w-max items-center gap-1.5 self-start"
+          style={{ gridColumn: `${segments.length + 1}` }}
+        >
           <span
             className="inline-block h-4 w-4 shrink-0 rounded-sm border"
             style={{

@@ -57,9 +57,15 @@ export default function SourcesPage() {
       />
       <PageShell>
         <div className="space-y-8">
-          <div className="flex justify-end">
+          <nav
+            aria-label={ko.foreignStudents.navigationLabel}
+            className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
+          >
+            <Link className="btn inline-flex" href="/">
+              {ko.nav.overview}
+            </Link>
             <ThemeToggle />
-          </div>
+          </nav>
           <Card title={ko.sources.title} description={ko.sources.tableNameValue}>
             <div className="space-y-4">
               <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
@@ -136,6 +142,7 @@ export default function SourcesPage() {
             <SourcePanel
               sources={sources}
               rateFormula={ko.sources.formulaValue}
+              showCommonMeta={false}
               notes={[
                 ko.sources.ratePrecisionNote,
                 ko.sources.schoolLevelNote,

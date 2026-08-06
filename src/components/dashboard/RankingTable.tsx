@@ -16,7 +16,7 @@ export interface RankingTableProps {
   rows: RankingTableRow[];
   excludedRegions: { regionCode: string; label: string }[];
   caption: string;
-  disclaimer: string;
+  disclaimer?: string;
 }
 
 function formatRankingValue(value: number | null, metric: RankingTableMetric): string {
@@ -63,13 +63,18 @@ export function RankingTable({
   const missingRows = Array.from(missingByCode.values()).sort((first, second) =>
     first.regionCode.localeCompare(second.regionCode),
   );
+  const maxAbsValue = rankedRows.reduce(
+    (maximum, row) => Math.max(maximum, Math.abs(row.value ?? 0)),
+    0,
+  );
+  const noDataTitleId = `ranking-no-data-title-${metric}`;
 
   return (
     <section className="space-y-3" aria-label={metricLabel(metric)}>
-      <p role="note">{disclaimer}</p>
+      {disclaimer ? <p role="note">{disclaimer}</p> : null}
       <div className="table-responsive">
         <table className="table">
-          <caption>{caption}</caption>
+          <caption className="sr-only">{caption}</caption>
           <thead>
             <tr>
               <th scope="col" className="text-end">
@@ -84,9 +89,29 @@ export function RankingTable({
           <tbody>
             {rankedRows.map((row) => (
               <tr key={row.regionCode} data-tied={row.isTied || undefined}>
-                <td className="text-end tabular-nums">{row.rank}</td>
+                <td
+                  className={`text-end tabular-nums ${row.rank >= 1 && row.rank <= 3 ? 'font-semibold' : ''}`}
+                >
+                  {row.rank}
+                </td>
                 <td>{row.label}</td>
-                <td className="text-end tabular-nums">{formatRankingValue(row.value, metric)}</td>
+                <td className="text-end tabular-nums">
+                  <span className="block">{formatRankingValue(row.value, metric)}</span>
+                  <span
+                    aria-hidden="true"
+                    className="mt-1 block h-1 overflow-hidden rounded-full bg-[var(--km-color-border)]/45"
+                  >
+                    <span
+                      className="block h-full rounded-full bg-[var(--km-map-count-5)]"
+                      style={{
+                        width:
+                          maxAbsValue === 0
+                            ? '0%'
+                            : `${Math.min((Math.abs(row.value ?? 0) / maxAbsValue) * 100, 100)}%`,
+                      }}
+                    />
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -94,8 +119,8 @@ export function RankingTable({
       </div>
 
       {missingRows.length > 0 ? (
-        <section aria-labelledby="ranking-no-data-title" className="space-y-2">
-          <h3 id="ranking-no-data-title" className="font-medium">
+        <section aria-labelledby={noDataTitleId} className="space-y-2">
+          <h3 id={noDataTitleId} className="font-medium">
             {ko.ranking.noData}
           </h3>
           <ul>

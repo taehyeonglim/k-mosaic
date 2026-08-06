@@ -17,18 +17,9 @@ import { MetricCardRow } from '@/components/dashboard/MetricCardRow';
 import { SelectField } from '@/components/ui/SelectField';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ko } from '@/content/ko';
-import {
-  toForeignCsv,
-  type ForeignRankingRow,
-  type ForeignTrendSeries,
-} from '@/lib/data/foreign';
+import { toForeignCsv, type ForeignRankingRow, type ForeignTrendSeries } from '@/lib/data/foreign';
 import type { ForeignNationwideStat, ForeignStudentStat } from '@/lib/schema/foreign-student';
-import {
-  metricKeySchema,
-  regionCodeSchema,
-  type MetricKey,
-  type RegionCode,
-} from '@/lib/schema';
+import { metricKeySchema, regionCodeSchema, type MetricKey, type RegionCode } from '@/lib/schema';
 import { formatCount, formatRate } from '@/lib/visualization/format';
 import { createCountScale, createRateScale } from '@/lib/visualization/scale';
 
@@ -328,11 +319,14 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
 
   function downloadAll(): void {
     triggerDownload(
-      toForeignCsv([...payload.regionalRecords, ...payload.nationalRecords, ...payload.nationwideTrend], {
-        source: ko.foreignStudents.download.sourceLabel,
-        referenceYear: filters.year,
-        formula: payload.rateFormula,
-      }),
+      toForeignCsv(
+        [...payload.regionalRecords, ...payload.nationalRecords, ...payload.nationwideTrend],
+        {
+          source: ko.foreignStudents.download.sourceLabel,
+          referenceYear: filters.year,
+          formula: payload.rateFormula,
+        },
+      ),
       'k-mosaic-foreign-students-full.csv',
     );
   }
@@ -497,6 +491,16 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
             </div>
           ) : null}
           <div className="grid min-w-0 gap-8 lg:grid-cols-2">
+            <section className="min-w-0 space-y-3" aria-labelledby="foreign-nationwide-trend-title">
+              <h3 id="foreign-nationwide-trend-title" className="text-base font-medium">
+                {ko.foreignStudents.trend.nationwideTitle}
+              </h3>
+              <TrendChart
+                series={nationwideTrendSeries}
+                metric="count"
+                formatValue={(value) => formatCount(value, ko.missing.value)}
+              />
+            </section>
             <section className="min-w-0 space-y-3" aria-labelledby="foreign-regional-trend-title">
               <h3 id="foreign-regional-trend-title" className="text-base font-medium">
                 {ko.foreignStudents.trend.regionalTitle}
@@ -517,26 +521,11 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
                   annotations={duplicateAnnotations}
                 />
               ) : (
-                <EmptyState
-                  title={ko.foreignStudents.trend.regionalTitle}
-                  description={ko.foreignStudents.trend.selectPrompt}
-                />
+                <EmptyState description={ko.foreignStudents.trend.selectPrompt} />
               )}
-            </section>
-            <section className="min-w-0 space-y-3" aria-labelledby="foreign-nationwide-trend-title">
-              <h3 id="foreign-nationwide-trend-title" className="text-base font-medium">
-                {ko.foreignStudents.trend.nationwideTitle}
-              </h3>
-              <TrendChart
-                series={nationwideTrendSeries}
-                metric="count"
-                formatValue={(value) => formatCount(value, ko.missing.value)}
-              />
             </section>
           </div>
           <div className="mt-4 space-y-1 text-small text-[var(--km-color-text-muted)]">
-            <p>{ko.foreignStudents.trend.coverageNote}</p>
-            <p>{ko.foreignStudents.trend.periodNote}</p>
             <p>{ko.foreignStudents.trend.missingSegment}</p>
           </div>
         </Card>
@@ -557,10 +546,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
       </section>
 
       <section id="foreign-downloads" aria-label={ko.foreignStudents.download.title}>
-        <Card
-          title={ko.foreignStudents.download.title}
-          description={ko.download.provenanceNote}
-        >
+        <Card title={ko.foreignStudents.download.title} description={ko.download.provenanceNote}>
           <DownloadButtons
             onDownloadFiltered={downloadFiltered}
             onDownloadAll={downloadAll}

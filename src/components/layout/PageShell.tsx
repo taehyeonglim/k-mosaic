@@ -11,7 +11,7 @@ export function PageShell({ children }: PageShellProps) {
     <div className="min-h-screen min-w-0 bg-canvas font-sans text-text">
       <SkipLink label={ko.nav.overview} targetId="main-content" />
       <main
-        className="mx-auto min-h-[60vh] w-full max-w-[1440px] min-w-0 px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8"
+        className="mx-auto min-h-[60vh] w-full max-w-[1440px] min-w-0 px-4 py-5 outline-none sm:px-6 sm:py-7 lg:px-8"
         id="main-content"
         tabIndex={-1}
       >

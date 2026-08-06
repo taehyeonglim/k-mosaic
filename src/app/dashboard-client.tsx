@@ -167,10 +167,9 @@ function createCompactIndex(payload: DashboardPayload): CompactIndex {
     regions: new Map(dataRegionCodes.map((regionCode, index) => [regionCode, index] as const)),
     levels: new Map(payload.levels.map((level, index) => [level, index] as const)),
     records: new Map(
-      payload.records.map((record) => [
-        compactRecordKey(record[0], record[1], record[2]),
-        record,
-      ] as const),
+      payload.records.map(
+        (record) => [compactRecordKey(record[0], record[1], record[2]), record] as const,
+      ),
     ),
     noteSets: payload.noteSets,
   };
@@ -289,11 +288,7 @@ function createDashboardSelectors(
     });
   }
 
-  function selectTrend(
-    codes: RegionScope[],
-    level: SchoolLevel,
-    metric: MetricKey,
-  ): TrendSeries[] {
+  function selectTrend(codes: RegionScope[], level: SchoolLevel, metric: MetricKey): TrendSeries[] {
     return codes.map((regionCode) => ({
       regionCode,
       regionNameKo: regionNameKo(regionCode, payload.regionLabels),
@@ -301,8 +296,7 @@ function createDashboardSelectors(
         const record = recordAt(index, year, regionCode, level);
         return {
           year,
-          value:
-            record === undefined ? null : metric === 'count' ? record[3] : record[5],
+          value: record === undefined ? null : metric === 'count' ? record[3] : record[5],
         };
       }),
     }));
@@ -323,10 +317,7 @@ function createDashboardSelectors(
         ? current[3] - previous[3]
         : null;
     const deltaPct =
-      deltaAbs !== null &&
-      previous !== undefined &&
-      previous[3] !== null &&
-      previous[3] !== 0
+      deltaAbs !== null && previous !== undefined && previous[3] !== null && previous[3] !== 0
         ? round4((deltaAbs / previous[3]) * 100)
         : null;
     const byLevel: LevelStatView[] = (['elementary', 'middle', 'high', 'other'] as const).map(
@@ -505,9 +496,9 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     () =>
       selectedRegion === null
         ? null
-        : selectors.selectByRegion(filters.year - 1, filters.level).find(
-            (view) => view.regionCode === selectedRegion,
-          ) ?? null,
+        : (selectors
+            .selectByRegion(filters.year - 1, filters.level)
+            .find((view) => view.regionCode === selectedRegion) ?? null),
     [filters.level, filters.year, selectedRegion, selectors],
   );
   const selectedDetailData = useMemo<RegionDetailData | null>(() => {
@@ -661,21 +652,21 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                 label: ko.overview.previousYear,
                 value: countDelta,
                 unit: 'count',
+                delta: countDelta,
                 deltaPct: countDeltaPct,
+                display: 'delta',
               },
               {
                 key: 'first-year',
                 label: ko.overview.firstYear,
                 value: firstYearDelta,
                 unit: 'count',
+                delta: firstYearDelta,
+                display: 'delta',
                 note: `${firstYear} ${ko.overview.referenceYear}`,
               },
             ]}
           />
-          <p className="mt-4 text-small text-[var(--km-color-text-muted)]">
-            {ko.overview.referenceYear}: {filters.year} · {ko.overview.updatedAt}:{' '}
-            {payload.retrievedAtLabel}
-          </p>
         </Card>
       </section>
 
@@ -714,7 +705,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
         </Card>
       </section>
 
-      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.65fr)]">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.65fr)]">
         <Card title={ko.map.title} description={ko.map.description}>
           <ChoroplethMap
             geo={payload.geo}
@@ -758,6 +749,9 @@ export function DashboardClient({ payload }: DashboardClientProps) {
         <Card title={ko.ranking.title}>
           <div className="space-y-5">
             <Badge tone="info">{ko.ranking.interpretationNote}</Badge>
+            <p className="text-small text-[var(--km-color-text-muted)]" role="note">
+              {ko.ranking.missingNote}
+            </p>
             <RankingBarChart
               rows={rankingChartRows}
               formatValue={(value) =>
@@ -772,9 +766,8 @@ export function DashboardClient({ payload }: DashboardClientProps) {
               rows={rankingRows}
               excludedRegions={[]}
               caption={ko.filters.metrics[filters.metric]}
-              disclaimer={ko.ranking.missingNote}
             />
-            <div className="grid min-w-0 gap-5 xl:grid-cols-2">
+            <div className="grid min-w-0 gap-5">
               {(['deltaAbs', 'deltaPct'] as const).map((rankingMetric) => (
                 <section className="min-w-0 space-y-3" key={rankingMetric}>
                   <h3 className="text-base font-medium">
@@ -787,7 +780,6 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                     caption={
                       rankingMetric === 'deltaAbs' ? ko.ranking.deltaAbs : ko.ranking.deltaPct
                     }
-                    disclaimer={ko.ranking.missingNote}
                   />
                 </section>
               ))}
@@ -796,79 +788,61 @@ export function DashboardClient({ payload }: DashboardClientProps) {
         </Card>
       </div>
 
-      <section id="region-detail" aria-label={ko.regionDetail.title}>
-        <Card title={ko.regionDetail.title}>
-          {selectedDetailData ? (
-            <div className="space-y-5">
-              <RegionDetailPanel
-                detail={
-                  filters.metric === 'count'
-                    ? selectedDetailData
-                    : { ...selectedDetailData, trend: [] }
-                }
-                onClose={() =>
-                  updateQuery({
-                    regions:
-                      selectedRegion === null
-                        ? filters.regions
-                        : filters.regions.filter((region) => region !== selectedRegion),
-                  })
-                }
-                nationalLabel={ko.overview.nationwideValue}
-              />
-              {filters.metric === 'rate' && selectedRegion !== null ? (
-                <section className="space-y-2" aria-label={ko.filters.metrics.rate}>
-                  <h3 className="font-medium">
-                    {ko.trend.title} · {ko.filters.metrics.rate}
-                  </h3>
-                  <TrendChart
-                    series={selectedTrend
-                      .filter((series) => series.regionCode === selectedRegion)
-                      .map((series) => ({
-                        regionCode: series.regionCode,
-                        label: series.regionNameKo,
-                        points: series.points,
-                      }))}
-                    metric="rate"
-                    formatValue={(value) => formatRate(value, ko.missing.value)}
-                  />
-                </section>
-              ) : null}
-            </div>
-          ) : (
-            <EmptyState title={ko.regionDetail.title} description={ko.regionDetail.selectPrompt} />
-          )}
-        </Card>
-      </section>
+      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+        <section id="region-detail" className="min-w-0" aria-label={ko.regionDetail.title}>
+          <Card title={ko.regionDetail.title}>
+            {selectedDetailData ? (
+              <div className="space-y-5">
+                <RegionDetailPanel
+                  detail={
+                    filters.metric === 'count'
+                      ? selectedDetailData
+                      : { ...selectedDetailData, trend: [] }
+                  }
+                  onClose={() =>
+                    updateQuery({
+                      regions:
+                        selectedRegion === null
+                          ? filters.regions
+                          : filters.regions.filter((region) => region !== selectedRegion),
+                    })
+                  }
+                  nationalLabel={ko.overview.nationwideValue}
+                />
+                {filters.metric === 'rate' && selectedRegion !== null ? (
+                  <section className="space-y-2" aria-label={ko.filters.metrics.rate}>
+                    <h3 className="font-medium">
+                      {ko.trend.title} · {ko.filters.metrics.rate}
+                    </h3>
+                    <TrendChart
+                      series={selectedTrend
+                        .filter((series) => series.regionCode === selectedRegion)
+                        .map((series) => ({
+                          regionCode: series.regionCode,
+                          label: series.regionNameKo,
+                          points: series.points,
+                        }))}
+                      metric="rate"
+                      formatValue={(value) => formatRate(value, ko.missing.value)}
+                    />
+                  </section>
+                ) : null}
+              </div>
+            ) : (
+              <EmptyState description={ko.regionDetail.selectPrompt} />
+            )}
+          </Card>
+        </section>
 
-      <section id="trend" aria-label={ko.trend.title}>
-        <Card title={ko.trend.title} description={ko.trend.coverageNote}>
-          <div className="grid min-w-0 gap-8 lg:grid-cols-2">
-            <section className="min-w-0 space-y-3" aria-labelledby="national-trend-title">
-              <h3 id="national-trend-title" className="text-base font-medium">
-                {ko.trend.nationwide}
-              </h3>
-              <TrendChart
-                series={nationwideTrend.map((series) => ({
-                  regionCode: series.regionCode,
-                  label: series.regionNameKo,
-                  points: series.points,
-                }))}
-                metric={filters.metric}
-                formatValue={(value) =>
-                  filters.metric === 'count'
-                    ? formatCount(value, ko.missing.value)
-                    : formatRate(value, ko.missing.value)
-                }
-              />
-            </section>
-            <section className="min-w-0 space-y-3" aria-labelledby="selected-trend-title">
-              <h3 id="selected-trend-title" className="text-base font-medium">
-                {ko.trend.selectedRegions}
-              </h3>
-              {selectedTrend.length > 0 ? (
+        <section id="trend" className="min-w-0" aria-label={ko.trend.title}>
+          <Card title={ko.trend.title} description={ko.trend.coverageNote}>
+            <div className="grid min-w-0 gap-8 lg:grid-cols-2">
+              <section className="min-w-0 space-y-3" aria-labelledby="national-trend-title">
+                <h3 id="national-trend-title" className="text-base font-medium">
+                  {ko.trend.nationwide}
+                </h3>
                 <TrendChart
-                  series={selectedTrend.map((series) => ({
+                  series={nationwideTrend.map((series) => ({
                     regionCode: series.regionCode,
                     label: series.regionNameKo,
                     points: series.points,
@@ -880,20 +854,37 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                       : formatRate(value, ko.missing.value)
                   }
                 />
-              ) : (
-                <EmptyState
-                  title={ko.trend.selectedRegions}
-                  description={ko.regionDetail.selectPrompt}
-                />
-              )}
-            </section>
-          </div>
-          <div className="mt-4 space-y-1 text-small text-[var(--km-color-text-muted)]">
-            <p>{ko.trend.missingSegment}</p>
-            <p>{ko.trend.maxRegionsNote}</p>
-          </div>
-        </Card>
-      </section>
+              </section>
+              <section className="min-w-0 space-y-3" aria-labelledby="selected-trend-title">
+                <h3 id="selected-trend-title" className="text-base font-medium">
+                  {ko.trend.selectedRegions}
+                </h3>
+                {selectedTrend.length > 0 ? (
+                  <TrendChart
+                    series={selectedTrend.map((series) => ({
+                      regionCode: series.regionCode,
+                      label: series.regionNameKo,
+                      points: series.points,
+                    }))}
+                    metric={filters.metric}
+                    formatValue={(value) =>
+                      filters.metric === 'count'
+                        ? formatCount(value, ko.missing.value)
+                        : formatRate(value, ko.missing.value)
+                    }
+                  />
+                ) : (
+                  <EmptyState description={ko.regionDetail.selectPrompt} />
+                )}
+              </section>
+            </div>
+            <div className="mt-4 space-y-1 text-small text-[var(--km-color-text-muted)]">
+              <p>{ko.trend.missingSegment}</p>
+              <p>{ko.trend.maxRegionsNote}</p>
+            </div>
+          </Card>
+        </section>
+      </div>
 
       <section id="sources" aria-label={ko.sources.title}>
         <Card>

@@ -48,6 +48,11 @@ test.describe('axe 자동 접근성 검사', () => {
           await themeButton.click();
           await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
 
+          // 테마 전환 직후에는 색상 transition(150ms)이 진행 중이라 axe 가
+          // 라이트·다크의 중간 보간 색을 계측해 color-contrast 오탐을 낸다.
+          // 전환이 정착된 뒤에 검사한다 (규칙 완화가 아니라 정상 상태 계측).
+          await page.waitForTimeout(400);
+
           const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
 
           expect(

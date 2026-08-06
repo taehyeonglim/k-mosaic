@@ -39,19 +39,26 @@ interface RankingDatum extends RankingBarChartRow {
 }
 
 export function RankingBarChart({ rows, formatValue, highlightRegion }: RankingBarChartProps) {
-  const chartData: RankingDatum[] = rows.map((row) => ({
+  const sortedRows = rows
+    .slice()
+    .sort(
+      (first, second) =>
+        first.rank - second.rank || first.regionCode.localeCompare(second.regionCode),
+    );
+  const chartData: RankingDatum[] = sortedRows.map((row) => ({
     ...row,
     displayLabel: `${row.rank}. ${row.label}`,
     formattedValue: formatValue(row.value),
     plotValue: row.value,
   }));
-  const chartLabel = rows.map((row) => row.label).join(', ') || ko.ranking.title;
+  const chartHeight = Math.max(chartData.length * 26 + 40, 160);
+  const chartLabel = sortedRows.map((row) => row.label).join(', ') || ko.ranking.title;
   const tableColumns: ChartDataTableColumn[] = [
     { key: 'rank', label: ko.ranking.rank, numeric: true },
     { key: 'region', label: ko.ranking.region },
     { key: 'value', label: ko.ranking.value, numeric: true },
   ];
-  const tableRows: ChartDataTableRow[] = rows.map((row) => ({
+  const tableRows: ChartDataTableRow[] = sortedRows.map((row) => ({
     id: row.regionCode,
     rank: row.rank,
     region: row.label,
@@ -60,8 +67,13 @@ export function RankingBarChart({ rows, formatValue, highlightRegion }: RankingB
 
   return (
     <section className="space-y-3" aria-label={chartLabel}>
-      <div className="h-[360px] w-full min-w-0" role="img" aria-label={chartLabel}>
-        <ResponsiveContainer width="100%" height="100%" minHeight={280}>
+      <div
+        className="w-full min-w-0"
+        style={{ height: `${chartHeight}px` }}
+        role="img"
+        aria-label={chartLabel}
+      >
+        <ResponsiveContainer width="100%" height="100%" minHeight={chartHeight}>
           <BarChart
             data={chartData}
             layout="vertical"
@@ -80,7 +92,8 @@ export function RankingBarChart({ rows, formatValue, highlightRegion }: RankingB
               type="category"
               dataKey="displayLabel"
               width={152}
-              tick={{ fill: 'var(--km-color-text)' }}
+              interval={0}
+              tick={{ fill: 'var(--km-color-text)', fontSize: 12 }}
               tickLine={false}
               axisLine={{ stroke: 'var(--km-color-border)' }}
             />
@@ -113,7 +126,12 @@ export function RankingBarChart({ rows, formatValue, highlightRegion }: RankingB
                   }
                 />
               ))}
-              <LabelList dataKey="formattedValue" position="right" fill="var(--km-color-text)" />
+              <LabelList
+                dataKey="formattedValue"
+                position="right"
+                fill="var(--km-color-text)"
+                style={{ fontSize: 'var(--km-text-small)' }}
+              />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
