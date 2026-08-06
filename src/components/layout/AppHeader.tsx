@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import ko from '@/content/ko';
 
 export interface AppHeaderProps {
@@ -58,9 +60,11 @@ export function AppHeader({
               <dd className="break-words font-semibold tabular-nums text-text">{lastUpdated}</dd>
             </div>
           </dl>
-          <a className="btn btn-ghost min-w-0 max-w-full break-words" href={sourceHref}>
+          {/* 일반 <a> 는 basePath(/k-mosaic)를 붙이지 않아 GitHub Pages 에서 404 가 난다.
+              내부 경로는 반드시 next/link 를 쓴다 (해시 전용 href 도 Link 가 처리한다). */}
+          <Link className="btn btn-ghost min-w-0 max-w-full break-words" href={sourceHref}>
             {sourceLabel}
-          </a>
+          </Link>
         </div>
       </div>
     </header>

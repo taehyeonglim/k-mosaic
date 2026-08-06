@@ -68,6 +68,19 @@ jobs:
       - name: .nojekyll 추가
         run: touch out/.nojekyll
 
+      # basePath 누락 링크 검사 — 일반 <a href="/..."> 는 basePath 를 붙이지 않아
+      # 프로젝트 페이지에서 404 가 된다 (실제 발생했던 회귀: 헤더 '데이터 출처' 링크).
+      # 로컬 E2E 는 basePath 없이 돌기 때문에 이 유형을 잡지 못한다 — 여기서 잡는다.
+      - name: basePath 누락 링크 검사
+        run: |
+          BAD=$(grep -rhoE 'href="/(sources|foreign-students)[/"#]' out --include='*.html' | sort -u || true)
+          if [ -n "$BAD" ]; then
+            echo "::error::basePath 가 붙지 않은 내부 링크 발견 — next/link 대신 일반 <a> 를 쓴 곳이 있다"
+            echo "$BAD"
+            exit 1
+          fi
+          echo "내부 링크 basePath 검사 통과"
+
       # 빌드 산출물에 비밀정보가 없는지 확인한다.
       # 이 워크플로에는 키가 없으므로 통상 무의미하지만, 실수로 커밋된 키를 잡는 최후 방어선이다.
       - name: 비밀정보 스캔
