@@ -283,7 +283,11 @@ npx tsx scripts/security/scan-secrets.ts
 
 ## 15. 라이선스
 
-미정 (오픈소스 라이선스 검토 중). 데이터 출처의 라이선스는 각 출처의 조건을 따릅니다.
+**코드**: [MIT License](LICENSE) © 2026 Taehyeong Lim
+
+**데이터**: 코드 라이선스와 별개로 각 출처의 조건을 따릅니다.
+- 통계 데이터 — 교육부·한국교육개발원 「교육기본통계」 (KOSIS·e-나라지표 경유). 이용 시 출처를 표시하세요
+- 행정경계 — 통계청 SGIS 공공누리 제1유형, 가공분 [vuski/admdongkor](https://github.com/vuski/admdongkor) CC BY 4.0 ([geo-source.md](docs/geo-source.md)의 출처표시 문구 유지)
 
 ---
 
