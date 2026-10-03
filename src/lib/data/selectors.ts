@@ -1,4 +1,5 @@
 import { REGION_BY_CODE, REGION_ORDER } from '../constants/regions';
+import { TABLE_IDS_BY_DATASET, type SourceDataset } from '../constants/sources';
 import type {
   MetricKey,
   RankingMetric,
@@ -189,6 +190,11 @@ export function selectAvailableYears(): number[] {
   );
 }
 
-export function selectSourceMeta(): SourceMeta[] {
-  return sourceMeta.map((entry) => ({ ...entry }));
+/** 데이터셋의 출처만 통계표 목록 순서대로 반환한다 — 다른 데이터셋의 표가 섞이지 않게 한다. */
+export function selectSourceMeta(dataset: SourceDataset): SourceMeta[] {
+  const tableIds = TABLE_IDS_BY_DATASET[dataset];
+  return sourceMeta
+    .filter((entry) => tableIds.includes(entry.tableId))
+    .sort((left, right) => tableIds.indexOf(left.tableId) - tableIds.indexOf(right.tableId))
+    .map((entry) => ({ ...entry }));
 }

@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ko } from '@/content/ko';
+import { fillTemplate, formatYearRange } from '@/content/template';
 import { snapshotToCsv, toCsv } from '@/lib/data/csv';
 import type {
   LevelStatView,
@@ -437,18 +438,21 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     () => currentViews.map((view) => ({ regionCode: view.regionCode, value: metricValue(view) })),
     [currentViews, metricValue],
   );
+  // 척도는 선택 연도가 아니라 수록 전 연도 값으로 만든다 — 연도를 바꿔도 같은 색이
+  // 같은 값을 뜻해야 연도 간 비교가 가능하다 (ko.map.scaleNote).
+  const scaleValues = useMemo(
+    () =>
+      payload.years.flatMap((year) =>
+        selectors.selectByRegion(year, filters.level).map(metricValue),
+      ),
+    [filters.level, metricValue, payload.years, selectors],
+  );
   const mapScale = useMemo(
     () =>
       filters.metric === 'count'
-        ? createCountScale(
-            mapData.map((item) => item.value),
-            'light',
-          )
-        : createRateScale(
-            mapData.map((item) => item.value),
-            'light',
-          ),
-    [filters.metric, mapData],
+        ? createCountScale(scaleValues, 'light')
+        : createRateScale(scaleValues, 'light'),
+    [filters.metric, scaleValues],
   );
   const mapRanks = useMemo(
     () =>
@@ -835,7 +839,10 @@ export function DashboardClient({ payload }: DashboardClientProps) {
         </section>
 
         <section id="trend" className="min-w-0" aria-label={ko.trend.title}>
-          <Card title={ko.trend.title} description={ko.trend.coverageNote}>
+          <Card
+            title={ko.trend.title}
+            description={fillTemplate(ko.trend.coverageNote, formatYearRange(payload.years))}
+          >
             <div className="grid min-w-0 gap-8 lg:grid-cols-2">
               <section className="min-w-0 space-y-3" aria-labelledby="national-trend-title">
                 <h3 id="national-trend-title" className="text-base font-medium">

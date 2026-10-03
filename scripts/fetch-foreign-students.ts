@@ -52,7 +52,7 @@ function decodeHtml(value: string): string {
     .replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"')
     .replace(/&#39;/gi, "'")
-    .replace(/&#(d+);/g, (_, code: string) => String.fromCharCode(Number(code)));
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCharCode(Number(code)));
 }
 
 function cellText(value: string): string {
