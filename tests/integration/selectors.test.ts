@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { describe, expect, it } from 'vitest';
 
 import { REGION_ORDER } from '@/lib/constants/regions';
@@ -7,6 +9,16 @@ import {
   selectNational,
   selectRanking,
 } from '@/lib/data/selectors';
+
+function snapshotCoverageYears(): number[] {
+  const snapshot = JSON.parse(
+    readFileSync(
+      new URL('../../data/snapshots/multicultural-students.v1.json', import.meta.url),
+      'utf8',
+    ),
+  ) as { coverage: { years: number[] } };
+  return snapshot.coverage.years;
+}
 
 describe('실제 스냅숏 selector 통합', () => {
   it('selectNational(2022, all)은 외부 교차검증 기준 168645명이다', () => {
@@ -57,8 +69,13 @@ describe('실제 스냅숏 selector 통합', () => {
     }
   });
 
-  it('selectAvailableYears는 2020~2025를 반환한다', () => {
-    expect(selectAvailableYears()).toEqual([2020, 2021, 2022, 2023, 2024, 2025]);
+  it('selectAvailableYears는 스냅숏 수록 연도를 연속·오름차순으로 반환한다', () => {
+    const years = selectAvailableYears();
+    // 연례 갱신으로 최신 연도가 늘어도 유효하도록 스냅숏 coverage 와 대조한다.
+    expect(years).toEqual([...snapshotCoverageYears()].sort((left, right) => left - right));
+    expect(years.every((year, index) => index === 0 || year === years[index - 1]! + 1)).toBe(true);
+    // 외부 교차검증 기준 연도(2022)는 반드시 포함된다.
+    expect(years).toContain(2022);
   });
 
   it('실제 결측 레코드는 0이 아니라 null을 가진다', () => {
