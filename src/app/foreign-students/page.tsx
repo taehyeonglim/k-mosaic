@@ -44,8 +44,7 @@ function formattedDate(value: string): string {
 }
 
 function sourcePanelSources(): SourcePanelSource[] {
-  return selectSourceMeta()
-    .filter((source) => source.tableId === 'DT_1963003_010_S' || source.tableId === '153401')
+  return selectSourceMeta('foreign')
     .map((source) => ({
       role:
         source.tableId === 'DT_1963003_010_S'

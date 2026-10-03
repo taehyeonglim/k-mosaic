@@ -7,6 +7,7 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { SourcePanel } from '@/components/dashboard/SourcePanel';
 import { Card } from '@/components/ui/Card';
 import { ko } from '@/content/ko';
+import { fillTemplate, formatYearRange } from '@/content/template';
 import { selectAvailableYears, selectSourceMeta } from '@/lib/data/selectors';
 import { loadSnapshot } from '@/lib/data/snapshot';
 
@@ -21,7 +22,7 @@ function formattedDate(value: string): string {
 }
 
 function sourcePanelSources() {
-  return selectSourceMeta().map((source) => ({
+  return selectSourceMeta('multicultural').map((source) => ({
     role:
       source.role === 'numerator' ? ko.sources.numeratorProvider : ko.sources.denominatorProvider,
     provider: source.provider,
@@ -130,7 +131,10 @@ export default function SourcesPage() {
             </Card>
           </div>
 
-          <Card title={ko.sources.title} description={ko.trend.coverageNote}>
+          <Card
+            title={ko.sources.title}
+            description={fillTemplate(ko.trend.coverageNote, formatYearRange(years))}
+          >
             <div className="space-y-3 text-sm leading-6 text-[var(--km-color-text-muted)]">
               <p>{ko.sources.ratePrecisionNote}</p>
               <p>{ko.trend.missingSegment}</p>

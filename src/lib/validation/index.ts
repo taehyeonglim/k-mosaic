@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { MULTICULTURAL_TABLE_IDS } from '../constants/sources';
 import type { MulticulturalStudentStat, Snapshot } from '../schema/index';
 
 export type ValidationSeverity = 'block' | 'warn';
@@ -18,13 +19,7 @@ export interface ValidationReport {
 }
 
 const SCHOOL_LEVELS = ['elementary', 'middle', 'high', 'other'] as const;
-const EXPECTED_SOURCE_TABLE_IDS = [
-  'F008403',
-  'DT_1963003_002',
-  'DT_1963003_003',
-  'DT_1963003_004',
-  'DT_1963003_009',
-] as const;
+const EXPECTED_SOURCE_TABLE_IDS = MULTICULTURAL_TABLE_IDS;
 const SURGE_THRESHOLD_PCT = 50;
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -33,7 +33,7 @@ function formattedDate(value: string): string {
 }
 
 function sourcePanelSources() {
-  return selectSourceMeta().map((source) => ({
+  return selectSourceMeta('multicultural').map((source) => ({
     role:
       source.role === 'numerator' ? ko.sources.numeratorProvider : ko.sources.denominatorProvider,
     provider: source.provider,

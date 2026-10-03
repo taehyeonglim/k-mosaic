@@ -78,7 +78,8 @@ export const ko = {
     countAxis: '학생 수(명)',
     rateAxis: '비율(%)',
     missingSegment: '결측 구간은 선을 연결하지 않습니다.',
-    coverageNote: '시도별 자료는 2020~2025년, 전국 학교급별 자료는 2016~2025년을 제공합니다.',
+    // {start}·{end} 는 스냅숏 수록 연도에서 채운다 — 연도를 리터럴로 쓰지 않는다.
+    coverageNote: '시도별·전국 학교급별 자료는 {start}~{end}년을 제공합니다.',
     maxRegionsNote: '최대 3개 지역까지 비교할 수 있습니다.',
   },
   regionDetail: {
@@ -123,7 +124,8 @@ export const ko = {
     ratePrecisionNote: '2025년 공표 비율은 정수로 반올림되어 있어 표시에는 계산값을 사용합니다.',
     schoolLevelNote:
       '분모는 초등학교·중학교·고등학교·각종학교 학생수이며, 유치원·특수학교는 제외합니다.',
-    sourceStatusNote: '기준일과 잠정치 여부는 원자료에서 확인되지 않았습니다.',
+    sourceStatusNote:
+      '조사 기준일은 매년 4월 1일이며, 잠정치·확정치 구분은 원자료에서 제공되지 않습니다.',
   },
   download: {
     title: '다운로드',
