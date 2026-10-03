@@ -3,7 +3,12 @@ import { join } from 'node:path';
 
 import { expect, test } from '@playwright/test';
 
-import { assertNoHorizontalOverflow, gotoDashboard, SCREENSHOTS_DIR } from './helpers';
+import {
+  assertNoHorizontalOverflow,
+  gotoDashboard,
+  readSnapshotFacts,
+  SCREENSHOTS_DIR,
+} from './helpers';
 
 function rankingRegion(page: Parameters<typeof gotoDashboard>[0]) {
   return page.getByRole('region', { name: '학생 수 순위', exact: true });
@@ -12,6 +17,7 @@ function rankingRegion(page: Parameters<typeof gotoDashboard>[0]) {
 test.describe('r4-e2e 핵심 사용자 흐름', () => {
   test('E1 첫 화면에 헤더·브랜드·기준 연도·갱신일이 열린다', async ({ page }) => {
     await gotoDashboard(page);
+    const facts = readSnapshotFacts();
 
     const header = page.locator('header');
     await expect(header.getByRole('heading', { name: 'K-MOSAIC', exact: true })).toBeVisible();
@@ -19,13 +25,15 @@ test.describe('r4-e2e 핵심 사용자 흐름', () => {
       header.getByText('대한민국 다문화학생 교육통계 시각화·분석 플랫폼', { exact: true }),
     ).toBeVisible();
     await expect(header.getByText('기준 연도', { exact: true })).toBeVisible();
-    await expect(header.getByText('2025', { exact: true })).toBeVisible();
+    await expect(header.getByText(String(facts.latestYear), { exact: true })).toBeVisible();
     await expect(header.getByText('갱신일', { exact: true })).toBeVisible();
-    await expect(header.getByText('2026. 8. 5.', { exact: true })).toBeVisible();
+    await expect(header.getByText(facts.retrievedAtLabel, { exact: true })).toBeVisible();
     await expect(
-      page.getByRole('region', { name: '전국 개요', exact: true }).getByText('202,208명', {
-        exact: true,
-      }),
+      page
+        .getByRole('region', { name: '전국 개요', exact: true })
+        .getByText(facts.latestNationalCountLabel, {
+          exact: true,
+        }),
     ).toBeVisible();
 
     await page.screenshot({
@@ -155,7 +163,7 @@ test.describe('r4-e2e 핵심 사용자 흐름', () => {
     const csv = readFileSync(downloadPath, 'utf8');
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     expect(csv).toContain('# 출처:');
-    expect(csv).toContain('# 기준연도: 2025');
+    expect(csv).toContain(`# 기준연도: ${readSnapshotFacts().latestYear}`);
     expect(csv).toContain('# 계산식:');
   });
 

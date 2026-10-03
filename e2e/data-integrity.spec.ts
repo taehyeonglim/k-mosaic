@@ -59,6 +59,9 @@ test.describe('r4-e2e 결측·윤리 표현 검증', () => {
   // 화면에서는 4.0% 를 확인하고 전체 정밀도(4.0238%)는 원자료에서 확인한다.
   test('2025년 전국 비율이 직접 계산값 4.0%로 표시된다', async ({ page }) => {
     await gotoDashboard(page);
+    // 기본 연도는 최신 연도를 따라가므로 2025년을 명시한다 (연례 갱신 후에도 유효).
+    await page.locator('#filter-year').selectOption('2025');
+    await expect(page).toHaveURL(/year=2025/);
 
     await expect(
       page

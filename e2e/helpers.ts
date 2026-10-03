@@ -47,3 +47,51 @@ export function containsSecret(values: readonly string[], secret: string): boole
     (value) => value.includes(secret) || value.includes(encodeURIComponent(secret)),
   );
 }
+
+export interface SnapshotFacts {
+  years: number[];
+  latestYear: number;
+  /** 최신 연도 전국·전체 학교급 다문화학생 수 — 화면 표기(예: 202,208명) */
+  latestNationalCountLabel: string;
+  /** 스냅숏 조회일 — 헤더 '갱신일' 표기(예: 2026. 8. 5.) */
+  retrievedAtLabel: string;
+}
+
+/**
+ * 기대값을 커밋된 스냅숏에서 파생한다. 최신 연도·수치·갱신일을 리터럴로 적으면
+ * 연례 데이터 갱신 때마다 테스트가 깨진다. 특정 연도의 외부 교차검증 값
+ * (예: 2022년 168,645명)은 갱신과 무관한 사실이므로 리터럴로 둔다.
+ */
+export function readSnapshotFacts(): SnapshotFacts {
+  const snapshot = JSON.parse(
+    readFileSync(resolve(process.cwd(), 'data/snapshots/multicultural-students.v1.json'), 'utf8'),
+  ) as {
+    retrievedAt: string;
+    coverage: { years: number[] };
+    records: {
+      year: number;
+      regionCode: string;
+      schoolLevel: string;
+      multiculturalStudentCount: number | null;
+    }[];
+  };
+  const years = [...snapshot.coverage.years].sort((left, right) => left - right);
+  const latestYear = years[years.length - 1];
+  if (latestYear === undefined) throw new Error('스냅숏 수록 연도가 비어 있습니다.');
+  const national = snapshot.records.find(
+    (record) =>
+      record.year === latestYear && record.regionCode === 'KR' && record.schoolLevel === 'all',
+  );
+  if (national?.multiculturalStudentCount == null) {
+    throw new Error(`스냅숏에 ${latestYear}년 전국 값이 없습니다.`);
+  }
+  return {
+    years,
+    latestYear,
+    latestNationalCountLabel: `${new Intl.NumberFormat('ko-KR').format(national.multiculturalStudentCount)}명`,
+    retrievedAtLabel: new Intl.DateTimeFormat('ko-KR', {
+      dateStyle: 'medium',
+      timeZone: 'Asia/Seoul',
+    }).format(new Date(snapshot.retrievedAt)),
+  };
+}
