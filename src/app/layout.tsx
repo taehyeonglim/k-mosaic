@@ -3,16 +3,12 @@ import type { ReactNode } from 'react';
 
 import '@/styles/globals.css';
 import { ko } from '@/content/ko';
+import { pageMetadata, SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'K-MOSAIC — Korea Multicultural Student Data Explorer',
-  description: ko.app.subtitle,
-  openGraph: {
-    title: 'K-MOSAIC — Korea Multicultural Student Data Explorer',
-    description: ko.app.tagline,
-    locale: 'ko_KR',
-    type: 'website',
-  },
+  metadataBase: new URL(SITE_URL),
+  title: { default: ko.app.metaTitle, template: `%s — ${ko.app.title}` },
+  ...pageMetadata({ description: ko.app.metaDescription, path: '' }),
 };
 
 const themeInitializer = `(function () {

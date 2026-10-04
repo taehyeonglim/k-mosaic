@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- 프로젝트 페이지(서브패스)라 도메인 루트 robots.txt 는 제어할 수 없다.
-     사이트맵은 Search Console 등에 직접 제출하는 용도로 유효하다. -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://taehyeonglim.github.io/k-mosaic/</loc></url>
-  <url><loc>https://taehyeonglim.github.io/k-mosaic/foreign-students/</loc></url>
-  <url><loc>https://taehyeonglim.github.io/k-mosaic/sources/</loc></url>
-</urlset>

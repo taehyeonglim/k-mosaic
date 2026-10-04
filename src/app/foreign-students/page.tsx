@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ko } from '@/content/ko';
+import { pageMetadata } from '@/lib/site';
 import {
   loadForeignSnapshot,
   selectForeignAvailableYears,
@@ -31,10 +32,11 @@ import {
   type ForeignStudentsPayload,
 } from './foreign-students-client';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: ko.foreignStudents.metaTitle,
   description: ko.foreignStudents.metaDescription,
-};
+  path: 'foreign-students/',
+});
 
 function formattedDate(value: string): string {
   return new Intl.DateTimeFormat('ko-KR', {
