@@ -1,7 +1,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { fetchEnaraTable, redact } from '../src/lib/mcp/index.js';
+import { fetchEnaraTable } from './lib/enara.js';
+import { redact } from './lib/redact.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW_DIR = resolve(ROOT, 'data/raw');

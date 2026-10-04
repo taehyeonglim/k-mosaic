@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { redact } from '../../src/lib/mcp/index.js';
+import { redact } from '../lib/redact.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 // E2E 리포트는 playwright.config.ts 가 e2e/playwright-report 에 쓴다 (루트 경로는 구버전 호환).

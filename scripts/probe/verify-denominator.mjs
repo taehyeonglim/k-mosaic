@@ -9,7 +9,8 @@
 // 보안: KOSIS_API_KEY 는 .env.local 에서만 읽고 URL 전문을 출력하지 않는다.
 
 import { readFileSync } from 'node:fs';
-import { REGIONS, codeFromShort, codeFromOfficial } from './regions.mjs';
+// .mjs 지만 tsx 로 실행해 TypeScript 매핑표(단일 출처)를 직접 쓴다.
+import { REGIONS, codeFromShort, codeFromOfficial } from '../../src/lib/constants/regions.ts';
 
 const ENV_PATH = new URL('../../.env.local', import.meta.url);
 const API_KEY = (() => {

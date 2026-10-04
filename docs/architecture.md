@@ -42,22 +42,32 @@ k-mosaic/
 │   └── metadata/      # ✅ 커밋: 출처·계보·데이터 사전
 ├── scripts/
 │   ├── probe/         # 탐색 프로토타입 (기획 단계 산출물)
-│   │   ├── regions.mjs
-│   │   └── verify-denominator.mjs
+│   │   └── verify-denominator.mjs   # 모수 역검증 (pnpm data:verify-denominator)
 │   ├── inspect-mcp.ts        # MCP 도구·스키마 점검
 │   ├── discover-tables.ts    # 통계표 탐색·목록화
 │   ├── fetch-multicultural-stats.ts  # 분자 수집 (e-나라지표)
 │   ├── fetch-total-students.ts       # 분모 수집 (KOSIS)
-│   ├── normalize-stats.ts            # 정규화
-│   ├── validate-stats.ts             # 검증 게이트
-│   └── build-public-dataset.ts       # 공개 데이터 생성
+│   ├── normalize-stats.ts            # 정규화 (과거 연도 보존 포함)
+│   ├── validate-stats.ts             # 검증 게이트 (다문화)
+│   ├── validate-foreign.ts           # 검증 게이트 (외국인 유학생)
+│   ├── build-public-dataset.ts       # 공개 데이터 생성
+│   ├── fetch-foreign-students.ts · build-foreign-dataset.ts  # 외국인 유학생
+│   ├── check-upstream.ts             # 새 연도 공표 감시 (키 불필요)
+│   ├── capture-screenshots.ts        # README·공유 카드 이미지
+│   ├── geo/build-sido-geojson.mjs    # 시도 경계 생성 (pnpm geo:build)
+│   └── lib/                          # 수집 클라이언트 — 런타임(src/)과 분리
+│       ├── kosis.ts · enara.ts · mcp.ts
+│       ├── redact.ts                 # 로그·에러의 키 마스킹
+│       └── source-metadata.ts · cli.ts
 ├── src/
 │   ├── app/           # Next.js App Router
 │   ├── components/
 │   ├── lib/
 │   │   ├── schema/    # Zod 스키마 (단일 진실 원천)
-│   │   ├── data/      # 스냅숏 로더·셀렉터
-│   │   └── viz/       # 색상·척도 (지도·차트 공유)
+│   │   ├── data/      # 스냅숏 로더·셀렉터·연도 처리(years.ts)
+│   │   ├── validation/  # 검증 규칙 (다문화·외국인 유학생)
+│   │   ├── constants/ # 지역 매핑표·데이터셋별 통계표 ID
+│   │   └── visualization/  # 색상·척도·투영 (지도·차트 공유)
 │   └── content/       # UI 문자열 (i18n 대비)
 ├── public/geo/        # 시도 경계 GeoJSON
 └── docs/
@@ -247,7 +257,7 @@ export const redact = (s: unknown) =>
   String(s).split(process.env.KOSIS_API_KEY ?? '\0').join('***REDACTED***');
 ```
 
-`scripts/probe/verify-denominator.mjs`에 이미 적용되어 있다.
+`scripts/lib/kosis.ts`(수집 클라이언트)와 `scripts/probe/verify-denominator.mjs`에 적용되어 있다.
 
 ### 5.4 키 회전
 

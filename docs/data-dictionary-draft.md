@@ -146,7 +146,7 @@ totalStudentCount
 - `강원도` → `강원특별자치도` (2023)
 - `전라북도` → `전북특별자치도` (2024)
 
-구현: `scripts/probe/regions.mjs`
+구현: `src/lib/constants/regions.ts` (스키마 코드 목록과의 일치는 `tests/unit/regions.test.ts`가 검사)
 
 ---
 

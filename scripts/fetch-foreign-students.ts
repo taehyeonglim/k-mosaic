@@ -2,7 +2,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { assertContiguousYears } from '../src/lib/data/years.js';
-import { fetchKosisTable, redact, type KosisCell } from '../src/lib/mcp/index.js';
+import { fetchKosisTable, type KosisCell } from './lib/kosis.js';
+import { redact } from './lib/redact.js';
 import type { ForeignNationwideStat } from '../src/lib/schema/foreign-student.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');

@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { codeFromOfficial, REGION_BY_CODE, REGION_ORDER } from '../src/lib/constants/regions.js';
 import { assertContiguousYears, retainHistoricalYears } from '../src/lib/data/years.js';
-import { redact, type KosisCell } from '../src/lib/mcp/index.js';
+import type { KosisCell } from './lib/kosis.js';
+import { redact } from './lib/redact.js';
 import {
   foreignNationwideStatSchema,
   parseForeignSnapshot,

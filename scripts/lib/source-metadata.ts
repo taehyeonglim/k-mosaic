@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { redact } from '../../src/lib/mcp/index.js';
+import { redact } from './redact.js';
 import { SourceMetaSchema, type SourceMeta } from '../../src/lib/schema/index.js';
 
 // data/metadata/sources.v1.json 은 다문화학생·외국인 유학생 두 데이터셋의 출처를 함께 담는다.

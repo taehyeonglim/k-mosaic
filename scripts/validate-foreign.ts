@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { redact } from '../src/lib/mcp/index.js';
+import { redact } from './lib/redact.js';
 import { parseForeignSnapshot } from '../src/lib/schema/foreign-student.js';
 import type { ValidationReport } from '../src/lib/validation/index.js';
 import { validateForeignSnapshot } from '../src/lib/validation/foreign.js';

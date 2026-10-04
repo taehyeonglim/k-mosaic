@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, relative, resolve } from 'node:path';
-import { redact } from '../src/lib/mcp/index.js';
+import { redact } from './lib/redact.js';
 import { parseSnapshot, type Snapshot } from '../src/lib/schema/index.js';
 import {
   validateSnapshot,

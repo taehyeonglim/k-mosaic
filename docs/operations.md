@@ -118,7 +118,7 @@ PR 본문에 검증 결과(PASS/WARN 목록)와 `git diff --stat data/`를 붙�
 | V2·X7·F2 | 시도 합 ≠ 전국 | 업스트림 정정 대기 또는 원자료 확인 |
 | V8·F5 | 연도 축소 | 업스트림이 중간 연도를 뺐는지 확인 |
 | X12 (block) | 2022=2023 외의 동일 연도 구간 | 출처 확인 후 화면 문구·주석 검토 |
-| V4 | 계산 비율 ≠ 공표 비율 | 모수 정의 재검증: `node scripts/probe/verify-denominator.mjs` |
+| V4 | 계산 비율 ≠ 공표 비율 | 모수 정의 재검증: `pnpm data:verify-denominator` |
 
 ---
 

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { redact } from '../../src/lib/mcp/index.js';
+import { redact } from './redact.js';
 
 /**
  * `--previous <path>` 로 비교 기준 스냅숏을 받는다. PR 검사는 base 브랜치의 스냅숏을

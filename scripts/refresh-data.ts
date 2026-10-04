@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { redact } from '../src/lib/mcp/index.js';
+import { redact } from './lib/redact.js';
 import { runFetchMulticulturalStats } from './fetch-multicultural-stats.js';
 import { runFetchTotalStudents } from './fetch-total-students.js';
 import { runNormalizeStats } from './normalize-stats.js';

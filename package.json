@@ -27,6 +27,8 @@
     "data:build-foreign": "tsx scripts/build-foreign-dataset.ts",
     "data:refresh": "tsx scripts/refresh-data.ts",
     "data:check-upstream": "tsx scripts/check-upstream.ts",
+    "data:verify-denominator": "tsx scripts/probe/verify-denominator.mjs",
+    "geo:build": "tsx scripts/geo/build-sido-geojson.mjs",
     "check:imports": "tsx scripts/security/check-import-extensions.ts"
   },
   "dependencies": {
