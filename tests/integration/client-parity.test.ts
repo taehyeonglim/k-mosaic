@@ -7,6 +7,7 @@ import { createSelectors } from '@/lib/data/select';
 import {
   selectAvailableYears,
   selectByRegion,
+  selectNationwideTrend,
   selectNational,
   selectRanking,
   selectRegionDetail,
@@ -53,6 +54,31 @@ describe('화면(클라이언트) 셀렉터와 서버 셀렉터의 일치', () =
       });
     }
   }
+
+  it('전국 장기 시계열(2016~) 추세가 같다', () => {
+    const snapshot = loadSnapshot();
+    const nationwide = createSelectors(
+      decodeStatRecords(
+        JSON.parse(
+          JSON.stringify(
+            encodeStatRecords(snapshot.nationwide, {
+              years: snapshot.coverage.nationwideYears,
+              regionScopes: ['KR'],
+              levels: LEVELS,
+            }),
+          ),
+        ),
+      ),
+    );
+    for (const level of LEVELS) {
+      for (const metric of ['count', 'rate'] as const) {
+        expect(nationwide.selectTrend(['KR'], level, metric)).toEqual(
+          selectNationwideTrend(level, metric),
+        );
+      }
+    }
+    expect(nationwide.years[0]).toBe(2016);
+  });
 
   it('시계열이 같다', () => {
     for (const level of LEVELS) {

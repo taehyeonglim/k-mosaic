@@ -171,3 +171,102 @@ export async function fetchEnaraTable(sttsCd: string): Promise<EnaraTable> {
     throw new Error(redact(message));
   }
 }
+
+// ---------------------------------------------------------------------------
+// 전국 학교급별 표 (F008402 학생 수 · F008401 비율) — 2016년부터 제공.
+// 구조: 머리글 행(연도) · 빈 머리글 행 · 전체 · [학교급별] 초등학교 · 중학교 · 고등학교 · 각종학교
+// ---------------------------------------------------------------------------
+
+export interface EnaraLevelRow {
+  year: number;
+  schoolLevel: SchoolLevel;
+  value: number | null;
+}
+
+export interface EnaraLevelTable {
+  sttsCd: string;
+  years: number[];
+  rows: EnaraLevelRow[];
+}
+
+const LEVEL_ROW_LABELS: ReadonlyArray<readonly [string, SchoolLevel]> = [
+  ['전체', 'all'],
+  ['초등학교', 'elementary'],
+  ['중학교', 'middle'],
+  ['고등학교', 'high'],
+  ['각종학교', 'other'],
+];
+
+/** 구조가 바뀌면 조용히 틀린 값을 읽지 않도록 예외를 던진다. */
+export function parseEnaraLevelTable(html: string, sttsCd: string): EnaraLevelTable {
+  const table = html.match(
+    new RegExp(
+      `<table\\b[^>]*\\bid\\s*=\\s*['"]t_Table_${sttsCd}['"][^>]*>([\\s\\S]*?)</table>`,
+      'i',
+    ),
+  );
+  if (!table?.[1]) throw new Error(redact(`e-나라지표 ${sttsCd} 통계표를 찾지 못했습니다.`));
+  const rows = [...table[1].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((row) =>
+    [...(row[1] ?? '').matchAll(/<(th|td)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map((cell) => ({
+      tag: cell[1]!.toLowerCase(),
+      text: htmlCellText(cell[2] ?? ''),
+    })),
+  );
+  const years = (rows[0] ?? [])
+    .filter((cell) => /^\d{4}$/.test(cell.text))
+    .map((cell) => Number(cell.text));
+  if (
+    years.length === 0 ||
+    years.some((year, index) => index > 0 && year !== years[index - 1]! + 1)
+  )
+    throw new Error(redact(`e-나라지표 ${sttsCd} 연도 머리글이 연속되지 않습니다.`));
+
+  const dataRows = rows.filter((row) => row.some((cell) => cell.tag === 'td'));
+  if (dataRows.length !== LEVEL_ROW_LABELS.length)
+    throw new Error(redact(`e-나라지표 ${sttsCd} 행 수가 예상과 다릅니다: ${dataRows.length}`));
+
+  const out: EnaraLevelRow[] = [];
+  for (const [index, row] of dataRows.entries()) {
+    const [label, schoolLevel] = LEVEL_ROW_LABELS[index]!;
+    const header = row.filter((cell) => cell.tag === 'th').at(-1)?.text;
+    if (header !== label)
+      throw new Error(
+        redact(`e-나라지표 ${sttsCd} ${index + 1}번째 행 라벨이 '${label}'이 아닙니다.`),
+      );
+    const values = row.filter((cell) => cell.tag === 'td');
+    if (values.length !== years.length)
+      throw new Error(redact(`e-나라지표 ${sttsCd} ${label} 셀 수가 연도 수와 다릅니다.`));
+    values.forEach((cell, valueIndex) => {
+      if (!isDataToken(cell.text))
+        throw new Error(redact(`e-나라지표 ${sttsCd} ${label} 값을 해석할 수 없습니다.`));
+      out.push({ year: years[valueIndex]!, schoolLevel, value: numberOrNull(cell.text) });
+    });
+  }
+  return { sttsCd, years, rows: out };
+}
+
+export async function fetchEnaraLevelTable(
+  sttsCd: string,
+): Promise<EnaraLevelTable & { rawHtml: string }> {
+  const url = new URL(ENARA_ENDPOINT);
+  url.searchParams.set('stts_cd', sttsCd);
+  url.searchParams.set('idx_cd', 'F0084');
+  url.searchParams.set('freq', 'Y');
+  url.searchParams.set('period', 'N');
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        Referer: 'https://www.index.go.kr/unify/idx-info.do?idxCd=F0084',
+        'User-Agent': 'Mozilla/5.0 (compatible; K-MOSAIC data pipeline)',
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(redact(`e-나라지표 ${sttsCd} 요청에 실패했습니다. ${message}`));
+  }
+  if (!response.ok)
+    throw new Error(redact(`e-나라지표 ${sttsCd} HTTP 응답 오류 ${response.status}`));
+  const rawHtml = await response.text();
+  return { ...parseEnaraLevelTable(rawHtml, sttsCd), rawHtml };
+}

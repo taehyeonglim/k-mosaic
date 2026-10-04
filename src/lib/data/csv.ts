@@ -52,6 +52,14 @@ export function toCsv(rows: StatView[] | RankingRow[], meta: CsvMeta): string {
   return `\uFEFF${[...comments, headers.map(csvCell).join(','), ...data.map((row) => row.map(csvCell).join(','))].join('\r\n')}\r\n`;
 }
 
+function yearRange(years: readonly number[]): string {
+  return years.length === 0 ? '없음' : `${Math.min(...years)}~${Math.max(...years)}`;
+}
+
+/**
+ * 전체 데이터셋 CSV — 화면 다운로드와 data/snapshots/*.csv 가 같은 함수로 만든다.
+ * 시도별 레코드 뒤에, 시도별 자료가 없는 연도(2016~2019)의 전국 장기 레코드를 붙인다.
+ */
 export function snapshotToCsv(snapshot: Snapshot): string {
   const headers = [
     'year',
@@ -67,11 +75,15 @@ export function snapshotToCsv(snapshot: Snapshot): string {
     'notes',
   ];
   const comments = [
-    '# 출처: e-나라지표 F008403 + KOSIS DT_1963003_002·003·004·009',
-    `# 기준연도: ${snapshot.coverage.years.join(', ')}`,
+    '# 출처: e-나라지표 F008403(시도별)·F008402(전국 학교급별) + KOSIS DT_1963003_002·003·004·009 · 대조용 공표 비율 F008401',
+    `# 기준연도: 시도별 ${yearRange(snapshot.coverage.years)} · 전국 학교급별 ${yearRange(snapshot.coverage.nationwideYears)}`,
     `# 계산식: ${snapshot.rateFormula}`,
   ];
-  const rows = snapshot.records.map((record) =>
+  const regionalYears = new Set(snapshot.coverage.years);
+  const rows = [
+    ...snapshot.records,
+    ...snapshot.nationwide.filter((record) => !regionalYears.has(record.year)),
+  ].map((record) =>
     [
       record.year,
       record.regionCode,

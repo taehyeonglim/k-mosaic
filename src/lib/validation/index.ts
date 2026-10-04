@@ -157,14 +157,13 @@ function committedSnapshot(): unknown {
   }
 }
 
-function previousCoverageYears(previous: unknown): number[] | null {
-  if (
-    !isRecord(previous) ||
-    !isRecord(previous.coverage) ||
-    !Array.isArray(previous.coverage.years)
-  )
-    return null;
-  return previous.coverage.years.map(Number).filter(Number.isInteger);
+function previousCoverageYears(
+  previous: unknown,
+  key: 'years' | 'nationwideYears' = 'years',
+): number[] | null {
+  if (!isRecord(previous) || !isRecord(previous.coverage)) return null;
+  const list = previous.coverage[key];
+  return Array.isArray(list) ? list.map(Number).filter(Number.isInteger) : null;
 }
 
 function previousSnapshotWithoutRetrievedAt(previous: unknown): string | null {
@@ -382,8 +381,13 @@ export function validateSnapshot(s: Snapshot, context: ValidationContext = {}): 
   );
 
   const previousYears = previousCoverageYears(previous);
-  const coverageNotReduced =
-    previousYears === null || previousYears.every((year) => years.includes(year));
+  const lostYears = [
+    ...(previousYears ?? []).filter((year) => !years.includes(year)),
+    ...(previousCoverageYears(previous, 'nationwideYears') ?? [])
+      .filter((year) => !s.coverage.nationwideYears.includes(year))
+      .map((year) => `전국 장기 ${year}`),
+  ];
+  const coverageNotReduced = lostYears.length === 0;
   results.push(
     result(
       'V8',
@@ -395,20 +399,24 @@ export function validateSnapshot(s: Snapshot, context: ValidationContext = {}): 
       previousYears === null
         ? '이전 스냅숏이 없어 커버리지 비교를 건너뛰었습니다.'
         : coverageNotReduced
-          ? '이전 스냅숏의 모든 연도가 유지됩니다.'
-          : `이전 스냅숏 대비 누락된 연도: ${previousYears.filter((year) => !years.includes(year)).join(', ')}`,
+          ? '이전 스냅숏의 모든 연도(시도별·전국 장기)가 유지됩니다.'
+          : `이전 스냅숏 대비 누락된 연도: ${lostYears.join(', ')}`,
     ),
   );
 
   // e-나라지표(분자)가 KOSIS(분모)보다 먼저 새 연도를 반영하면, 그 연도는 비율이 전부
   // 결측인 채로 다른 규칙을 모두 통과한다. 수록 연도마다 전국 분모가 있어야 공개한다.
-  const yearsWithoutDenominator = years.filter((year) => {
-    const national = s.records.find(
+  const nationalAll = (rows: readonly MulticulturalStudentStat[], year: number) =>
+    rows.find(
       (record) =>
         record.year === year && record.regionCode === 'KR' && record.schoolLevel === 'all',
     );
-    return national?.totalStudentCount === null || national?.totalStudentCount === undefined;
-  });
+  const yearsWithoutDenominator = [
+    ...years.filter((year) => nationalAll(s.records, year)?.totalStudentCount == null),
+    ...s.coverage.nationwideYears
+      .filter((year) => nationalAll(s.nationwide, year)?.totalStudentCount == null)
+      .map((year) => `전국 장기 ${year}`),
+  ];
   results.push(
     result(
       'V9',
@@ -418,6 +426,77 @@ export function validateSnapshot(s: Snapshot, context: ValidationContext = {}): 
       yearsWithoutDenominator.length === 0
         ? '모든 수록 연도에 전국 분모(전체 학생 수)가 있습니다.'
         : `분모가 없는 연도: ${yearsWithoutDenominator.join(', ')} — KOSIS 반영 후 다시 갱신하세요.`,
+    ),
+  );
+
+  // 전국 학교급별 장기 시계열(F008402) — 계산 비율을 공표 비율(F008401)과 대조한다.
+  // 시도별 V4 와 같은 기준이며, 2020년 이전 구간에서 모수 정의(초+중+고+각종)를 다시 검증한다.
+  const nationwideRounded = integerRoundedYears(
+    s.nationwide.map((record) => ({
+      year: record.year,
+      published: record.multiculturalStudentRatePublished,
+    })),
+  );
+  const nationwideCompared = s.nationwide.filter(
+    (record) =>
+      !nationwideRounded.includes(record.year) &&
+      record.multiculturalStudentRateComputed !== null &&
+      record.multiculturalStudentRatePublished !== null,
+  );
+  const gap = (record: MulticulturalStudentStat) =>
+    Math.abs(
+      (record.multiculturalStudentRateComputed ?? 0) -
+        (record.multiculturalStudentRatePublished ?? 0),
+    );
+  const nationwideMismatches = nationwideCompared.filter((record) => gap(record) > 0.1);
+  const within005 = nationwideCompared.filter((record) => gap(record) <= 0.05).length;
+  results.push(
+    result(
+      'V10',
+      '전국 장기 시계열 계산 비율과 공표 비율',
+      'block',
+      s.nationwide.length === 0 ||
+        (nationwideCompared.length > 0 && nationwideMismatches.length === 0),
+      s.nationwide.length === 0
+        ? '전국 장기 시계열이 없습니다.'
+        : nationwideMismatches.length === 0
+          ? `비교 ${nationwideCompared.length}건이 모두 ±0.1%p 이내입니다 (±0.05%p 이내 ${((within005 / Math.max(1, nationwideCompared.length)) * 100).toFixed(1)}%).`
+          : nationwideMismatches
+              .map(
+                (record) =>
+                  `${record.year}/${record.schoolLevel}: ${record.multiculturalStudentRateComputed} vs ${record.multiculturalStudentRatePublished}`,
+              )
+              .join(', '),
+    ),
+  );
+
+  // 시도별 스냅숏의 전국 레코드와 겹치는 연도는 값이 같아야 한다 — 두 출처(F008403·F008402)가
+  // 어긋나면 같은 화면의 개요와 추세가 서로 다른 숫자를 보여 준다.
+  const overlapMismatches = s.nationwide.flatMap((record) => {
+    if (record.regionCode !== 'KR')
+      return [`${record.year}/${record.schoolLevel}: 전국 레코드가 아님`];
+    const regional = s.records.find(
+      (candidate) =>
+        candidate.year === record.year &&
+        candidate.regionCode === 'KR' &&
+        candidate.schoolLevel === record.schoolLevel,
+    );
+    if (regional === undefined) return [];
+    return regional.multiculturalStudentCount === record.multiculturalStudentCount &&
+      regional.totalStudentCount === record.totalStudentCount &&
+      regional.multiculturalStudentRateComputed === record.multiculturalStudentRateComputed
+      ? []
+      : [`${record.year}/${record.schoolLevel}`];
+  });
+  results.push(
+    result(
+      'V11',
+      '전국 장기 시계열과 시도별 전국 값 일치',
+      'block',
+      overlapMismatches.length === 0,
+      overlapMismatches.length === 0
+        ? '겹치는 연도의 전국 값이 모두 같습니다.'
+        : `불일치: ${overlapMismatches.join(', ')}`,
     ),
   );
 

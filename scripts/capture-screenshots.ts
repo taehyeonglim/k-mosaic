@@ -79,13 +79,16 @@ interface OgFacts {
   year: number;
   count: string;
   rate: string;
+  /** 시도별·전국 장기 수록 시작 연도 — 카드 문구에 리터럴로 쓰지 않는다. */
+  regionalStart: number;
+  nationwideStart: number;
 }
 
 function latestNationalFacts(): OgFacts {
   const snapshot = JSON.parse(
     readFileSync(resolve(ROOT, 'data/snapshots/multicultural-students.v1.json'), 'utf8'),
   ) as {
-    coverage: { years: number[] };
+    coverage: { years: number[]; nationwideYears: number[] };
     records: {
       year: number;
       regionCode: string;
@@ -107,6 +110,8 @@ function latestNationalFacts(): OgFacts {
     year,
     count: new Intl.NumberFormat('ko-KR').format(national.multiculturalStudentCount),
     rate: national.multiculturalStudentRateComputed.toFixed(1),
+    regionalStart: Math.min(...snapshot.coverage.years),
+    nationwideStart: Math.min(...snapshot.coverage.nationwideYears),
   };
 }
 
@@ -136,7 +141,7 @@ function ogHtml(facts: OgFacts, mapPng: string): string {
     </div>
     <div class="map"><img src="data:image/png;base64,${mapPng}" alt=""></div>
   </div>
-  <div class="source">출처: 교육부·한국교육개발원 「교육기본통계」 · 17개 시·도 · 2020년부터</div>
+  <div class="source">출처: 교육부·한국교육개발원 「교육기본통계」 · 17개 시·도 ${facts.regionalStart}년~ · 전국 ${facts.nationwideStart}년~</div>
   </body></html>`;
 }
 

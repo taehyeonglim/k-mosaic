@@ -9,11 +9,15 @@ import { gotoDashboard } from './helpers';
 
 const FOREIGN_TABLE_IDS = ['153401', 'DT_1963003_010_S'];
 
-function snapshotYears(): number[] {
+function snapshotCoverage(): { years: number[]; nationwideYears: number[] } {
   const snapshot = JSON.parse(
     readFileSync(resolve(process.cwd(), 'data/snapshots/multicultural-students.v1.json'), 'utf8'),
-  ) as { coverage: { years: number[] } };
-  return snapshot.coverage.years;
+  ) as { coverage: { years: number[]; nationwideYears: number[] } };
+  return snapshot.coverage;
+}
+
+function snapshotYears(): number[] {
+  return snapshotCoverage().years;
 }
 
 function foreignCoverage(): { years: number[]; nationwideYears: number[] } {
@@ -52,10 +56,24 @@ test.describe('회귀 방지', () => {
 
   test('수록 기간 안내는 스냅숏 연도와 일치한다', async ({ page }) => {
     await gotoDashboard(page);
-    const years = snapshotYears();
+    const { years, nationwideYears } = snapshotCoverage();
 
     await expect(
-      page.getByText(`${Math.min(...years)}~${Math.max(...years)}년을 제공합니다.`),
+      page.getByText(
+        `시도별 자료는 ${range(years)}년, 전국 학교급별 자료는 ${range(nationwideYears)}년을 제공합니다.`,
+      ),
+    ).toBeVisible();
+  });
+
+  test('전국 추세는 시도별보다 긴 전국 장기 시계열(첫 연도부터)로 그린다', async ({ page }) => {
+    await gotoDashboard(page);
+    const { nationwideYears } = snapshotCoverage();
+    const nationalChart = page
+      .locator('section[aria-labelledby="national-trend-title"]')
+      .locator('svg');
+
+    await expect(
+      nationalChart.getByText(String(Math.min(...nationwideYears)), { exact: true }),
     ).toBeVisible();
   });
 

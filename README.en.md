@@ -30,7 +30,7 @@ Every number on screen can be traced back to its **source, statistical table ID,
 |---|---|
 | Multicultural students, nationwide | **202,208** |
 | Share of all students | **4.0%** (computed) |
-| Coverage | 2020–2025 · nationwide + 17 provinces · elementary, middle, high and miscellaneous schools |
+| Coverage | provinces 2020–2025 · nationwide by school level **2016–2025** · elementary, middle, high and miscellaneous schools |
 | Separate page | [International students in higher education](https://taehyeonglim.github.io/k-mosaic/foreign-students/) — a different population; do not compare directly |
 
 "Multicultural students" is an official category of the Ministry of Education and KEDI's *Statistical Yearbook of Education* (교육기본통계). It covers children of international marriages (born in Korea or migrated mid-childhood) and children of foreign families.
@@ -39,16 +39,16 @@ Every number on screen can be traced back to its **source, statistical table ID,
 
 ```mermaid
 flowchart LR
-  A["e-Nara index F008403<br/>multicultural students (numerator)"] --> C
+  A["e-Nara index F008403·F008402<br/>multicultural students (numerator)"] --> C
   B["KOSIS education statistics<br/>elementary+middle+high+misc. students (denominator)"] --> C
-  C["Computed<br/>numerator ÷ denominator × 100"] --> D{"Validation gate<br/>V1–V9 · X1–X11"}
+  C["Computed<br/>numerator ÷ denominator × 100"] --> D{"Validation gate<br/>V1–V11 · X1–X11"}
   D -- pass --> E[("Committed snapshot<br/>data/snapshots")]
   D -- fail --> F["Refresh aborted<br/>last validated data kept"]
   E --> G["Static site<br/>no runtime API calls"]
 ```
 
 - **The KOSIS Open API has no multicultural-student statistics.** After confirming this through six independent routes, the numerator comes from the e-Nara index and the share is computed ([data audit](docs/data-audit.md), in Korean).
-- **The denominator was reverse-engineered.** Only elementary + middle + high + miscellaneous schools reproduces 100% of the published shares within ±0.05 pp; adding special schools drops it to 81.3%. The 2022 national count (168,645) matches KEDI's published figure exactly.
+- **The denominator was reverse-engineered.** Only elementary + middle + high + miscellaneous schools reproduces 100% of the published shares within ±0.05 pp (provinces 2020–2025 and nationwide 2016–2025); adding special schools drops it to 81.3%. The 2022 national count (168,645) matches KEDI's published figure exactly.
 - **Published shares are not displayed as-is.** The 2025 published shares are rounded to integers (7.0, 6.0, …), so the site shows computed values and keeps the published ones for cross-checking.
 - **Missing is not zero.** Missing values stay `null` and are drawn with a hatch pattern on the map.
 - **Nothing is published unless it validates.** CI re-runs the validation rules on every PR and blocks any loss of year coverage against the base branch. New-year releases are watched automatically and open an issue ([operations guide](docs/operations.md)).
@@ -57,7 +57,7 @@ flowchart LR
 
 - **Choropleth map** — count/share toggle, keyboard navigation, scale fixed across years, hatched missing regions, table alternative
 - **Four rankings** — count, share, absolute change, growth rate; ties share a rank, with a note that rankings do not measure educational quality
-- **Time series & comparison** — national trend plus up to three regions, gaps not interpolated
+- **Time series & comparison** — ten-year national trend (2016–) plus up to three regions (2020–), gaps not interpolated
 - **Shareable views** — year, school level, metric and region filters live in the URL
 - **Sources & methodology** — table IDs, publishers, formula and reference date reachable from every view
 - **Downloads** — filtered CSV with provenance comments, full CSV/JSON, data dictionary
@@ -101,7 +101,7 @@ The two sources count differently, so values differ for the same year. The sourc
 | By student type (born in Korea / migrated / foreign family) | ❌ not published by the source ([DL-001](docs/decision-log.md)) |
 | District (시·군·구) level | ❌ provinces are the finest level |
 | Kindergartens, special schools | ❌ outside this statistic's denominator ([DL-004](docs/decision-log.md)) |
-| Before 2020 | ❌ provincial data starts in 2020 |
+| Provinces before 2020 | ❌ provincial data starts in 2020 (nationwide by school level from 2016) |
 | Provisional vs. final figures | ⚠️ not distinguished by the source — shown as "unconfirmed" |
 
 ## Quick start
@@ -141,7 +141,7 @@ Use the repository's **Cite this repository** button ([CITATION.cff](CITATION.cf
 
 | Role | Source | Table |
 |---|---|---|
-| Multicultural students | [e-Nara index F0084](https://www.index.go.kr/unify/idx-info.do?idxCd=F0084) | `F008403` |
+| Multicultural students | [e-Nara index F0084](https://www.index.go.kr/unify/idx-info.do?idxCd=F0084) | `F008403` (provinces) · `F008402` (nationwide by level) · `F008401` (published shares, cross-check) |
 | All students | [KOSIS](https://kosis.kr) education statistics | `DT_1963003_002·003·004·009` |
 | International students | KOSIS higher-education overview · [e-Nara index 1534](https://www.index.go.kr/unify/idx-info.do?idxCd=1534) | `DT_1963003_010_S` · `153401` |
 | Original statistics | Ministry of Education & KEDI, *Statistical Yearbook of Education* | |

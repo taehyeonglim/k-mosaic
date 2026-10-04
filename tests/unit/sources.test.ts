@@ -19,11 +19,13 @@ describe('데이터셋별 출처 메타데이터', () => {
     expect([...tableIds].sort()).toEqual([...FOREIGN_TABLE_IDS].sort());
   });
 
-  it('다문화학생 분자는 e-나라지표 F008403 하나뿐이다', () => {
-    const numerators = selectSourceMeta('multicultural').filter(
-      (source) => source.role === 'numerator',
-    );
+  it('다문화학생 분자는 e-나라지표 시도별(F008403)·전국 장기(F008402)이고, F008401 은 대조용이다', () => {
+    const sources = selectSourceMeta('multicultural');
+    const byRole = (role: string) =>
+      sources.filter((source) => source.role === role).map((source) => source.tableId);
 
-    expect(numerators.map((source) => source.tableId)).toEqual(['F008403']);
+    expect(byRole('numerator')).toEqual(['F008403', 'F008402']);
+    expect(byRole('reference')).toEqual(['F008401']);
+    expect(byRole('denominator')).toHaveLength(4);
   });
 });

@@ -11,39 +11,13 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ko } from '@/content/ko';
 import { formatRatePrecisionNote } from '@/content/template';
-import {
-  selectAvailableYears,
-  selectIntegerRoundedYears,
-  selectSourceMeta,
-} from '@/lib/data/selectors';
+import { selectAvailableYears, selectIntegerRoundedYears } from '@/lib/data/selectors';
+import { formattedDate, multiculturalSourcePanelSources } from '@/lib/data/source-panel';
 import { loadSnapshot } from '@/lib/data/snapshot';
 import { REGION_BY_CODE, REGION_ORDER } from '@/lib/constants/regions';
 import type { SchoolLevel } from '@/lib/schema';
 import { encodeStatRecords } from '@/lib/data/compact';
 import { DashboardClient, type DashboardPayload } from './dashboard-client';
-
-function formattedDate(value: string): string {
-  return new Intl.DateTimeFormat('ko-KR', {
-    dateStyle: 'medium',
-    timeZone: 'Asia/Seoul',
-  }).format(new Date(value));
-}
-
-function sourcePanelSources() {
-  return selectSourceMeta('multicultural').map((source) => ({
-    role:
-      source.role === 'numerator' ? ko.sources.numeratorProvider : ko.sources.denominatorProvider,
-    provider: source.provider,
-    organization: source.organization,
-    statisticsName: source.statisticsName,
-    tableId: source.tableId,
-    tableName: source.tableName,
-    sourceUrl: source.sourceUrl,
-    retrievedAt: formattedDate(source.retrievedAt),
-    referenceDate: source.referenceDate,
-    isProvisional: source.isProvisional,
-  }));
-}
 
 function buildPayload(snapshot: ReturnType<typeof loadSnapshot>): DashboardPayload {
   const years = selectAvailableYears();
@@ -55,8 +29,15 @@ function buildPayload(snapshot: ReturnType<typeof loadSnapshot>): DashboardPaylo
     levels,
   });
 
+  const nationwide = encodeStatRecords(snapshot.nationwide, {
+    years: snapshot.coverage.nationwideYears,
+    regionScopes: ['KR'],
+    levels,
+  });
+
   return {
     geo: geoJson as FeatureCollection,
+    nationwide,
     years,
     levels,
     regionCodes: [...REGION_ORDER],
@@ -65,7 +46,7 @@ function buildPayload(snapshot: ReturnType<typeof loadSnapshot>): DashboardPaylo
     ),
     records,
     noteSets,
-    sources: sourcePanelSources(),
+    sources: multiculturalSourcePanelSources(),
     retrievedAtLabel: formattedDate(snapshot.retrievedAt),
     rateFormula: ko.sources.formulaValue,
     ratePrecisionNote: formatRatePrecisionNote(
