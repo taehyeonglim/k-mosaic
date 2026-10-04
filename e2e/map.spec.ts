@@ -41,6 +41,52 @@ test.describe('지도', () => {
     await expect(svg.locator('[data-map-selection]')).toHaveCount(0);
   });
 
+  test('여러 지역을 고르면 고른 지역 모두에 선택 링을 그린다', async ({ page }) => {
+    await gotoDashboard(page);
+    const svg = mapSvg(page);
+    const region = (name: string) => page.locator(`path[role="button"][aria-label^="${name},"]`);
+    const rings = svg.locator('[data-map-selection="ring"]');
+    const halos = svg.locator('[data-map-selection="halo"]');
+
+    // 작은 지역은 경계 상자 한가운데가 바다일 수 있어 키보드로 고른다.
+    await region('서울특별시').press('Enter');
+    await expect(rings).toHaveCount(1);
+    await region('부산광역시').press('Enter');
+    await expect(rings).toHaveCount(2);
+    await expect(halos).toHaveCount(2);
+    // 먼저 고른 지역도 눌린 상태로 남는다 (마지막에 고른 지역만이 아니다).
+    await expect(region('서울특별시')).toHaveAttribute('aria-pressed', 'true');
+    await expect(region('부산광역시')).toHaveAttribute('aria-pressed', 'true');
+
+    await region('제주특별자치도').press('Enter');
+    await expect(rings).toHaveCount(3);
+
+    // 먼저 고른 지역을 다시 누르면 그 지역만 해제된다.
+    await region('서울특별시').press('Enter');
+    await expect(rings).toHaveCount(2);
+    await expect(region('서울특별시')).toHaveAttribute('aria-pressed', 'false');
+    await expect(region('부산광역시')).toHaveAttribute('aria-pressed', 'true');
+
+    // Escape 는 지금 있는 지역을 해제한다.
+    await region('제주특별자치도').press('Escape');
+    await expect(rings).toHaveCount(1);
+    await expect(region('부산광역시')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  for (const target of [
+    { name: '대시보드', path: '/?regions=11,26,41' },
+    { name: '외국인 유학생 페이지', path: '/foreign-students/?regions=11,26,41' },
+  ]) {
+    test(`${target.name} — 주소의 비교 지역 셋 모두에 선택 링이 있다`, async ({ page }) => {
+      await page.goto(target.path, { waitUntil: 'networkidle' });
+      const svg = mapSvg(page);
+
+      await expect(svg.locator('path[role="button"]')).toHaveCount(17);
+      await expect(svg.locator('[data-map-selection="ring"]')).toHaveCount(3);
+      await expect(svg.locator('path[role="button"][aria-pressed="true"]')).toHaveCount(3);
+    });
+  }
+
   test('범례는 7단계와 결측 표시를 갖고, 눈금 글자가 겹치지 않는다', async ({ page }) => {
     await gotoDashboard(page);
     const legend = page.getByRole('list', { name: '학생 수', exact: true });
