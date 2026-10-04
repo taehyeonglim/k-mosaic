@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+// Pretendard 가변 폰트(동적 서브셋, OFL-1.1) — unicode-range 로 쓰인 글자 범위만 내려받는다.
+// globals.css 에서 @import 하지 않는다: Tailwind 가 url() 경로 처리를 가져가 basePath 가 빠진다.
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import '@/styles/globals.css';
 import { ko } from '@/content/ko';
 import { pageMetadata, SITE_URL } from '@/lib/site';

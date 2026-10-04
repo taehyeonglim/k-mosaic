@@ -1,52 +1,109 @@
 @import 'tailwindcss';
 
+/* 글꼴 교체(swap) 때 글줄이 움직이지 않게, 기기 글꼴의 세로 치수를 Pretendard 에 맞춘다.
+   실측(100px): Pretendard 위 95 / 아래 24, Apple SD Gothic Neo 위 90 / 아래 30.
+   한글 폭은 거의 같아(0.995배) 크기 보정은 하지 않는다. Windows(맑은 고딕) 폭은 실측하지 못했다. */
+@font-face {
+  font-family: 'Pretendard Fallback';
+  font-weight: 100 500;
+  src: local('Apple SD Gothic Neo'), local('AppleSDGothicNeo-Regular'), local('Malgun Gothic');
+  ascent-override: 95%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Pretendard Fallback';
+  font-weight: 600 900;
+  src:
+    local('Apple SD Gothic Neo Bold'), local('AppleSDGothicNeo-Bold'), local('Malgun Gothic Bold');
+  ascent-override: 95%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
 :root {
   color-scheme: light;
-  --km-color-canvas: #f6f9fa;
+  /* 면 — 캔버스·표면·표면-약 사이에 실제 명암 단계를 둔다 */
+  --km-color-canvas: #f1f5f6;
   --km-color-surface: #ffffff;
-  --km-color-surface-muted: #edf3f4;
-  --km-color-text: #17323b;
-  --km-color-text-muted: #58717a;
-  --km-color-border: #cbd9dd;
-  --km-color-accent: #176d78;
-  --km-color-accent-strong: #105665;
+  --km-color-surface-muted: #edf2f3;
+  --km-color-text: #0e2029;
+  --km-color-text-muted: #5a6f79;
+  --km-color-border: #d6e0e3;
+  /* 입력 컨트롤 경계 — 표면 위 3:1 이상 (WCAG 1.4.11) */
+  --km-color-border-strong: #71868f;
+  --km-color-accent: #0c6f78;
+  --km-color-accent-strong: #095861;
   --km-color-accent-contrast: #ffffff;
+  /* 강조 보라 — 선택·강조 전용. 데이터 값 표현에는 쓰지 않는다 */
+  --km-color-accent2: #6a4be0;
+  --km-color-accent2-soft: #f0edff;
   --km-color-focus: #174ea6;
   --km-color-destructive: #b3261e;
-  --km-color-missing: #d9e2e5;
+  --km-color-missing: #e1e8ea;
   --km-color-missing-stroke: #5f747c;
   --km-color-quality-note: #7c641d;
-  --km-map-count-1: #e9f5f4;
-  --km-map-count-2: #c8e6e3;
-  --km-map-count-3: #a2d2d1;
-  --km-map-count-4: #78babb;
-  --km-map-count-5: #559da3;
-  --km-map-count-6: #367e8e;
-  --km-map-count-7: #1f6075;
-  --km-map-rate-1: #edf5fb;
-  --km-map-rate-2: #d0e5f2;
-  --km-map-rate-3: #abd0e5;
-  --km-map-rate-4: #82b8d2;
-  --km-map-rate-5: #5b9ebc;
-  --km-map-rate-6: #3e829f;
-  --km-map-rate-7: #285f80;
-  --km-font-sans: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  /* 잉크 띠(히어로·헤더·푸터) — 두 테마 공통 */
+  --km-color-ink: #0b212b;
+  --km-color-ink-raised: #1a303a;
+  --km-ink-glow-violet: #6a4be0;
+  --km-ink-glow-teal: #21968c;
+  /* 지도 순차 램프 — 한 색상 계열, 밝기 단조. on-ramp 은 타일 안 글자색(4.5:1 이상).
+     검증: dataviz validate_palette.js --ordinal (docs/design-system.md §2) */
+  --km-ramp-1: #80c1c1;
+  --km-ramp-2: #60afb2;
+  --km-ramp-3: #419ca4;
+  --km-ramp-4: #0b7b89;
+  --km-ramp-5: #006678;
+  --km-ramp-6: #005166;
+  --km-ramp-7: #003d52;
+  --km-on-ramp-1: #0e2029;
+  --km-on-ramp-2: #0e2029;
+  --km-on-ramp-3: #0e2029;
+  --km-on-ramp-4: #ffffff;
+  --km-on-ramp-5: #ffffff;
+  --km-on-ramp-6: #ffffff;
+  --km-on-ramp-7: #ffffff;
+  /* 비교 시계열 범주색(최대 3개 지역) — 색각 이상 전 쌍 검증 통과 */
+  --km-series-1: #2a78d6;
+  --km-series-2: #149a6c;
+  --km-series-3: #4a3aa7;
+  /* 이전 이름 — 학생 수·비율이 같은 램프를 쓴다. 호출부 정리 후 제거한다 */
+  --km-map-count-1: var(--km-ramp-1);
+  --km-map-count-2: var(--km-ramp-2);
+  --km-map-count-3: var(--km-ramp-3);
+  --km-map-count-4: var(--km-ramp-4);
+  --km-map-count-5: var(--km-ramp-5);
+  --km-map-count-6: var(--km-ramp-6);
+  --km-map-count-7: var(--km-ramp-7);
+  --km-map-rate-1: var(--km-ramp-1);
+  --km-map-rate-2: var(--km-ramp-2);
+  --km-map-rate-3: var(--km-ramp-3);
+  --km-map-rate-4: var(--km-ramp-4);
+  --km-map-rate-5: var(--km-ramp-5);
+  --km-map-rate-6: var(--km-ramp-6);
+  --km-map-rate-7: var(--km-ramp-7);
+  --km-font-sans:
+    'Pretendard Variable', 'Pretendard Fallback', 'Noto Sans KR', 'Apple SD Gothic Neo',
+    'Malgun Gothic', sans-serif;
   --km-font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
   --km-font-variant-numeric: tabular-nums;
+  --km-text-hero: clamp(3.25rem, 2rem + 5.2vw, 5.75rem);
   --km-text-metric-lg: 2rem;
   --km-text-metric-lg-line-height: 1.1;
   --km-text-metric-md: 1.375rem;
   --km-text-metric-md-line-height: 1.2;
-  --km-text-title: 1.125rem;
+  --km-text-title: 1.0625rem;
   --km-text-title-line-height: 1.4;
   --km-text-small: 0.8125rem;
   --km-text-small-line-height: 1.45;
-  --km-radius-sm: 0.25rem;
-  --km-radius-md: 0.5rem;
-  --km-radius-lg: 0.75rem;
+  --km-radius-sm: 0.375rem;
+  --km-radius-md: 0.625rem;
+  --km-radius-lg: 1rem;
   --km-space-unit: 0.25rem;
-  --km-shadow-card: 0 1px 2px rgb(23 50 59 / 0.06), 0 8px 24px rgb(23 50 59 / 0.05);
-  --km-shadow-floating: 0 10px 28px rgb(23 50 59 / 0.16);
+  --km-shadow-card: 0 1px 2px rgb(14 32 41 / 0.05), 0 10px 30px rgb(14 32 41 / 0.07);
+  --km-shadow-floating: 0 12px 32px rgb(14 32 41 / 0.18);
 }
 
 @theme inline {
@@ -56,13 +113,35 @@
   --color-text: var(--km-color-text);
   --color-text-muted: var(--km-color-text-muted);
   --color-border: var(--km-color-border);
+  --color-border-strong: var(--km-color-border-strong);
   --color-accent: var(--km-color-accent);
   --color-accent-strong: var(--km-color-accent-strong);
+  --color-accent2: var(--km-color-accent2);
+  --color-accent2-soft: var(--km-color-accent2-soft);
   --color-focus: var(--km-color-focus);
   --color-destructive: var(--km-color-destructive);
   --color-missing: var(--km-color-missing);
   --color-missing-stroke: var(--km-color-missing-stroke);
   --color-quality-note: var(--km-color-quality-note);
+  --color-ink: var(--km-color-ink);
+  --color-ink-raised: var(--km-color-ink-raised);
+  --color-ramp-1: var(--km-ramp-1);
+  --color-on-ramp-1: var(--km-on-ramp-1);
+  --color-ramp-2: var(--km-ramp-2);
+  --color-on-ramp-2: var(--km-on-ramp-2);
+  --color-ramp-3: var(--km-ramp-3);
+  --color-on-ramp-3: var(--km-on-ramp-3);
+  --color-ramp-4: var(--km-ramp-4);
+  --color-on-ramp-4: var(--km-on-ramp-4);
+  --color-ramp-5: var(--km-ramp-5);
+  --color-on-ramp-5: var(--km-on-ramp-5);
+  --color-ramp-6: var(--km-ramp-6);
+  --color-on-ramp-6: var(--km-on-ramp-6);
+  --color-ramp-7: var(--km-ramp-7);
+  --color-on-ramp-7: var(--km-on-ramp-7);
+  --color-series-1: var(--km-series-1);
+  --color-series-2: var(--km-series-2);
+  --color-series-3: var(--km-series-3);
   --color-map-count-1: var(--km-map-count-1);
   --color-map-count-2: var(--km-map-count-2);
   --color-map-count-3: var(--km-map-count-3);
@@ -77,6 +156,8 @@
   --color-map-rate-5: var(--km-map-rate-5);
   --color-map-rate-6: var(--km-map-rate-6);
   --color-map-rate-7: var(--km-map-rate-7);
+  --text-hero: var(--km-text-hero);
+  --text-hero--line-height: 1;
   --text-metric-lg: var(--km-text-metric-lg);
   --text-metric-lg--line-height: var(--km-text-metric-lg-line-height);
   --text-metric-md: var(--km-text-metric-md);
@@ -91,108 +172,99 @@
   --shadow-floating: var(--km-shadow-floating);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --km-color-canvas: #142229;
-    --km-color-surface: #1d3038;
-    --km-color-surface-muted: #263c44;
-    --km-color-text: #e4f0f1;
-    --km-color-text-muted: #b0c8cc;
-    --km-color-border: #49636b;
-    --km-color-accent: #73c8c0;
-    --km-color-accent-strong: #a5e1d5;
-    --km-color-accent-contrast: #142229;
-    --km-color-focus: #9cc8ff;
-    --km-color-destructive: #ffb4ab;
-    --km-color-missing: #3b4d53;
-    --km-color-missing-stroke: #b5c8cb;
-    --km-color-quality-note: #e2c877;
-    --km-map-count-1: #173640;
-    --km-map-count-2: #1b4b58;
-    --km-map-count-3: #22636d;
-    --km-map-count-4: #2d7f82;
-    --km-map-count-5: #459d9a;
-    --km-map-count-6: #70beb1;
-    --km-map-count-7: #a7dfcc;
-    --km-map-rate-1: #16354a;
-    --km-map-rate-2: #1c4f67;
-    --km-map-rate-3: #236c84;
-    --km-map-rate-4: #2e89a0;
-    --km-map-rate-5: #50a8b3;
-    --km-map-rate-6: #7acbc0;
-    --km-map-rate-7: #b4ebd6;
-    --km-shadow-card: 0 1px 2px rgb(0 0 0 / 0.24), 0 8px 24px rgb(0 0 0 / 0.18);
-    --km-shadow-floating: 0 10px 28px rgb(0 0 0 / 0.34);
-  }
-}
-
-:root[data-theme='dark'] {
+/* 다크 토큰. 잉크 띠(.ink-band)는 테마와 무관하게 이 값을 쓴다 —
+   라이트 포커스색은 잉크 위에서 2.1:1 이라 그대로 쓰면 안 된다. */
+:root[data-theme='dark'],
+.ink-band {
   color-scheme: dark;
-  --km-color-canvas: #142229;
-  --km-color-surface: #1d3038;
-  --km-color-surface-muted: #263c44;
-  --km-color-text: #e4f0f1;
-  --km-color-text-muted: #b0c8cc;
-  --km-color-border: #49636b;
+  --km-color-canvas: #0a1a21;
+  --km-color-surface: #12272f;
+  --km-color-surface-muted: #183039;
+  --km-color-text: #e6f1f2;
+  --km-color-text-muted: #a9c3c8;
+  --km-color-border: #2a444d;
+  --km-color-border-strong: #7f9aa3;
   --km-color-accent: #73c8c0;
   --km-color-accent-strong: #a5e1d5;
-  --km-color-accent-contrast: #142229;
+  --km-color-accent-contrast: #0a1a21;
+  --km-color-accent2: #a996ff;
+  --km-color-accent2-soft: #2a2756;
   --km-color-focus: #9cc8ff;
   --km-color-destructive: #ffb4ab;
-  --km-color-missing: #3b4d53;
+  --km-color-missing: #2b4048;
   --km-color-missing-stroke: #b5c8cb;
   --km-color-quality-note: #e2c877;
-  --km-map-count-1: #173640;
-  --km-map-count-2: #1b4b58;
-  --km-map-count-3: #22636d;
-  --km-map-count-4: #2d7f82;
-  --km-map-count-5: #459d9a;
-  --km-map-count-6: #70beb1;
-  --km-map-count-7: #a7dfcc;
-  --km-map-rate-1: #16354a;
-  --km-map-rate-2: #1c4f67;
-  --km-map-rate-3: #236c84;
-  --km-map-rate-4: #2e89a0;
-  --km-map-rate-5: #50a8b3;
-  --km-map-rate-6: #7acbc0;
-  --km-map-rate-7: #b4ebd6;
-  --km-shadow-card: 0 1px 2px rgb(0 0 0 / 0.24), 0 8px 24px rgb(0 0 0 / 0.18);
-  --km-shadow-floating: 0 10px 28px rgb(0 0 0 / 0.34);
+  --km-color-ink: #0b212b;
+  --km-color-ink-raised: #1a303a;
+  --km-ink-glow-violet: #6a4be0;
+  --km-ink-glow-teal: #21968c;
+  --km-ramp-1: #266267;
+  --km-ramp-2: #29777b;
+  --km-ramp-3: #389a98;
+  --km-ramp-4: #4cb1a9;
+  --km-ramp-5: #67c8b9;
+  --km-ramp-6: #8cddc8;
+  --km-ramp-7: #b5f1da;
+  --km-on-ramp-1: #f2fbf8;
+  --km-on-ramp-2: #f2fbf8;
+  --km-on-ramp-3: #06222a;
+  --km-on-ramp-4: #06222a;
+  --km-on-ramp-5: #06222a;
+  --km-on-ramp-6: #06222a;
+  --km-on-ramp-7: #06222a;
+  --km-series-1: #5e8cf9;
+  --km-series-2: #17a750;
+  --km-series-3: #955c98;
+  --km-shadow-card: 0 1px 2px rgb(0 0 0 / 0.28), 0 10px 30px rgb(0 0 0 / 0.22);
+  --km-shadow-floating: 0 12px 32px rgb(0 0 0 / 0.4);
 }
 
-:root[data-theme='light'] {
-  color-scheme: light;
-  --km-color-canvas: #f6f9fa;
-  --km-color-surface: #ffffff;
-  --km-color-surface-muted: #edf3f4;
-  --km-color-text: #17323b;
-  --km-color-text-muted: #58717a;
-  --km-color-border: #cbd9dd;
-  --km-color-accent: #176d78;
-  --km-color-accent-strong: #105665;
-  --km-color-accent-contrast: #ffffff;
-  --km-color-focus: #174ea6;
-  --km-color-destructive: #b3261e;
-  --km-color-missing: #d9e2e5;
-  --km-color-missing-stroke: #5f747c;
-  --km-color-quality-note: #7c641d;
-  --km-map-count-1: #e9f5f4;
-  --km-map-count-2: #c8e6e3;
-  --km-map-count-3: #a2d2d1;
-  --km-map-count-4: #78babb;
-  --km-map-count-5: #559da3;
-  --km-map-count-6: #367e8e;
-  --km-map-count-7: #1f6075;
-  --km-map-rate-1: #edf5fb;
-  --km-map-rate-2: #d0e5f2;
-  --km-map-rate-3: #abd0e5;
-  --km-map-rate-4: #82b8d2;
-  --km-map-rate-5: #5b9ebc;
-  --km-map-rate-6: #3e829f;
-  --km-map-rate-7: #285f80;
-  --km-shadow-card: 0 1px 2px rgb(23 50 59 / 0.06), 0 8px 24px rgb(23 50 59 / 0.05);
-  --km-shadow-floating: 0 10px 28px rgb(23 50 59 / 0.16);
+/* 시스템 다크. 사용자가 라이트를 고른 경우(data-theme='light')는 제외한다.
+   위 블록과 값이 같아야 한다 (tests/unit/tokens.test.ts 가 검사). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --km-color-canvas: #0a1a21;
+    --km-color-surface: #12272f;
+    --km-color-surface-muted: #183039;
+    --km-color-text: #e6f1f2;
+    --km-color-text-muted: #a9c3c8;
+    --km-color-border: #2a444d;
+    --km-color-border-strong: #7f9aa3;
+    --km-color-accent: #73c8c0;
+    --km-color-accent-strong: #a5e1d5;
+    --km-color-accent-contrast: #0a1a21;
+    --km-color-accent2: #a996ff;
+    --km-color-accent2-soft: #2a2756;
+    --km-color-focus: #9cc8ff;
+    --km-color-destructive: #ffb4ab;
+    --km-color-missing: #2b4048;
+    --km-color-missing-stroke: #b5c8cb;
+    --km-color-quality-note: #e2c877;
+    --km-color-ink: #0b212b;
+    --km-color-ink-raised: #1a303a;
+    --km-ink-glow-violet: #6a4be0;
+    --km-ink-glow-teal: #21968c;
+    --km-ramp-1: #266267;
+    --km-ramp-2: #29777b;
+    --km-ramp-3: #389a98;
+    --km-ramp-4: #4cb1a9;
+    --km-ramp-5: #67c8b9;
+    --km-ramp-6: #8cddc8;
+    --km-ramp-7: #b5f1da;
+    --km-on-ramp-1: #f2fbf8;
+    --km-on-ramp-2: #f2fbf8;
+    --km-on-ramp-3: #06222a;
+    --km-on-ramp-4: #06222a;
+    --km-on-ramp-5: #06222a;
+    --km-on-ramp-6: #06222a;
+    --km-on-ramp-7: #06222a;
+    --km-series-1: #5e8cf9;
+    --km-series-2: #17a750;
+    --km-series-3: #955c98;
+    --km-shadow-card: 0 1px 2px rgb(0 0 0 / 0.28), 0 10px 30px rgb(0 0 0 / 0.22);
+    --km-shadow-floating: 0 12px 32px rgb(0 0 0 / 0.4);
+  }
 }
 
 @media (max-width: 639px) {
@@ -202,6 +274,26 @@
 }
 
 @layer components {
+  /* 잉크 띠 — 헤더·히어로·푸터의 짙은 면. 광원 불투명도(42%·38%)는
+     tests/unit/tokens.test.ts 의 GLOW_ALPHA 와 같아야 한다. */
+  .ink-band {
+    background:
+      radial-gradient(
+        900px 420px at 92% -12%,
+        color-mix(in srgb, var(--km-ink-glow-violet) 42%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        760px 460px at -6% 118%,
+        color-mix(in srgb, var(--km-ink-glow-teal) 38%, transparent),
+        transparent 60%
+      ),
+      repeating-linear-gradient(0deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 30px),
+      repeating-linear-gradient(90deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 30px),
+      var(--km-color-ink);
+    color: var(--km-color-text);
+  }
+
   .card {
     min-width: 0;
     border: 1px solid var(--km-color-border);
@@ -231,8 +323,8 @@
   .viz-stat-value {
     color: var(--km-color-text);
     font-size: var(--km-text-metric-lg);
-    font-variant-numeric: var(--km-font-variant-numeric);
-    font-weight: 650;
+    /* 큰 단독 숫자는 비례폭. tabular-nums 는 표·축 눈금에만 쓴다. */
+    font-weight: 700;
     letter-spacing: -0.01em;
     line-height: var(--km-text-metric-lg-line-height);
   }
@@ -305,7 +397,7 @@
   .form-select {
     min-height: 2.5rem;
     min-width: 0;
-    border: 1px solid var(--km-color-border);
+    border: 1px solid var(--km-color-border-strong);
     border-radius: var(--km-radius-md);
     background-color: var(--km-color-surface);
     padding: 0.5rem 0.75rem;
@@ -324,7 +416,7 @@
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    border: 1px solid var(--km-color-border);
+    border: 1px solid var(--km-color-border-strong);
     border-radius: var(--km-radius-md);
     background-color: var(--km-color-surface);
     padding: 0.375rem 0.75rem;

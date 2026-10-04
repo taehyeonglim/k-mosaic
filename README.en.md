@@ -147,3 +147,4 @@ Use the repository's **Cite this repository** button ([CITATION.cff](CITATION.cf
 | International students | KOSIS higher-education overview · [e-Nara index 1534](https://www.index.go.kr/unify/idx-info.do?idxCd=1534) | `DT_1963003_010_S` · `153401` |
 | Original statistics | Ministry of Education & KEDI, *Statistical Yearbook of Education* | |
 | Administrative boundaries | Statistics Korea SGIS — KOGL Type 1 (processed by [vuski/admdongkor](https://github.com/vuski/admdongkor), CC BY 4.0) | [geo-source.md](docs/geo-source.md) |
+| Typeface | [Pretendard](https://github.com/orioncactus/pretendard) — SIL Open Font License 1.1 (self-hosted) | |
