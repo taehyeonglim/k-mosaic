@@ -1,7 +1,9 @@
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
+  LabelList,
   Line,
-  LineChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -12,6 +14,11 @@ import type { ActiveDotProps, DotItemDotProps } from 'recharts';
 import type { ReactNode } from 'react';
 
 import { ko } from '@/content/ko';
+import {
+  resolveSeriesStyles,
+  type MarkerShape,
+  type SeriesSlot,
+} from '@/lib/visualization/series-style';
 
 import {
   ChartDataTable,
@@ -24,13 +31,15 @@ export interface TrendChartProps {
     regionCode: string;
     label: string;
     points: { year: number; value: number | null }[];
+    /** 범주색 자리 고정 — 비교 지역을 더하거나 빼도 색이 바뀌지 않게 한다. */
+    slot?: SeriesSlot;
+    /** 기준 계열(전국 값) — 중립색 점선 */
+    reference?: boolean;
   }[];
   metric: 'count' | 'rate';
   formatValue(v: number | null): string;
   annotations?: { year: number; label: string }[];
 }
-
-type MarkerShape = 'circle' | 'diamond' | 'triangle';
 
 interface TrendDatum {
   year: number;
@@ -40,83 +49,68 @@ interface TrendDatum {
 interface MarkerPositionProps {
   cx?: number;
   cy?: number;
-  r?: number | string;
   value?: number | null;
 }
 
-const SERIES_COLORS = [
-  'var(--km-map-count-7)',
-  'var(--km-map-count-5)',
-  'var(--km-map-count-3)',
-] as const;
+const MARKER_RADIUS = 4;
+const TICK = { fill: 'var(--km-color-text-muted)', fontSize: 12 };
+const TOOLTIP_STYLE = {
+  backgroundColor: 'var(--km-color-surface)',
+  border: '1px solid var(--km-color-border)',
+  borderRadius: 'var(--km-radius-md)',
+  boxShadow: 'var(--km-shadow-floating)',
+  color: 'var(--km-color-text)',
+  fontSize: '0.8125rem',
+  padding: '0.5rem 0.75rem',
+};
 
-function markerShape(index: number): MarkerShape {
-  return index === 1 ? 'diamond' : index === 2 ? 'triangle' : 'circle';
-}
-
+/** 마커 — 계열색으로 채우고 표면색 2px 테두리를 둘러 선·다른 마커와 겹쳐도 구분된다. */
 function markerElement(shape: MarkerShape, color: string, props: MarkerPositionProps): ReactNode {
-  if (props.cx === undefined || props.cy === undefined || props.value === null) {
+  if (props.cx === undefined || props.cy === undefined || props.value == null) {
     return null;
   }
-  const cx = props.cx ?? 0;
-  const cy = props.cy ?? 0;
-  const radius = Number(props.r ?? 4);
-  const size = Math.max(3, radius);
+  const { cx, cy } = props;
+  const size = MARKER_RADIUS;
+  const paint = { fill: color, stroke: 'var(--km-color-surface)', strokeWidth: 2 };
 
   if (shape === 'diamond') {
     return (
       <rect
+        {...paint}
         x={cx - size}
         y={cy - size}
         width={size * 2}
         height={size * 2}
         transform={`rotate(45 ${cx} ${cy})`}
-        fill="var(--km-color-surface)"
-        stroke={color}
-        strokeWidth={2}
       />
     );
+  }
+  if (shape === 'square') {
+    return <rect {...paint} x={cx - size} y={cy - size} width={size * 2} height={size * 2} />;
   }
   if (shape === 'triangle') {
     return (
       <path
-        d={`M ${cx} ${cy - size - 1} L ${cx + size + 1} ${cy + size} L ${cx - size - 1} ${cy + size} Z`}
-        fill="var(--km-color-surface)"
-        stroke={color}
-        strokeWidth={2}
+        {...paint}
+        d={`M ${cx} ${cy - size - 1.5} L ${cx + size + 1.5} ${cy + size} L ${cx - size - 1.5} ${cy + size} Z`}
       />
     );
   }
-  return (
-    <circle
-      cx={cx}
-      cy={cy}
-      r={size}
-      fill="var(--km-color-surface)"
-      stroke={color}
-      strokeWidth={2}
-    />
-  );
-}
-
-function renderMarker(shape: MarkerShape, color: string) {
-  return (props: DotItemDotProps): ReactNode => markerElement(shape, color, props);
-}
-
-function renderActiveMarker(shape: MarkerShape, color: string) {
-  return (props: ActiveDotProps): ReactNode => markerElement(shape, color, props);
+  return <circle {...paint} cx={cx} cy={cy} r={size + 0.5} />;
 }
 
 function LegendMarker({ shape, color }: { shape: MarkerShape; color: string }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-      {markerElement(shape, color, { cx: 8, cy: 8, r: 4 })}
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      {markerElement(shape, color, { cx: 8, cy: 8, value: 0 })}
     </svg>
   );
 }
 
 export function TrendChart({ series, metric, formatValue, annotations = [] }: TrendChartProps) {
   const displayedSeries = series.slice(0, 3);
+  const styles = resolveSeriesStyles(displayedSeries);
+  const solo = styles[0]?.solo === true;
   const yearSet = new Set<number>();
   displayedSeries.forEach((item) => {
     item.points.forEach((point) => yearSet.add(point.year));
@@ -130,6 +124,12 @@ export function TrendChart({ series, metric, formatValue, annotations = [] }: Tr
     });
     return datum;
   });
+  // 단독 계열의 끝점(값이 있는 마지막 연도)에만 값을 적는다 — 모든 점에 숫자를 달지 않는다.
+  const soloCode = solo ? displayedSeries[0]?.regionCode : undefined;
+  const endIndex =
+    soloCode === undefined
+      ? -1
+      : chartData.reduce((last, datum, index) => (datum[soloCode] != null ? index : last), -1);
 
   const tableColumns: ChartDataTableColumn[] = [
     { key: 'year', label: ko.filters.year, numeric: true },
@@ -147,53 +147,57 @@ export function TrendChart({ series, metric, formatValue, annotations = [] }: Tr
 
   return (
     <section className="space-y-3" aria-label={chartLabel}>
-      <ul className="flex flex-wrap justify-end gap-x-4 gap-y-2 text-small" aria-label={chartLabel}>
-        {displayedSeries.map((item, index) => {
-          const color = SERIES_COLORS[index] ?? SERIES_COLORS[0];
-          return (
-            <li className="flex items-center gap-1.5" key={item.regionCode}>
-              <LegendMarker shape={markerShape(index)} color={color} />
-              <span>{item.label}</span>
-            </li>
-          );
-        })}
-      </ul>
+      {/* 계열이 하나면 범례를 두지 않는다 — 제목이 이미 무엇인지 말한다.
+          글자는 본문색, 정체성은 옆의 마커가 전한다. */}
+      {displayedSeries.length > 1 ? (
+        <ul className="flex flex-wrap gap-x-4 gap-y-2 text-small" aria-label={chartLabel}>
+          {displayedSeries.map((item, index) => {
+            const style = styles[index]!;
+            return (
+              <li className="flex items-center gap-1.5" key={item.regionCode}>
+                <LegendMarker shape={style.shape} color={style.color} />
+                <span>{item.label}</span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
 
-      <div className="h-[320px] w-full min-w-0" role="img" aria-label={ko.filters.metrics[metric]}>
-        <ResponsiveContainer width="100%" height="100%" minHeight={280}>
-          <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 12, left: 8 }}>
-            <CartesianGrid
-              stroke="var(--km-color-border)"
-              strokeDasharray="3 3"
-              strokeOpacity={0.3}
-              vertical={false}
-            />
+      <div className="h-[300px] w-full min-w-0" role="img" aria-label={ko.filters.metrics[metric]}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={260}>
+          <ComposedChart
+            data={chartData}
+            margin={{ top: 12, right: solo ? 84 : 16, bottom: 8, left: 4 }}
+          >
+            <CartesianGrid stroke="var(--km-color-border)" vertical={false} />
             <XAxis
               dataKey="year"
               type="number"
               domain={['dataMin', 'dataMax']}
-              tick={{ fill: 'var(--km-color-text-muted)', fontSize: 12 }}
-              tickLine={{ stroke: 'var(--km-color-border)' }}
-              axisLine={{ stroke: 'var(--km-color-border)' }}
+              // 연 단위 자료 — 눈금은 수록 연도에만 둔다 (자리가 모자라면 일부를 건너뛴다).
+              ticks={years}
+              interval="equidistantPreserveStart"
+              minTickGap={12}
+              allowDecimals={false}
+              tick={TICK}
+              tickLine={false}
+              tickMargin={8}
+              axisLine={{ stroke: 'var(--km-color-border-strong)' }}
             />
             <YAxis
               domain={[0, 'auto']}
               tickFormatter={(value) => formatValue(value as number)}
-              tick={{ fill: 'var(--km-color-text-muted)', fontSize: 12 }}
-              tickLine={{ stroke: 'var(--km-color-border)' }}
-              axisLine={{ stroke: 'var(--km-color-border)' }}
-              width={72}
+              tick={TICK}
+              tickLine={false}
+              axisLine={false}
+              width={68}
             />
             <Tooltip
               filterNull={false}
               formatter={(value, name) => [formatValue(value as number | null), String(name)]}
               labelFormatter={(label) => String(label)}
-              contentStyle={{
-                backgroundColor: 'var(--km-color-surface)',
-                borderColor: 'var(--km-color-border)',
-                color: 'var(--km-color-text)',
-              }}
-              cursor={{ stroke: 'var(--km-color-focus)', strokeDasharray: '4 4' }}
+              contentStyle={TOOLTIP_STYLE}
+              cursor={{ stroke: 'var(--km-color-border-strong)' }}
             />
             {annotations.map((annotation) => (
               <ReferenceLine
@@ -201,29 +205,84 @@ export function TrendChart({ series, metric, formatValue, annotations = [] }: Tr
                 x={annotation.year}
                 stroke="var(--km-color-text-muted)"
                 strokeDasharray="4 4"
-                label={annotation.label}
+                // 선 오른쪽 위에 작게 적는다 — 가운데에 두면 첫 연도에서 y축 눈금과 겹친다.
+                label={{
+                  value: annotation.label,
+                  position: 'insideTopLeft',
+                  offset: 6,
+                  fill: 'var(--km-color-text-muted)',
+                  fontSize: 11,
+                }}
               />
             ))}
+            {solo && soloCode !== undefined ? (
+              <Area
+                type="monotone"
+                dataKey={soloCode}
+                stroke="none"
+                fill={styles[0]!.color}
+                fillOpacity={0.1}
+                connectNulls={false}
+                activeDot={false}
+                tooltipType="none"
+                isAnimationActive="auto"
+                animationDuration={150}
+              />
+            ) : null}
             {displayedSeries.map((item, index) => {
-              const color = SERIES_COLORS[index] ?? SERIES_COLORS[0];
-              const shape = markerShape(index);
+              const style = styles[index]!;
               return (
                 <Line
                   key={item.regionCode}
                   type="monotone"
                   dataKey={item.regionCode}
                   name={item.label}
-                  stroke={color}
+                  stroke={style.color}
                   strokeWidth={2}
+                  strokeDasharray={style.dashed ? '6 4' : undefined}
                   connectNulls={false}
-                  dot={renderMarker(shape, color)}
-                  activeDot={renderActiveMarker(shape, color)}
+                  dot={(props: DotItemDotProps) => markerElement(style.shape, style.color, props)}
+                  activeDot={(props: ActiveDotProps) =>
+                    markerElement(style.shape, style.color, props)
+                  }
                   isAnimationActive="auto"
                   animationDuration={150}
-                />
+                >
+                  {style.solo ? (
+                    <LabelList
+                      dataKey={item.regionCode}
+                      content={({ x, y, index: pointIndex, value }) =>
+                        pointIndex === endIndex &&
+                        typeof x === 'number' &&
+                        typeof y === 'number' ? (
+                          <g>
+                            <text
+                              data-end-label=""
+                              x={x + 10}
+                              y={y + 1}
+                              fill="var(--km-color-text)"
+                              fontSize={13}
+                              fontWeight={700}
+                            >
+                              {formatValue(typeof value === 'number' ? value : null)}
+                            </text>
+                            <text
+                              x={x + 10}
+                              y={y + 16}
+                              fill="var(--km-color-text-muted)"
+                              fontSize={11}
+                            >
+                              {chartData[endIndex]?.year}
+                            </text>
+                          </g>
+                        ) : null
+                      }
+                    />
+                  ) : null}
+                </Line>
               );
             })}
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 

@@ -1,5 +1,6 @@
+import { InlineBar } from '@/components/charts/InlineBar';
 import { ko } from '@/content/ko';
-import { barDomain, barGeometry } from '@/lib/visualization/bar';
+import { barDomain } from '@/lib/visualization/bar';
 import { formatCount, formatDelta, formatRate } from '@/lib/visualization/format';
 
 export type RankingTableMetric = 'count' | 'rate' | 'deltaAbs' | 'deltaPct';
@@ -69,7 +70,6 @@ export function RankingTable({
   );
   // 막대는 0 기준선에서 출발한다. 증감처럼 음수가 섞이면 기준선이 트랙 안쪽으로 들어온다.
   const domain = barDomain(rankedRows.map((row) => row.value));
-  const baseline = barGeometry(0, domain).offset;
   const noDataTitleId = `ranking-no-data-title-${metric}`;
 
   return (
@@ -96,7 +96,6 @@ export function RankingTable({
           <tbody>
             {rankedRows.map((row) => {
               const isSelected = highlightRegions.includes(row.regionCode);
-              const bar = barGeometry(row.value ?? 0, domain);
               return (
                 <tr
                   key={row.regionCode}
@@ -120,32 +119,13 @@ export function RankingTable({
                     </span>
                   </td>
                   <td>
-                    <span className="flex items-center gap-3">
-                      <span aria-hidden="true" className="relative h-2.5 min-w-6 flex-1">
-                        {domain.min < 0 ? (
-                          <span
-                            className="absolute inset-y-[-0.1875rem] w-px bg-border-strong"
-                            style={{ left: `${baseline}%` }}
-                          />
-                        ) : null}
-                        {/* 한 가지 색 — 값의 크기는 길이가 전한다. 선택한 지역만 강조 보라.
-                            값 쪽 끝만 둥글게, 기준선 쪽은 각지게. */}
-                        <span
-                          className={`absolute inset-y-0 ${isSelected ? 'bg-accent2' : 'bg-ramp-5'} ${
-                            bar.direction === 'negative' ? 'rounded-l-[4px]' : 'rounded-r-[4px]'
-                          }`}
-                          data-direction={bar.direction}
-                          data-ranking-bar=""
-                          style={{ left: `${bar.offset}%`, width: `${bar.length}%` }}
-                        />
-                      </span>
-                      <span
-                        className="w-[4.75rem] shrink-0 text-end tabular-nums sm:w-[5.25rem]"
-                        data-ranking-value=""
-                      >
-                        {formatRankingValue(row.value, metric)}
-                      </span>
-                    </span>
+                    {/* 한 가지 색 — 값의 크기는 길이가 전한다. 선택한 지역만 강조 보라. */}
+                    <InlineBar
+                      value={row.value}
+                      domain={domain}
+                      label={formatRankingValue(row.value, metric)}
+                      selected={isSelected}
+                    />
                   </td>
                 </tr>
               );

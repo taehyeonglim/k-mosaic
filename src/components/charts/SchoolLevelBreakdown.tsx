@@ -1,21 +1,7 @@
-import {
-  Bar,
-  BarChart,
-  Cell,
-  LabelList,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-
 import { ko } from '@/content/ko';
+import { barDomain } from '@/lib/visualization/bar';
 
-import {
-  ChartDataTable,
-  type ChartDataTableColumn,
-  type ChartDataTableRow,
-} from './ChartDataTable';
+import { InlineBar } from './InlineBar';
 
 export interface SchoolLevelBreakdownItem {
   level: string;
@@ -30,105 +16,61 @@ export interface SchoolLevelBreakdownProps {
   formatRate(v: number | null): string;
 }
 
-function BreakdownBars({
-  items,
-  dataKey,
-  formatValue,
-}: {
-  items: SchoolLevelBreakdownItem[];
-  dataKey: 'count' | 'rate';
-  formatValue(v: number | null): string;
-}) {
-  const label = dataKey === 'count' ? ko.overview.studentCount : ko.overview.rate;
-
-  return (
-    <section className="space-y-2" aria-label={label}>
-      <div className="h-[220px] w-full min-w-0" role="img" aria-label={label}>
-        <ResponsiveContainer width="100%" height="100%" minHeight={180}>
-          <BarChart
-            data={items}
-            layout="vertical"
-            margin={{ top: 8, right: 56, bottom: 8, left: 8 }}
-            barCategoryGap={12}
-          >
-            <XAxis
-              type="number"
-              domain={[0, 'auto']}
-              tickFormatter={(value) => formatValue(value as number)}
-              tick={{ fill: 'var(--km-color-text-muted)' }}
-              tickLine={{ stroke: 'var(--km-color-border)' }}
-              axisLine={{ stroke: 'var(--km-color-border)' }}
-            />
-            <YAxis
-              type="category"
-              dataKey="label"
-              width={120}
-              tick={{ fill: 'var(--km-color-text)' }}
-              tickLine={false}
-              axisLine={{ stroke: 'var(--km-color-border)' }}
-            />
-            <Tooltip
-              filterNull={false}
-              formatter={(value, name) => [formatValue(value as number | null), String(name)]}
-              contentStyle={{
-                backgroundColor: 'var(--km-color-surface)',
-                borderColor: 'var(--km-color-border)',
-                color: 'var(--km-color-text)',
-              }}
-            />
-            <Bar
-              dataKey={dataKey}
-              fill="var(--km-map-count-6)"
-              radius={[0, 4, 4, 0]}
-              isAnimationActive="auto"
-              animationDuration={150}
-            >
-              {items.map((item) => (
-                <Cell
-                  key={item.level}
-                  fill={
-                    item[dataKey] === null ? 'var(--km-color-missing)' : 'var(--km-map-count-6)'
-                  }
-                />
-              ))}
-              <LabelList
-                dataKey={dataKey}
-                position="right"
-                formatter={(value) => formatValue(value as number | null)}
-                fill="var(--km-color-text)"
-              />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </section>
-  );
-}
-
+/**
+ * 학교급별 학생 수와 비율 — 표 한 장에 막대를 곁들인다.
+ * 항목이 넷뿐이라 축·격자가 있는 차트 두 장보다 값이 바로 읽히는 표가 낫다.
+ */
 export function SchoolLevelBreakdown({
   items,
   formatCount,
   formatRate,
 }: SchoolLevelBreakdownProps) {
-  const tableColumns: ChartDataTableColumn[] = [
-    { key: 'level', label: ko.filters.schoolLevel },
-    { key: 'count', label: ko.overview.studentCount, numeric: true },
-    { key: 'rate', label: ko.overview.rate, numeric: true },
-  ];
-  const tableRows: ChartDataTableRow[] = items.map((item) => ({
-    id: item.level,
-    level: item.label,
-    count: formatCount(item.count),
-    rate: formatRate(item.rate),
-  }));
-  const chartLabel =
-    items.map((item) => item.label).join(', ') || ko.regionDetail.schoolLevelComposition;
+  const countDomain = barDomain(items.map((item) => item.count));
+  const rateDomain = barDomain(items.map((item) => item.rate));
 
+  // 고정 배치 — 좁은 화면에서는 막대가 줄어들 뿐 표가 가로로 넘치지 않는다.
   return (
-    <section className="space-y-4" aria-label={chartLabel}>
-      <BreakdownBars items={items} dataKey="count" formatValue={formatCount} />
-      <BreakdownBars items={items} dataKey="rate" formatValue={formatRate} />
-      <ChartDataTable caption={chartLabel} columns={tableColumns} rows={tableRows} visuallyHidden />
-    </section>
+    <table className="table table-fixed">
+      <caption className="sr-only">{ko.regionDetail.schoolLevelComposition}</caption>
+      <colgroup>
+        <col className="w-[5.5rem]" />
+        <col className="w-[55%]" />
+        <col />
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">{ko.filters.schoolLevel}</th>
+          <th scope="col" className="text-end">
+            {ko.overview.studentCount}
+          </th>
+          <th scope="col" className="text-end">
+            {ko.overview.rate}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((item) => (
+          <tr key={item.level}>
+            <th scope="row">{item.label}</th>
+            <td>
+              <InlineBar
+                value={item.count}
+                domain={countDomain}
+                label={formatCount(item.count)}
+                valueWidth="count"
+              />
+            </td>
+            <td>
+              <InlineBar
+                value={item.rate}
+                domain={rateDomain}
+                label={formatRate(item.rate)}
+                valueWidth="rate"
+              />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

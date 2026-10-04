@@ -10,7 +10,7 @@ function rankingRegion(page: Page, name: string): Locator {
 
 async function barWidths(region: Locator): Promise<number[]> {
   return region
-    .locator('tbody tr [data-ranking-bar]')
+    .locator('tbody tr [data-inline-bar]')
     .evaluateAll((bars) => bars.map((bar) => bar.getBoundingClientRect().width));
 }
 
@@ -25,7 +25,7 @@ test.describe('순위 표', () => {
 
     const widths = await barWidths(region);
     expect(widths).toHaveLength(17);
-    const values = (await region.locator('tbody tr [data-ranking-value]').allInnerTexts()).map(
+    const values = (await region.locator('tbody tr [data-inline-value]').allInnerTexts()).map(
       parseValue,
     );
     expect(values).toHaveLength(17);
@@ -45,8 +45,8 @@ test.describe('순위 표', () => {
 
     const signs = await rows.evaluateAll((items) =>
       items.map((row) => ({
-        value: row.querySelector('[data-ranking-value]')?.textContent ?? '',
-        direction: row.querySelector('[data-ranking-bar]')?.getAttribute('data-direction') ?? '',
+        value: row.querySelector('[data-inline-value]')?.textContent ?? '',
+        direction: row.querySelector('[data-inline-bar]')?.getAttribute('data-direction') ?? '',
       })),
     );
     for (const row of signs) {

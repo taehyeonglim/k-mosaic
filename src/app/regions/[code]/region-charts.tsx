@@ -22,7 +22,8 @@ export function RegionTrendCharts({
   rateSeries: TrendChartProps['series'];
 }) {
   return (
-    <div className="grid min-w-0 gap-8 lg:grid-cols-2">
+    // 범례가 있는 차트와 없는 차트의 그림 영역이 어긋나지 않게 아래로 맞춘다.
+    <div className="grid min-w-0 gap-8 lg:grid-cols-2 lg:items-end">
       <section className="min-w-0 space-y-3" aria-labelledby="region-count-trend-title">
         <h3 id="region-count-trend-title" className="text-base font-medium">
           {ko.regionPage.countTrend}
