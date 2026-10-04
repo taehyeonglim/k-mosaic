@@ -96,4 +96,18 @@ test.describe('회귀 방지', () => {
       ).toBeVisible();
     }
   });
+
+  test('데이터 사전 다운로드는 정적 파일에서 받는다 (payload 에 싣지 않음)', async ({ page }) => {
+    await gotoDashboard(page);
+    expect(await page.content()).not.toContain('# K-MOSAIC 데이터 사전');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: '데이터 사전 Markdown', exact: true }).click();
+    const download = await downloadPromise;
+    const path = await download.path();
+    if (path === null) throw new Error('데이터 사전 다운로드 경로를 확인할 수 없습니다.');
+
+    expect(download.suggestedFilename()).toBe('k-mosaic-data-dictionary.md');
+    expect(readFileSync(path, 'utf8')).toContain('# K-MOSAIC 데이터 사전');
+  });
 });

@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 import { REGION_ORDER } from '../constants/regions';
 import { findIdenticalAdjacentYears } from '../data/foreign-duplicates';
 import type { ForeignSnapshot, ForeignStudentStat } from '../schema/foreign-student';
-import type { RegionCode } from '../schema/dimensions';
 import type {
   ValidationContext,
   ValidationReport,

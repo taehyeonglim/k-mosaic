@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { ExtendedFeatureCollection as FeatureCollection } from 'd3-geo';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
@@ -23,9 +21,6 @@ import { REGION_BY_CODE, REGION_ORDER } from '@/lib/constants/regions';
 import type { SchoolLevel } from '@/lib/schema';
 import { encodeStatRecords } from '@/lib/data/compact';
 import { DashboardClient, type DashboardPayload } from './dashboard-client';
-
-const GEO_ATTRIBUTION =
-  '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형 · 가공: vuski/admdongkor — CC BY 4.0';
 
 function formattedDate(value: string): string {
   return new Intl.DateTimeFormat('ko-KR', {
@@ -77,7 +72,6 @@ function buildPayload(snapshot: ReturnType<typeof loadSnapshot>): DashboardPaylo
       ko.sources.ratePrecisionNote,
       selectIntegerRoundedYears(),
     ),
-    dictionary: readFileSync(join(process.cwd(), 'docs/data-dictionary-draft.md'), 'utf8'),
   };
 }
 
@@ -123,7 +117,7 @@ export default function Page() {
         </div>
       </PageShell>
       <AppFooter
-        geoAttribution={GEO_ATTRIBUTION}
+        geoAttribution={ko.common.geoAttribution}
         dataAttribution={ko.sources.organizationValue}
         ethicsNote={ko.ethics.aggregateOnly}
       />
