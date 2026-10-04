@@ -82,16 +82,25 @@ test.describe('공통 크롬', () => {
     await expect(page.getByRole('heading', { name: '전국 개요', exact: true })).toBeVisible();
   });
 
-  test('건너뛰기 링크가 첫 포커스 대상이고 본문으로 보낸다', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'networkidle' });
+  // 대시보드는 헤더 바로 아래(잉크 띠 안)의 전국 개요부터가 본문이다 — <main> 으로
+  // 건너뛰면 핵심 수치를 지나친다. 다른 페이지는 <main> 으로 보낸다.
+  for (const target of [
+    { path: '/', id: 'overview' },
+    { path: '/sources/', id: 'main-content' },
+  ]) {
+    test(`${target.path} — 건너뛰기 링크가 첫 포커스 대상이고 본문으로 보낸다`, async ({
+      page,
+    }) => {
+      await page.goto(target.path, { waitUntil: 'networkidle' });
 
-    await page.keyboard.press('Tab');
-    const skipLink = page.getByRole('link', { name: '본문으로 건너뛰기', exact: true });
-    await expect(skipLink).toBeFocused();
-    await expect(skipLink).toHaveAttribute('href', '#main-content');
-    await page.keyboard.press('Enter');
-    await expect(page.locator('#main-content')).toBeFocused();
-  });
+      await page.keyboard.press('Tab');
+      const skipLink = page.getByRole('link', { name: '본문으로 건너뛰기', exact: true });
+      await expect(skipLink).toBeFocused();
+      await expect(skipLink).toHaveAttribute('href', `#${target.id}`);
+      await page.keyboard.press('Enter');
+      await expect(page.locator(`#${target.id}`)).toBeFocused();
+    });
+  }
 
   test('푸터에 서체 라이선스를 표기한다', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });

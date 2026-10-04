@@ -4,6 +4,13 @@ import { expect, test, type Page } from '@playwright/test';
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const pages = [
   { name: '/', path: '/', readyHeading: '전국 개요', readyHeadingCount: 1 },
+  // 비율 지표 + 선택 지역 — 타일 모자이크(결측 사선 포함)와 선택 표시가 함께 있는 상태
+  {
+    name: '/?metric=rate&regions=11',
+    path: '/?metric=rate&regions=11',
+    readyHeading: '전국 개요',
+    readyHeadingCount: 1,
+  },
   { name: '/sources', path: '/sources/', readyHeading: '출처 및 계산식', readyHeadingCount: 3 },
   {
     name: '/regions/36',

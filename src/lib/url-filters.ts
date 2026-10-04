@@ -1,4 +1,11 @@
-import { regionCodeSchema, type RegionCode } from './schema/index';
+import {
+  metricKeySchema,
+  regionCodeSchema,
+  schoolLevelSchema,
+  type MetricKey,
+  type RegionCode,
+  type SchoolLevel,
+} from './schema/index';
 
 // URL 쿼리 필터 해석 — 대시보드와 외국인 유학생 페이지가 공유하는 순수 함수.
 // 필터 상태를 URL 에 두어 화면을 그대로 공유할 수 있게 한다.
@@ -22,6 +29,32 @@ export function readRegions(
     return result.success ? [result.data] : [];
   });
   return { regions: [...new Set(parsed)].slice(0, max), hasTooManyRegions: parsed.length > max };
+}
+
+export interface DashboardFilters {
+  year: number;
+  level: SchoolLevel;
+  metric: MetricKey;
+  regions: RegionCode[];
+  hasTooManyRegions: boolean;
+}
+
+/**
+ * 대시보드의 필터 상태. 히어로와 본문이 같은 URL 을 읽어 같은 상태를 본다.
+ * 쿼리가 비어 있으면 기본값(최신 연도·전체 학교급·학생 수) — 정적 HTML 의 기본 화면이다.
+ */
+export function readDashboardFilters(
+  params: URLSearchParams,
+  years: readonly number[],
+): DashboardFilters {
+  const level = schoolLevelSchema.safeParse(params.get('level'));
+  const metric = metricKeySchema.safeParse(params.get('metric'));
+  return {
+    year: readYear(params, years),
+    level: level.success ? level.data : 'all',
+    metric: metric.success ? metric.data : 'count',
+    ...readRegions(params),
+  };
 }
 
 /**

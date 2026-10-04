@@ -1,11 +1,6 @@
 import rawSnapshot from '../../../data/snapshots/multicultural-students.v1.json';
 import rawSourceMeta from '../../../data/metadata/sources.v1.json';
-import {
-  parseSnapshot,
-  SourceMetaSchema,
-  type Snapshot,
-  type SourceMeta,
-} from '../schema/index';
+import { parseSnapshot, SourceMetaSchema, type Snapshot, type SourceMeta } from '../schema/index';
 
 function indexKey(year: number, regionCode: string, schoolLevel: string): string {
   return `${year}|${regionCode}|${schoolLevel}`;

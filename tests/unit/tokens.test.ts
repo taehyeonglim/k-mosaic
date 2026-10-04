@@ -168,6 +168,25 @@ describe('지도 순차 램프', () => {
   });
 });
 
+describe('타일 모자이크의 결측 타일 (잉크 띠 — 다크 토큰)', () => {
+  // TileMosaic 의 HATCH 사선 농도와 같아야 한다 (color-mix 는 테스트가 계산하지 못한다).
+  const HATCH_ALPHA = 0.55;
+  const base = color(dark, '--km-color-missing');
+  const stripe = blend(base, color(dark, '--km-color-missing-stroke'), HATCH_ALPHA);
+
+  it('글자는 사선이 아니라 단색 바탕 위에 놓이고 4.5:1 이상이다', () => {
+    expect(contrast(color(dark, '--km-color-text'), base)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('사선은 바탕과 3:1 이상으로 구분된다 (패턴이 보여야 한다)', () => {
+    expect(contrast(stripe, base)).toBeGreaterThanOrEqual(3);
+  });
+
+  it('결측 타일은 가장 옅은 램프 단계와 다른 색이다', () => {
+    expect(base).not.toBe(color(dark, '--km-ramp-1'));
+  });
+});
+
 describe('잉크 띠 위의 글자', () => {
   // globals.css 의 .ink-band 배경 광원과 같은 값이어야 한다 (color-mix 는 테스트가 계산하지 못한다).
   const GLOW_ALPHA = { '--km-ink-glow-violet': 0.42, '--km-ink-glow-teal': 0.38 } as const;

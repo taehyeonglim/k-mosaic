@@ -289,6 +289,14 @@
   }
 }
 
+@layer base {
+  /* 정적 HTML 의 기본 히어로는 주소에 필터가 있으면 클라이언트가 다시 그릴 때까지 가린다
+     (layout.tsx 의 heroPendingInitializer). */
+  :root[data-hero-pending] [data-hero-fallback] {
+    visibility: hidden;
+  }
+}
+
 @layer components {
   /* 잉크 띠 — 헤더·히어로·푸터의 짙은 면. 광원 불투명도(42%·38%)는
      tests/unit/tokens.test.ts 의 GLOW_ALPHA 와 같아야 한다. */
@@ -308,6 +316,49 @@
       repeating-linear-gradient(90deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 30px),
       var(--km-color-ink);
     color: var(--km-color-text);
+  }
+
+  /* 타일 모자이크의 타일 — 색(램프 단계·결측 사선)은 TileMosaic 이 인라인으로 준다. */
+  .mosaic-tile {
+    display: flex;
+    min-width: 0;
+    min-height: 4.5rem;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-radius: var(--km-radius-md);
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1rem;
+    transition: filter 150ms ease;
+  }
+
+  .mosaic-tile:hover {
+    filter: brightness(1.1);
+  }
+
+  .mosaic-tile:focus-visible {
+    outline: 2px solid var(--km-color-focus);
+    outline-offset: 2px;
+  }
+
+  .mosaic-tile-name {
+    align-self: flex-start;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .mosaic-tile-value {
+    align-self: flex-start;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  /* 결측 타일의 글자는 사선 위가 아니라 단색 바탕 위에 둔다. */
+  .mosaic-tile[data-missing] > span {
+    border-radius: 0.25rem;
+    background-color: var(--km-color-missing);
+    padding: 0 0.25rem;
   }
 
   /* 패널 제목 — 앞의 작은 정사각형은 모자이크 타일 표식이다 (장식, 의사요소). */
@@ -663,6 +714,16 @@
   .viz-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .mosaic-tile {
+    min-height: 5.25rem;
+    padding: 0.625rem;
+    font-size: 0.9375rem;
+  }
+
+  .mosaic-tile-name {
+    font-size: 0.8125rem;
+  }
 }
 
 @media (min-width: 1280px) {
@@ -672,6 +733,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mosaic-tile,
   .btn,
   .segmented-item,
   .form-select,

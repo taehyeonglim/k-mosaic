@@ -43,6 +43,20 @@ export const ko = {
     referenceYear: '기준 연도',
     updatedAt: '갱신일',
     computedRate: '직접 계산한 비율',
+    // 히어로 — 연도는 선택한 필터와 스냅숏에서 채운다 (리터럴 금지).
+    countLabel: '다문화학생 수',
+    asOf: '{year}년 4월 1일 기준',
+    sinceYear: '{year}년 대비',
+  },
+  units: {
+    count: '명',
+  },
+  mosaic: {
+    label: '시·도 모자이크',
+    caption: '17개 시·도 · {metric} — 타일을 누르면 지역 페이지로 이동합니다.',
+    // 작은 범례의 양 끝. 정확한 구간은 지도 범례가 보여 준다.
+    low: { count: '적음', rate: '낮음' },
+    high: { count: '많음', rate: '높음' },
   },
   filters: {
     title: '필터',
