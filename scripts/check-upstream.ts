@@ -10,6 +10,7 @@ import { parseForeignEnaraTable } from './fetch-foreign-students.js';
 // GitHub Actions 에서는 결과를 $GITHUB_OUTPUT 에 쓴다: new_year=true|false, summary=<문장>
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ATTEMPTS = 4;
 const ENARA_ENDPOINT = 'https://www.index.go.kr/unity/potal/eNara/sub/showStblGams3.do';
 
 interface UpstreamStatus {
@@ -29,6 +30,30 @@ function snapshotLatestYear(file: string, key: 'years' | 'nationwideYears' = 'ye
   return Math.max(...years);
 }
 
+function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const cause = error.cause as { code?: string; message?: string } | undefined;
+  return [error.message, cause?.code, cause?.message].filter(Boolean).join(' / ');
+}
+
+/**
+ * GitHub 러너(미국)에서 e-나라지표까지 TLS 연결이 6초 안팎 걸리고, 가끔 undici 의
+ * 연결 타임아웃(10초)을 넘어 `fetch failed` 가 난다 (2026-10 실측). 지수 백오프로 재시도한다.
+ */
+async function withRetry<T>(label: string, task: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+    try {
+      return await task();
+    } catch (error) {
+      lastError = error;
+      console.warn(redact(`${label} 시도 ${attempt}/${ATTEMPTS} 실패: ${describeError(error)}`));
+      if (attempt < ATTEMPTS) await new Promise((done) => setTimeout(done, 2_000 * 2 ** attempt));
+    }
+  }
+  throw new Error(redact(`${label} 확인 실패: ${describeError(lastError)}`));
+}
+
 async function foreignNationwideLatestYear(): Promise<number> {
   const url = new URL(ENARA_ENDPOINT);
   url.searchParams.set('stts_cd', '153401');
@@ -46,7 +71,7 @@ async function foreignNationwideLatestYear(): Promise<number> {
 }
 
 export async function checkUpstream(): Promise<UpstreamStatus[]> {
-  const multicultural = await fetchEnaraTable('F008403');
+  const multicultural = await withRetry('e-나라지표 F008403', () => fetchEnaraTable('F008403'));
   return [
     {
       dataset: '다문화학생 (시도별)',
@@ -58,7 +83,7 @@ export async function checkUpstream(): Promise<UpstreamStatus[]> {
       dataset: '대학 외국인 유학생 (전국 장기)',
       tableId: '153401',
       snapshotLatest: snapshotLatestYear('foreign-students.v1.json', 'nationwideYears'),
-      upstreamLatest: await foreignNationwideLatestYear(),
+      upstreamLatest: await withRetry('e-나라지표 153401', foreignNationwideLatestYear),
     },
   ];
 }
