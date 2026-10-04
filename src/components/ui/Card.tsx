@@ -7,6 +7,7 @@ export interface CardProps {
   className?: string;
 }
 
+/** 패널 — 캔버스 위의 흰 면. 안쪽 구획은 테두리가 아니라 한 단계 어두운 면(.card)으로 나눈다. */
 export function Card({ title, description, children, className }: CardProps) {
   return (
     <section
@@ -14,11 +15,11 @@ export function Card({ title, description, children, className }: CardProps) {
     >
       {title || description ? (
         <header className="relative mb-4 min-w-0">
-          {title ? (
-            <h2 className="text-title font-semibold tracking-tight text-text">{title}</h2>
-          ) : null}
+          {title ? <h2 className="panel-title">{title}</h2> : null}
           {description ? (
-            <p className="mt-1 text-sm leading-6 text-text-muted">{description}</p>
+            <p className={`text-sm leading-6 text-text-muted ${title ? 'mt-1.5' : ''}`}>
+              {description}
+            </p>
           ) : null}
         </header>
       ) : null}

@@ -1,5 +1,7 @@
 'use client';
 
+import { Icon } from '@/components/ui/Icon';
+
 export interface DownloadButtonLabels {
   filtered: string;
   all: string;
@@ -22,12 +24,15 @@ export function DownloadButtons({
   return (
     <div className="viz-row" role="group" aria-label={labels.filtered}>
       <button type="button" className="btn" onClick={onDownloadFiltered}>
+        <Icon name="download" />
         {labels.filtered}
       </button>
       <button type="button" className="btn" onClick={onDownloadAll}>
+        <Icon name="download" />
         {labels.all}
       </button>
       <button type="button" className="btn" onClick={onDownloadDictionary}>
+        <Icon name="download" />
         {labels.dictionary}
       </button>
     </div>

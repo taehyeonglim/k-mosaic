@@ -2,6 +2,8 @@
 
 import ko from '@/content/ko';
 
+import { Icon } from './Icon';
+
 export interface ErrorStateProps {
   title: string;
   description: string;
@@ -23,12 +25,12 @@ export function ErrorState({ title, description, onRetry }: ErrorStateProps) {
         {onRetry ? (
           <button
             aria-label={ko.errors.generic}
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-[var(--km-radius-md)] border border-border bg-surface text-lg text-text transition-colors duration-150 hover:bg-surface-muted motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-text transition-colors duration-150 hover:bg-surface-muted motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             onClick={onRetry}
             title={ko.errors.generic}
             type="button"
           >
-            <span aria-hidden="true">↻</span>
+            <Icon name="refresh" size={18} />
           </button>
         ) : null}
       </div>

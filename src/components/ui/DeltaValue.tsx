@@ -1,6 +1,8 @@
 import ko from '@/content/ko';
 import type { ReactNode } from 'react';
 
+import { Icon, type IconName } from './Icon';
+
 export interface DeltaValueProps {
   delta: number | null;
   deltaPct: number | null;
@@ -37,41 +39,38 @@ function formatSignedPercent(value: number) {
   }).format(value);
 }
 
-function getDirection(delta: number) {
-  if (delta > 0) return '↑';
-  if (delta < 0) return '↓';
-  return '→';
+// 방향은 장식이다 — 부호(+/−)가 값에 이미 들어 있다. 증가·감소에 색을 입히지 않는다.
+function getDirection(delta: number): IconName {
+  if (delta > 0) return 'arrow-up';
+  if (delta < 0) return 'arrow-down';
+  return 'arrow-right';
 }
 
 export function DeltaValue({ delta, deltaPct, unit }: DeltaValueProps): ReactNode {
   if (delta === null && deltaPct === null) {
     return (
-      <span
-        aria-label={ko.missing.ariaLabel}
-        className="tabular-nums text-text-muted"
-        data-missing="true"
-      >
+      <span aria-label={ko.missing.ariaLabel} className="text-text-muted" data-missing="true">
         —
       </span>
     );
   }
 
   return (
-    <span className="inline-flex min-w-0 items-baseline gap-1.5 tabular-nums text-text">
+    <span className="inline-flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-text">
       {delta === null ? (
         <span aria-label={ko.missing.ariaLabel} data-missing="true">
           —
         </span>
       ) : (
-        <span className="inline-flex items-baseline gap-1">
-          <span aria-hidden="true" className="font-semibold">
-            {getDirection(delta)}
-          </span>
+        <span className="inline-flex items-center gap-[0.2em]">
+          <Icon name={getDirection(delta)} size="0.78em" strokeWidth={2.6} />
           <span>{formatSignedValue(delta, unit)}</span>
         </span>
       )}
       {deltaPct === null ? null : (
-        <span className="text-sm text-text-muted">({formatSignedPercent(deltaPct)})</span>
+        <span className="text-sm font-medium text-text-muted">
+          ({formatSignedPercent(deltaPct)})
+        </span>
       )}
     </span>
   );

@@ -12,7 +12,7 @@ export function Skeleton({ width, height, count }: SkeletonProps) {
     <div aria-hidden="true" className="grid min-w-0 gap-2">
       {Array.from({ length: skeletonCount }, (_, index) => (
         <span
-          className="block max-w-full rounded-[var(--km-radius-sm)] bg-surface-muted animate-pulse motion-reduce:animate-none"
+          className="block max-w-full rounded-[var(--km-radius-md)] bg-border/70 animate-pulse motion-reduce:animate-none"
           key={index}
           style={{ height: height ?? '1rem', width: width ?? '100%' }}
         />

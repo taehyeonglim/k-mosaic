@@ -95,6 +95,8 @@ export const ko = {
     region: '지역',
     value: '값',
     noData: '데이터 없음',
+    // 순위 표에서 선택한 지역의 행에 붙는 화면낭독기용 표시 (색만으로 알리지 않는다)
+    selectedMark: '선택한 지역',
     interpretationNote: '순위는 교육의 우열이나 지역의 좋고 나쁨을 의미하지 않습니다.',
     missingNote: '결측 지역은 순위에서 제외하고 별도로 표시합니다.',
   },
@@ -166,7 +168,6 @@ export const ko = {
     denominatorProvider: 'KOSIS 국가통계포털 OpenAPI (분모)',
     referenceProvider: 'e-나라지표 (대조용 공표 비율)',
     originalLinks: '원자료 링크',
-    originalLinkAction: '원자료 링크 ↗',
     numeratorLink: 'e-나라지표 원자료',
     denominatorLink: 'KOSIS 원자료',
     numeratorUrl: 'https://www.index.go.kr/unify/idx-info.do?idxCd=F0084',

@@ -80,6 +80,28 @@ describe.each(themes)('%s 테마 색 대비', (_, theme) => {
     ).toBeGreaterThanOrEqual(4.5);
   });
 
+  it('선택 표시(강조 보라) 위의 글자·기호가 4.5:1 이상이다', () => {
+    // 체크 표시: 보라 바탕 위의 accent2-contrast. 선택된 칩: 옅은 보라 바탕 위의 본문색.
+    expect(
+      contrast(color(theme, '--km-color-accent2-contrast'), color(theme, '--km-color-accent2')),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrast(color(theme, '--km-color-text'), color(theme, '--km-color-accent2-soft')),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('순위 막대(램프 5단계, 선택 시 강조 보라)가 표면 위에서 3:1 이상이다', () => {
+    const surface = color(theme, '--km-color-surface');
+    expect(contrast(color(theme, '--km-ramp-5'), surface)).toBeGreaterThanOrEqual(3);
+    // 행에 마우스를 올리면 배경이 표면-약 쪽으로 바뀐다.
+    expect(
+      contrast(color(theme, '--km-ramp-5'), color(theme, '--km-color-surface-muted')),
+    ).toBeGreaterThanOrEqual(3);
+    expect(
+      contrast(color(theme, '--km-color-accent2'), color(theme, '--km-color-surface-muted')),
+    ).toBeGreaterThanOrEqual(3);
+  });
+
   it('의미색(오류·품질 안내)이 표면 위에서 4.5:1 이상이다', () => {
     const surface = color(theme, '--km-color-surface');
     expect(contrast(color(theme, '--km-color-destructive'), surface)).toBeGreaterThanOrEqual(4.5);
