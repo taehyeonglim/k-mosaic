@@ -273,6 +273,14 @@
   }
 }
 
+@layer base {
+  /* 헤더·푸터(잉크 띠)와 본문 사이, 그리고 스크롤 끝의 여백이 테마 배경색으로 보이게 한다. */
+  body {
+    background-color: var(--km-color-canvas);
+    color: var(--km-color-text);
+  }
+}
+
 @layer components {
   /* 잉크 띠 — 헤더·히어로·푸터의 짙은 면. 광원 불투명도(42%·38%)는
      tests/unit/tokens.test.ts 의 GLOW_ALPHA 와 같아야 한다. */

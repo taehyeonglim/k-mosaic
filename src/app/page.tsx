@@ -1,13 +1,11 @@
 import type { ExtendedFeatureCollection as FeatureCollection } from 'd3-geo';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { Suspense } from 'react';
 
 import geoJson from '../../public/geo/sido.geo.json';
 import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { PageShell } from '@/components/layout/PageShell';
-import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ko } from '@/content/ko';
 import { formatRatePrecisionNote } from '@/content/template';
@@ -77,25 +75,13 @@ export default function Page() {
         brandName={ko.app.title}
         brandSubtitle={ko.app.subtitle}
         dataYear={latestYear}
+        current="multicultural"
         lastUpdated={payload.retrievedAtLabel}
-        sourceLabel={ko.nav.sources}
-        sourceHref="/sources/"
       />
       <PageShell>
-        <div className="space-y-4">
-          <nav
-            aria-label={ko.foreignStudents.navigationLabel}
-            className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
-          >
-            <Link className="btn inline-flex" href="/foreign-students/">
-              {ko.foreignStudents.mainLink}
-            </Link>
-            <ThemeToggle />
-          </nav>
-          <Suspense fallback={<DashboardFallback />}>
-            <DashboardClient payload={payload} />
-          </Suspense>
-        </div>
+        <Suspense fallback={<DashboardFallback />}>
+          <DashboardClient payload={payload} />
+        </Suspense>
       </PageShell>
       <AppFooter
         geoAttribution={ko.common.geoAttribution}

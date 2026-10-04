@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation';
 import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { PageShell } from '@/components/layout/PageShell';
-import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { MetricCardRow } from '@/components/dashboard/MetricCardRow';
 import { Card } from '@/components/ui/Card';
 import { DataTable } from '@/components/ui/DataTable';
@@ -103,25 +102,19 @@ export default async function RegionPage({ params }: { params: Promise<{ code: s
         brandName={ko.app.title}
         brandSubtitle={ko.app.subtitle}
         dataYear={year}
+        current="multicultural"
+        currentScope="section"
         lastUpdated={formattedDate(snapshot.retrievedAt)}
-        sourceLabel={ko.nav.sources}
-        sourceHref="/sources/"
       />
       <PageShell>
         <div className="space-y-8">
-          <nav
-            aria-label={ko.regionPage.navigationLabel}
-            className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
-          >
-            <div className="flex flex-wrap gap-2">
-              <Link className="btn inline-flex" href="/">
-                {ko.regionPage.backToDashboard}
-              </Link>
-              <Link className="btn inline-flex" href={`/?regions=${code}`}>
-                {ko.regionPage.compareInDashboard}
-              </Link>
-            </div>
-            <ThemeToggle />
+          <nav aria-label={ko.regionPage.navigationLabel} className="flex flex-wrap gap-2">
+            <Link className="btn inline-flex" href="/">
+              {ko.regionPage.backToDashboard}
+            </Link>
+            <Link className="btn inline-flex" href={`/?regions=${code}`}>
+              {ko.regionPage.compareInDashboard}
+            </Link>
           </nav>
 
           <header className="space-y-2">

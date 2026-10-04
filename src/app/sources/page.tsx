@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { PageShell } from '@/components/layout/PageShell';
-import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { SourcePanel } from '@/components/dashboard/SourcePanel';
 import { Card } from '@/components/ui/Card';
 import { ko } from '@/content/ko';
@@ -39,21 +38,11 @@ export default function SourcesPage() {
         brandName={ko.app.title}
         brandSubtitle={ko.app.subtitle}
         dataYear={latestYear}
+        current="sources"
         lastUpdated={formattedDate(snapshot.retrievedAt)}
-        sourceLabel={ko.nav.overview}
-        sourceHref="/"
       />
       <PageShell>
         <div className="space-y-8">
-          <nav
-            aria-label={ko.foreignStudents.navigationLabel}
-            className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
-          >
-            <Link className="btn inline-flex" href="/">
-              {ko.nav.overview}
-            </Link>
-            <ThemeToggle />
-          </nav>
           <Card title={ko.sources.title} description={ko.sources.tableNameValue}>
             <div className="space-y-4">
               <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
