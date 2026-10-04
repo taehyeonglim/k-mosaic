@@ -1,12 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { REGION_ORDER } from '@/lib/constants/regions';
-import { selectByRegion, selectNational, selectRanking } from '@/lib/data/selectors';
-import { snapshotIndex, snapshotKey } from '@/lib/data/snapshot';
+import { toStatRecord } from '@/lib/data/compact';
+import { createSelectors } from '@/lib/data/select';
+import { selectByRegion, selectNational } from '@/lib/data/selectors';
 import type { MulticulturalStudentStat, RegionScope } from '@/lib/schema';
 import { formatCount, formatRate } from '@/lib/visualization/format';
 
-const originalSnapshotEntries = [...snapshotIndex.entries()];
+// 픽스처는 화면과 서버가 함께 쓰는 순수 팩토리(createSelectors)에 직접 넣는다.
+// 예전처럼 모듈 싱글톤 인덱스를 바꿔 끼우지 않는다.
 
 function makeStat({
   year,
@@ -36,21 +38,9 @@ function makeStat({
   };
 }
 
-function installStats(records: MulticulturalStudentStat[]): void {
-  snapshotIndex.clear();
-  for (const record of records) {
-    snapshotIndex.set(snapshotKey(record.year, record.regionCode, record.schoolLevel), record);
-  }
+function selectorsFor(records: MulticulturalStudentStat[]) {
+  return createSelectors(records.map(toStatRecord));
 }
-
-function restoreSnapshotIndex(): void {
-  snapshotIndex.clear();
-  for (const [key, record] of originalSnapshotEntries) snapshotIndex.set(key, record);
-}
-
-afterEach(() => {
-  restoreSnapshotIndex();
-});
 
 describe('비율·증감·순위·포맷', () => {
   it('정상 비율은 저장된 소수 4자리 정밀도를 유지한다', () => {
@@ -58,15 +48,15 @@ describe('비율·증감·순위·포맷', () => {
   });
 
   it('분자 null, 분모 null, 분모 0의 비율은 모두 null이다', () => {
-    installStats([
+    const selectors = selectorsFor([
       makeStat({ year: 2030, regionCode: 'KR', count: null, totalStudents: 100, rate: null }),
       makeStat({ year: 2031, regionCode: 'KR', count: 10, totalStudents: null, rate: null }),
       makeStat({ year: 2032, regionCode: 'KR', count: 10, totalStudents: 0, rate: null }),
     ]);
 
-    expect(selectNational(2030, 'all')?.rate).toBeNull();
-    expect(selectNational(2031, 'all')?.rate).toBeNull();
-    expect(selectNational(2032, 'all')?.rate).toBeNull();
+    expect(selectors.selectNational(2030, 'all')?.rate).toBeNull();
+    expect(selectors.selectNational(2031, 'all')?.rate).toBeNull();
+    expect(selectors.selectNational(2032, 'all')?.rate).toBeNull();
   });
 
   it('전년 값이 null인 증가율은 순위에서 제외된다', () => {
@@ -86,9 +76,7 @@ describe('비율·증감·순위·포맷', () => {
         rate: 2,
       }),
     ]);
-    installStats(records);
-
-    const ranking = selectRanking(2025, 'all', 'deltaPct');
+    const ranking = selectorsFor(records).selectRanking(2025, 'all', 'deltaPct');
     expect(ranking).toHaveLength(16);
     expect(ranking.some((row) => row.regionCode === '26')).toBe(false);
   });
@@ -101,7 +89,7 @@ describe('비율·증감·순위·포맷', () => {
     counts['26'] = 90;
     counts['27'] = 90;
     counts['28'] = 80;
-    installStats(
+    const selectors = selectorsFor(
       REGION_ORDER.map((regionCode) =>
         makeStat({
           year: 2030,
@@ -113,7 +101,7 @@ describe('비율·증감·순위·포맷', () => {
       ),
     );
 
-    const ranking = selectRanking(2030, 'all', 'count');
+    const ranking = selectors.selectRanking(2030, 'all', 'count');
     expect(ranking.slice(0, 4).map((row) => row.rank)).toEqual([1, 2, 2, 4]);
     expect(ranking.slice(0, 4).map((row) => row.regionCode)).toEqual(['11', '26', '27', '28']);
     expect(ranking[1]?.isTied).toBe(true);
@@ -127,7 +115,7 @@ describe('비율·증감·순위·포맷', () => {
         regionCode === '11' || regionCode === '50' ? 100 : 1,
       ]),
     ) as Record<(typeof REGION_ORDER)[number], number>;
-    installStats(
+    const selectors = selectorsFor(
       REGION_ORDER.map((regionCode) =>
         makeStat({
           year: 2030,
@@ -140,7 +128,8 @@ describe('비율·증감·순위·포맷', () => {
     );
 
     expect(
-      selectRanking(2030, 'all', 'count')
+      selectors
+        .selectRanking(2030, 'all', 'count')
         .slice(0, 2)
         .map((row) => row.regionCode),
     ).toEqual(['11', '50']);
@@ -156,9 +145,7 @@ describe('비율·증감·순위·포맷', () => {
         rate: regionCode === '50' ? null : 1,
       }),
     );
-    installStats(records);
-
-    const ranking = selectRanking(2030, 'all', 'count');
+    const ranking = selectorsFor(records).selectRanking(2030, 'all', 'count');
     expect(ranking).toHaveLength(16);
     expect(ranking.some((row) => row.regionCode === '50')).toBe(false);
     expect(ranking.at(-1)?.regionCode).toBe('48');

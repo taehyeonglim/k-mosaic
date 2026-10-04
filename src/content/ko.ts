@@ -9,6 +9,9 @@ export const ko = {
       '17개 시·도 다문화학생 수와 비율을 지도·순위·시계열로 탐색합니다. 모든 수치에 출처·통계표 ID·계산식을 표시합니다.',
     ogImageAlt: 'K-MOSAIC — 전국 다문화학생 수와 비율, 17개 시·도 단계구분도',
   },
+  common: {
+    nationwide: '전국',
+  },
   nav: {
     overview: '전국 개요',
     map: '지역 지도',

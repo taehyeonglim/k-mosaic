@@ -1,4 +1,5 @@
 import rawForeignSnapshot from '../../../data/snapshots/foreign-students.v1.json';
+import { rankWithTies } from './compare';
 import { REGION_BY_CODE, REGION_ORDER } from '../constants/regions';
 import {
   parseForeignSnapshot,
@@ -84,28 +85,16 @@ export function selectForeignByRegion(year: number): ForeignStudentStat[] {
 }
 
 export function selectForeignRanking(year: number, metric: 'count' | 'rate'): ForeignRankingRow[] {
-  const candidates = selectForeignByRegion(year)
-    .flatMap((record) => {
-      const value =
-        metric === 'count' ? record.foreignStudentCount : record.foreignStudentRateComputed;
-      if (record.regionCode === 'KR') return [];
-      return value === null ? [] : [{ regionCode: record.regionCode, value }];
-    })
-    .sort(
-      (left, right) => right.value - left.value || left.regionCode.localeCompare(right.regionCode),
-    );
-
-  return candidates.map((candidate, index) => {
-    const previous = candidates[index - 1];
-    const next = candidates[index + 1];
-    return {
-      rank: candidates.findIndex((entry) => entry.value === candidate.value) + 1,
-      regionCode: candidate.regionCode,
-      regionNameKo: REGION_BY_CODE[candidate.regionCode]!.officialKo,
-      value: candidate.value,
-      isTied: previous?.value === candidate.value || next?.value === candidate.value,
-    };
+  const candidates = selectForeignByRegion(year).flatMap((record) => {
+    const value =
+      metric === 'count' ? record.foreignStudentCount : record.foreignStudentRateComputed;
+    if (record.regionCode === 'KR' || value === null) return [];
+    return [{ regionCode: record.regionCode, value }];
   });
+  return rankWithTies(candidates).map((entry) => ({
+    ...entry,
+    regionNameKo: REGION_BY_CODE[entry.regionCode]!.officialKo,
+  }));
 }
 
 export function selectForeignTrend(regionCodes: RegionCode[]): ForeignTrendSeries[] {

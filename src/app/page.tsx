@@ -20,12 +20,9 @@ import {
 } from '@/lib/data/selectors';
 import { loadSnapshot } from '@/lib/data/snapshot';
 import { REGION_BY_CODE, REGION_ORDER } from '@/lib/constants/regions';
-import type { RegionScope, SchoolLevel } from '@/lib/schema';
-import {
-  DashboardClient,
-  type CompactRecord,
-  type DashboardPayload,
-} from './dashboard-client';
+import type { SchoolLevel } from '@/lib/schema';
+import { encodeStatRecords } from '@/lib/data/compact';
+import { DashboardClient, type DashboardPayload } from './dashboard-client';
 
 const GEO_ATTRIBUTION =
   '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형 · 가공: vuski/admdongkor — CC BY 4.0';
@@ -56,32 +53,11 @@ function sourcePanelSources() {
 function buildPayload(snapshot: ReturnType<typeof loadSnapshot>): DashboardPayload {
   const years = selectAvailableYears();
   const levels: SchoolLevel[] = ['all', 'elementary', 'middle', 'high', 'other'];
-  const dataRegionCodes: RegionScope[] = ['KR', ...REGION_ORDER];
-  const noteSets: string[][] = [];
-  const noteIndexes = new Map<string, number>();
-  const records: CompactRecord[] = snapshot.records.map((record) => {
-    const yearIndex = years.indexOf(record.year);
-    const regionIndex = dataRegionCodes.indexOf(record.regionCode);
-    const levelIndex = levels.indexOf(record.schoolLevel);
-    if (yearIndex < 0 || regionIndex < 0 || levelIndex < 0) {
-      throw new Error('화면용 데이터 차원 인덱스를 만들 수 없습니다.');
-    }
-    const noteKey = JSON.stringify(record.notes);
-    let noteIndex = noteIndexes.get(noteKey);
-    if (noteIndex === undefined) {
-      noteIndex = noteSets.length;
-      noteIndexes.set(noteKey, noteIndex);
-      noteSets.push([...record.notes]);
-    }
-    return [
-      yearIndex,
-      regionIndex,
-      levelIndex,
-      record.multiculturalStudentCount,
-      record.totalStudentCount,
-      record.multiculturalStudentRateComputed,
-      noteIndex,
-    ];
+  // 클라이언트는 decodeStatRecords 로 같은 레코드를 복원해 같은 셀렉터(createSelectors)를 쓴다.
+  const { records, noteSets } = encodeStatRecords(snapshot.records, {
+    years,
+    regionScopes: ['KR', ...REGION_ORDER],
+    levels,
   });
 
   return {
@@ -136,10 +112,7 @@ export default function Page() {
             aria-label={ko.foreignStudents.navigationLabel}
             className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
           >
-            <Link
-              className="btn inline-flex"
-              href="/foreign-students/"
-            >
+            <Link className="btn inline-flex" href="/foreign-students/">
               {ko.foreignStudents.mainLink}
             </Link>
             <ThemeToggle />

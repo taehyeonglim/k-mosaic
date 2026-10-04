@@ -18,6 +18,7 @@ import { SelectField } from '@/components/ui/SelectField';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ko } from '@/content/ko';
 import { fillTemplate, formatYearRange } from '@/content/template';
+import { difference, percentageDifference } from '@/lib/data/compare';
 import { markedYearPairs } from '@/lib/data/foreign-duplicates';
 import { toForeignCsv, type ForeignRankingRow, type ForeignTrendSeries } from '@/lib/data/foreign';
 import type { ForeignNationwideStat, ForeignStudentStat } from '@/lib/schema/foreign-student';
@@ -69,15 +70,6 @@ interface FilterUpdates {
   year?: number;
   metric?: MetricKey;
   regions?: RegionCode[];
-}
-
-function difference(current: number | null, previous: number | null): number | null {
-  return current === null || previous === null ? null : current - previous;
-}
-
-function percentageDifference(current: number | null, previous: number | null): number | null {
-  if (current === null || previous === null || previous === 0) return null;
-  return (current / previous - 1) * 100;
 }
 
 function readFilters(searchParams: URLSearchParams, years: number[]): FilterState {
