@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { expect, type Page } from '@playwright/test';
@@ -25,14 +25,21 @@ export async function assertNoHorizontalOverflow(page: Page): Promise<void> {
   expect(hasHorizontalOverflow).toBe(false);
 }
 
-export function readApiKeyFromEnvLocal(): string {
-  const line = readFileSync(resolve(process.cwd(), '.env.local'), 'utf8')
+/**
+ * 실제 KOSIS 키 — 환경변수 또는 .env.local. 없으면 null.
+ * CI·새 clone 에는 키가 없다(배포에 키가 필요 없도록 설계). 키가 없을 때 E2E 가 실패하면
+ * CI 에서 E2E 를 돌릴 수 없으므로, 호출부는 null 이면 패턴 검사만 한다.
+ */
+export function readApiKeyIfAvailable(): string | null {
+  const fromEnv = process.env.KOSIS_API_KEY?.trim();
+  if (fromEnv) return fromEnv;
+  const path = resolve(process.cwd(), '.env.local');
+  if (!existsSync(path)) return null;
+  const line = readFileSync(path, 'utf8')
     .split(/\r?\n/)
     .find((entry) => entry.startsWith('KOSIS_API_KEY='));
   const rawValue = line?.slice('KOSIS_API_KEY='.length).trim() ?? '';
-  if (rawValue.length === 0) {
-    throw new Error('KOSIS_API_KEY가 .env.local에 없습니다.');
-  }
+  if (rawValue.length === 0) return null;
   if (
     (rawValue.startsWith('"') && rawValue.endsWith('"')) ||
     (rawValue.startsWith("'") && rawValue.endsWith("'"))
@@ -40,6 +47,11 @@ export function readApiKeyFromEnvLocal(): string {
     return rawValue.slice(1, -1);
   }
   return rawValue;
+}
+
+/** 키 값을 몰라도 잡을 수 있는 노출 흔적 — KOSIS 인증 파라미터에 값이 실린 경우. */
+export function containsApiKeyParameter(values: readonly string[]): boolean {
+  return values.some((value) => /[?&]apiKey=[^&\s"']+/i.test(value));
 }
 
 export function containsSecret(values: readonly string[], secret: string): boolean {
