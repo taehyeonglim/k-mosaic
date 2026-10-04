@@ -8,6 +8,8 @@ export const snapshotCoverageSchema = z
     regionCount: z.number().int().nonnegative(),
     schoolLevels: z.array(schoolLevelSchema).min(1),
     studentTypes: z.array(multiculturalStudentTypeSchema).min(1),
+    // 전국 학교급별 장기 시계열(e-나라 F008402)의 수록 연도. 시도별(years)보다 길다.
+    nationwideYears: z.array(z.number().int().min(2016)).default([]),
   })
   .strict();
 
@@ -21,6 +23,8 @@ export const snapshotSchema = z
     coverage: snapshotCoverageSchema,
     rateFormula: z.string().min(1),
     records: z.array(multiculturalStudentStatSchema),
+    // 전국(KR) 학교급별 장기 시계열. records 의 전국 레코드와 겹치는 연도는 값이 같아야 한다(V11).
+    nationwide: z.array(multiculturalStudentStatSchema).default([]),
   })
   .strict();
 

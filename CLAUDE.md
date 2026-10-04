@@ -31,9 +31,10 @@
 
 데이터 계보:
 ```
-분자  e-나라지표 F008403          HTML 파싱
-분모  KOSIS DT_1963003_002/003/004/009   OpenAPI
+분자  e-나라지표 F008403(시도별 2020~) · F008402(전국 학교급별 2016~)   HTML 파싱
+분모  KOSIS DT_1963003_002/003/004/009   OpenAPI ('총계' 행이 전국)
 비율  분자 ÷ 분모 × 100           직접 계산
+대조  e-나라지표 F008401(전국 공표 비율) — 계산값과 ±0.1%p 대조(V10), 표시에는 쓰지 않음
 ```
 
 ---
@@ -100,7 +101,7 @@ KOSIS 교육기본통계 시도 코드는 행정표준코드가 아니다. 세�
 
 ```bash
 pnpm data:refresh                           # 연례 갱신 (키 필요) — 절차는 docs/operations.md
-pnpm data:validate                          # 다문화 검증 게이트 (V1~V9, X1~X11)
+pnpm data:validate                          # 다문화 검증 게이트 (V1~V11, X1~X11)
 pnpm data:validate-foreign                  # 외국인 유학생 검증 게이트 (F1~F11)
 pnpm data:check-upstream                    # 새 연도 공표 확인 (키 불필요)
 pnpm data:verify-denominator               # 모수 역검증 (키 필요)

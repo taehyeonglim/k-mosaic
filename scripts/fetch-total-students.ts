@@ -28,28 +28,28 @@ function loadLocalKosisEnvironment(): void {
   if (match?.[1]) process.env.KOSIS_API_KEY = match[1].replace(/^['"]|['"]$/g, '');
 }
 
-function readYearRange(): { startYear: number; endYear: number } {
-  const enaraPath = resolve(RAW_DIR, 'enara-F008403.json');
-  if (!existsSync(enaraPath)) return { startYear: DEFAULT_START_YEAR, endYear: DEFAULT_END_YEAR };
+function rawYears(path: string): number[] {
+  if (!existsSync(path)) return [];
   try {
-    const raw: unknown = JSON.parse(readFileSync(enaraPath, 'utf8'));
-    if (raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
-      const years = (raw as { years?: unknown }).years;
-      if (
-        Array.isArray(years) &&
-        years.length > 0 &&
-        years.every((year) => Number.isInteger(year))
-      ) {
-        return {
-          startYear: Math.min(...(years as number[])),
-          endYear: Math.max(...(years as number[])),
-        };
-      }
-    }
+    const raw: unknown = JSON.parse(readFileSync(path, 'utf8'));
+    const years =
+      raw !== null && typeof raw === 'object' ? (raw as { years?: unknown }).years : undefined;
+    return Array.isArray(years)
+      ? years.filter((year): year is number => Number.isInteger(year))
+      : [];
   } catch {
     // normalize 단계에서 원자료 구조를 다시 검증한다. 여기서는 기본 범위를 사용한다.
+    return [];
   }
-  return { startYear: DEFAULT_START_YEAR, endYear: DEFAULT_END_YEAR };
+}
+
+/** 분모는 분자 표(시도별 F008403 · 전국 장기 F008402)가 덮는 연도 전체를 받는다. */
+function readYearRange(): { startYear: number; endYear: number } {
+  const years = ['enara-F008403.json', 'enara-F008402.json'].flatMap((file) =>
+    rawYears(resolve(RAW_DIR, file)),
+  );
+  if (years.length === 0) return { startYear: DEFAULT_START_YEAR, endYear: DEFAULT_END_YEAR };
+  return { startYear: Math.min(...years), endYear: Math.max(...years) };
 }
 
 function writeJson(path: string, value: unknown): void {

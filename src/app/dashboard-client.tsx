@@ -25,7 +25,7 @@ import { triggerDownload } from '@/lib/browser/download';
 import { BASE_PATH } from '@/lib/site';
 import { readRegions, readYear, toggleRegion } from '@/lib/url-filters';
 import { fillTemplate, formatYearRange } from '@/content/template';
-import { type CompactRecord, decodeStatRecords } from '@/lib/data/compact';
+import { type CompactDataset, type CompactRecord, decodeStatRecords } from '@/lib/data/compact';
 import { difference, percentageDifference } from '@/lib/data/compare';
 import { snapshotToCsv, toCsv } from '@/lib/data/csv';
 import { createSelectors } from '@/lib/data/select';
@@ -65,6 +65,8 @@ export interface DashboardPayload {
   rateFormula: string;
   /** 공표 비율 정수 반올림 안내. 해당 연도가 없으면 null. */
   ratePrecisionNote: string | null;
+  /** 전국 학교급별 장기 시계열(2016~) — 전국 추세 차트가 쓴다. regionScopes 는 ['KR']. */
+  nationwide: CompactDataset;
 }
 
 interface DashboardClientProps {
@@ -116,6 +118,10 @@ export function DashboardClient({ payload }: DashboardClientProps) {
         }),
       ),
     [payload],
+  );
+  const nationwideSelectors = useMemo(
+    () => createSelectors(decodeStatRecords(payload.nationwide)),
+    [payload.nationwide],
   );
   const currentViews = useMemo(
     () => selectors.selectByRegion(filters.year, filters.level),
@@ -263,8 +269,9 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     [filters.level, filters.metric, payload.regionCodes, selectors],
   );
   const nationwideTrend = useMemo(
-    () => trendSeries.filter((series) => series.regionCode === 'KR'),
-    [trendSeries],
+    // 전국 추세는 시도별(2020~)보다 긴 전국 장기 시계열(2016~)로 그린다.
+    () => nationwideSelectors.selectTrend(['KR'], filters.level, filters.metric),
+    [filters.level, filters.metric, nationwideSelectors],
   );
   const selectedTrend = useMemo(
     () =>
@@ -515,7 +522,11 @@ export function DashboardClient({ payload }: DashboardClientProps) {
         <section id="trend" className="min-w-0" aria-label={ko.trend.title}>
           <Card
             title={ko.trend.title}
-            description={fillTemplate(ko.trend.coverageNote, formatYearRange(payload.years))}
+            description={fillTemplate(ko.trend.coverageNote, {
+              ...formatYearRange(payload.years),
+              nationwideStart: formatYearRange(payload.nationwide.years).start,
+              nationwideEnd: formatYearRange(payload.nationwide.years).end,
+            })}
           >
             <div className="grid min-w-0 gap-8 lg:grid-cols-2">
               <section className="min-w-0 space-y-3" aria-labelledby="national-trend-title">

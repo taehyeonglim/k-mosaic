@@ -1,5 +1,5 @@
-﻿# 출처: e-나라지표 F008403 + KOSIS DT_1963003_002·003·004·009
-# 기준연도: 2020, 2021, 2022, 2023, 2024, 2025
+﻿# 출처: e-나라지표 F008403(시도별)·F008402(전국 학교급별) + KOSIS DT_1963003_002·003·004·009 · 대조용 공표 비율 F008401
+# 기준연도: 시도별 2020~2025 · 전국 학교급별 2016~2025
 # 계산식: multiculturalStudentRateComputed = multiculturalStudentCount / totalStudentCount * 100, 분모 = 초등학교+중학교+고등학교+각종학교 학생수 (특수학교·유치원 제외)
 year,regionCode,regionNameKo,regionNameEn,schoolLevel,studentType,multiculturalStudentCount,totalStudentCount,multiculturalStudentRateComputed,multiculturalStudentRatePublished,notes
 2020,KR,전국,Korea (nationwide),all,total,147378,5355832,2.7517,2.8,
@@ -542,3 +542,23 @@ year,regionCode,regionNameKo,regionNameEn,schoolLevel,studentType,multiculturalS
 2025,50,제주특별자치도,Jeju,middle,total,875,20750,4.2169,4,공표 비율이 정수 반올림됨 — 표시에는 계산값을 사용
 2025,50,제주특별자치도,Jeju,high,total,427,18711,2.2821,2,공표 비율이 정수 반올림됨 — 표시에는 계산값을 사용
 2025,50,제주특별자치도,Jeju,other,total,,,,0,분모 일부 학교급 결측 — 비율 계산 불가 | 원자료 결측(-) — 0명이 아님 | 공표 비율이 정수 반올림됨 — 표시에는 계산값을 사용
+2016,KR,전국,Korea (nationwide),all,total,99186,5890949,1.6837,1.7,
+2016,KR,전국,Korea (nationwide),elementary,total,73972,2672843,2.7675,2.8,
+2016,KR,전국,Korea (nationwide),middle,total,15080,1457490,1.0347,1,
+2016,KR,전국,Korea (nationwide),high,total,9816,1752457,0.5601,0.6,
+2016,KR,전국,Korea (nationwide),other,total,318,8159,3.8975,3.9,
+2017,KR,전국,Korea (nationwide),all,total,109387,5733132,1.908,1.9,
+2017,KR,전국,Korea (nationwide),elementary,total,82733,2674227,3.0937,3.1,
+2017,KR,전국,Korea (nationwide),middle,total,15945,1381334,1.1543,1.2,
+2017,KR,전국,Korea (nationwide),high,total,10334,1669699,0.6189,0.6,
+2017,KR,전국,Korea (nationwide),other,total,375,7872,4.7637,4.8,
+2018,KR,전국,Korea (nationwide),all,total,122212,5592792,2.1852,2.2,
+2018,KR,전국,Korea (nationwide),elementary,total,93027,2711385,3.431,3.4,
+2018,KR,전국,Korea (nationwide),middle,total,18068,1334288,1.3541,1.4,
+2018,KR,전국,Korea (nationwide),high,total,10688,1538576,0.6947,0.7,
+2018,KR,전국,Korea (nationwide),other,total,429,8543,5.0217,5,
+2019,KR,전국,Korea (nationwide),all,total,137225,5461614,2.5125,2.5,
+2019,KR,전국,Korea (nationwide),elementary,total,103881,2747219,3.7813,3.8,
+2019,KR,전국,Korea (nationwide),middle,total,21693,1294559,1.6757,1.7,
+2019,KR,전국,Korea (nationwide),high,total,11234,1411027,0.7962,0.8,
+2019,KR,전국,Korea (nationwide),other,total,417,8809,4.7338,4.7,

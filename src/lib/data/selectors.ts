@@ -9,7 +9,7 @@ import type {
 } from '../schema/index';
 import { toStatRecord } from './compact';
 import { createSelectors, type Selectors } from './select';
-import { snapshotIndex, sourceMeta } from './snapshot';
+import { loadSnapshot, snapshotIndex, sourceMeta } from './snapshot';
 import type { RankingRow, RegionDetail, StatView, TrendSeries } from './types';
 import { integerRoundedYears } from './years';
 
@@ -53,6 +53,14 @@ export function selectRegionDetail(
   level: SchoolLevel,
 ): RegionDetail | null {
   return selectors().selectRegionDetail(code, year, level);
+}
+
+let nationwideSelectors: Selectors | null = null;
+
+/** 전국 학교급별 장기 시계열(2016~)의 추세 — 시도별 수록 연도보다 길다. */
+export function selectNationwideTrend(level: SchoolLevel, metric: MetricKey): TrendSeries[] {
+  nationwideSelectors ??= createSelectors(loadSnapshot().nationwide.map(toStatRecord));
+  return nationwideSelectors.selectTrend(['KR'], level, metric);
 }
 
 export function selectAvailableYears(): number[] {

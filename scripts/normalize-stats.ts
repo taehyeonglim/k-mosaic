@@ -16,7 +16,7 @@ import {
   integerRoundedYears,
   retainHistoricalYears,
 } from '../src/lib/data/years.js';
-import type { EnaraRow } from './lib/enara.js';
+import type { EnaraLevelTable, EnaraRow } from './lib/enara.js';
 import type { KosisCell } from './lib/kosis.js';
 import { redact } from './lib/redact.js';
 
@@ -24,6 +24,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW_DIR = resolve(ROOT, 'data/raw');
 const NORMALIZED_DIR = resolve(ROOT, 'data/normalized');
 const ENARA_FILE = resolve(RAW_DIR, 'enara-F008403.json');
+// 전국 학교급별 장기 시계열: 학생 수(F008402)와 대조용 공표 비율(F008401)
+const NATIONWIDE_COUNT_FILE = resolve(RAW_DIR, 'enara-F008402.json');
+const NATIONWIDE_RATE_FILE = resolve(RAW_DIR, 'enara-F008401.json');
 const SNAPSHOT_PATH = resolve(ROOT, 'data/snapshots/multicultural-students.v1.json');
 const LEVELS: SchoolLevel[] = ['all', 'elementary', 'middle', 'high', 'other'];
 const DENOMINATOR_LEVELS = {
@@ -98,6 +101,29 @@ function readEnara(): { retrievedAt: string; years: number[]; rows: EnaraRow[] }
   const retrievedAt = String(raw.retrievedAt ?? '');
   if (!retrievedAt) throw new Error(redact('e-나라지표 원자료의 조회일이 없습니다.'));
   return { retrievedAt, years, rows };
+}
+
+function readEnaraLevel(path: string, sttsCd: string): EnaraLevelTable {
+  const raw = readJson(path);
+  if (
+    !isRecord(raw) ||
+    raw.sttsCd !== sttsCd ||
+    !Array.isArray(raw.years) ||
+    !Array.isArray(raw.rows)
+  )
+    throw new Error(redact(`e-나라지표 ${sttsCd} 원자료 구조가 올바르지 않습니다.`));
+  const rows = raw.rows.map((value, index) => {
+    const level = schoolLevelSchema.safeParse(isRecord(value) ? value.schoolLevel : undefined);
+    const year = Number(isRecord(value) ? value.year : NaN);
+    if (!isRecord(value) || !level.success || !Number.isInteger(year))
+      throw new Error(redact(`e-나라지표 ${sttsCd} 행 ${index}가 올바르지 않습니다.`));
+    return {
+      year,
+      schoolLevel: level.data,
+      value: parseSourceNumber(value.value, `${sttsCd} 행 ${index}`),
+    };
+  });
+  return { sttsCd, years: raw.years.map(Number), rows };
 }
 
 function readKosisCells(tblId: string): KosisCell[] {
@@ -246,6 +272,58 @@ function normalize(
   });
 }
 
+/**
+ * 전국(KR) 학교급별 장기 레코드. 분자는 F008402, 분모는 시도별과 같은 KOSIS 개황표의 '총계'.
+ * 공표 비율(F008401)은 대조용으로 보존하고 표시는 계산값을 쓴다 (CLAUDE.md §3.5).
+ */
+function normalizeNationwide(
+  counts: EnaraLevelTable,
+  rates: EnaraLevelTable,
+  denominatorMaps: Readonly<Record<keyof typeof DENOMINATOR_LEVELS, Map<string, DenominatorValue>>>,
+): MulticulturalStudentStat[] {
+  const years = assertContiguousYears(counts.years, 'e-나라지표 F008402');
+  const rateOf = new Map(rates.rows.map((row) => [`${row.year}|${row.schoolLevel}`, row.value]));
+  const roundedYears = new Set(
+    integerRoundedYears(rates.rows.map((row) => ({ year: row.year, published: row.value }))),
+  );
+  return years.flatMap((year) =>
+    LEVELS.map((schoolLevel): MulticulturalStudentStat => {
+      const count =
+        counts.rows.find((row) => row.year === year && row.schoolLevel === schoolLevel)?.value ??
+        null;
+      const publishedRate = rateOf.get(`${year}|${schoolLevel}`) ?? null;
+      const parts = schoolLevel === 'all' ? Object.keys(DENOMINATOR_LEVELS) : [schoolLevel];
+      const denominator = sumDenominators(
+        year,
+        'KR',
+        parts.filter((part): part is keyof typeof DENOMINATOR_LEVELS => part in DENOMINATOR_LEVELS),
+        denominatorMaps,
+      );
+      const notes: string[] = [];
+      if (denominator.incomplete) notes.push('분모 일부 학교급 결측 — 비율 계산 불가');
+      if (count === null) notes.push('원자료 결측(-) — 0명이 아님');
+      if (roundedYears.has(year) && publishedRate !== null)
+        notes.push('공표 비율이 정수 반올림됨 — 표시에는 계산값을 사용');
+      return {
+        year,
+        regionCode: 'KR',
+        regionNameKo: '전국',
+        regionNameEn: 'Korea (nationwide)',
+        schoolLevel,
+        studentType: 'total',
+        multiculturalStudentCount: count,
+        totalStudentCount: denominator.value,
+        multiculturalStudentRateComputed:
+          count !== null && denominator.value !== null && denominator.value > 0
+            ? round4((count / denominator.value) * 100)
+            : null,
+        multiculturalStudentRatePublished: publishedRate,
+        notes,
+      };
+    }),
+  );
+}
+
 export function runNormalizeStats(): Snapshot {
   const enara = readEnara();
   const denominatorMaps = {
@@ -270,19 +348,33 @@ export function runNormalizeStats(): Snapshot {
     normalized.records,
     previous?.records ?? [],
   );
-  const snapshot =
-    retainedYears.length === 0
-      ? normalized
-      : parseSnapshot({
-          ...normalized,
-          coverage: {
-            ...normalized.coverage,
-            years: [...new Set(records.map((record) => record.year))].sort((a, b) => a - b),
-          },
-          records,
-        });
-  if (retainedYears.length > 0)
-    console.log(redact(`업스트림 제공 범위 밖 연도 보존: ${retainedYears.join(', ')}`));
+  const nationwide = retainHistoricalYears(
+    normalizeNationwide(
+      readEnaraLevel(NATIONWIDE_COUNT_FILE, 'F008402'),
+      readEnaraLevel(NATIONWIDE_RATE_FILE, 'F008401'),
+      denominatorMaps,
+    ),
+    previous?.nationwide ?? [],
+  );
+  const uniqueYears = (rows: readonly MulticulturalStudentStat[]) =>
+    [...new Set(rows.map((record) => record.year))].sort((a, b) => a - b);
+  const snapshot = parseSnapshot({
+    ...normalized,
+    coverage: {
+      ...normalized.coverage,
+      years: uniqueYears(records),
+      nationwideYears: uniqueYears(nationwide.records),
+    },
+    records,
+    nationwide: nationwide.records,
+  });
+  for (const [label, retained] of [
+    ['시도별', retainedYears],
+    ['전국 장기', nationwide.retainedYears],
+  ] as const) {
+    if (retained.length > 0)
+      console.log(redact(`${label}: 업스트림 제공 범위 밖 연도 보존 ${retained.join(', ')}`));
+  }
   mkdirSync(NORMALIZED_DIR, { recursive: true });
   writeFileSync(
     resolve(NORMALIZED_DIR, 'multicultural-students.v1.json'),

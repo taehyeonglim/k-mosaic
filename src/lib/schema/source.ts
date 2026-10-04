@@ -4,7 +4,8 @@ const isoDateTimeSchema = z.string().datetime({ offset: true });
 
 export const sourceMetaSchema = z
   .object({
-    role: z.enum(['numerator', 'denominator']),
+    // reference: 계산에 쓰지 않고 대조만 하는 공표 비율 (예: F008401)
+    role: z.enum(['numerator', 'denominator', 'reference']),
     provider: z.string().min(1),
     organization: z.string().min(1),
     statisticsName: z.string().min(1),

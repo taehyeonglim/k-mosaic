@@ -97,7 +97,8 @@ export const ko = {
     rateAxis: '비율(%)',
     missingSegment: '결측 구간은 선을 연결하지 않습니다.',
     // {start}·{end} 는 스냅숏 수록 연도에서 채운다 — 연도를 리터럴로 쓰지 않는다.
-    coverageNote: '시도별·전국 학교급별 자료는 {start}~{end}년을 제공합니다.',
+    coverageNote:
+      '시도별 자료는 {start}~{end}년, 전국 학교급별 자료는 {nationwideStart}~{nationwideEnd}년을 제공합니다.',
     maxRegionsNote: '최대 3개 지역까지 비교할 수 있습니다.',
   },
   regionDetail: {
@@ -126,6 +127,7 @@ export const ko = {
     provider: '제공처',
     numeratorProvider: 'e-나라지표 (분자)',
     denominatorProvider: 'KOSIS 국가통계포털 OpenAPI (분모)',
+    referenceProvider: 'e-나라지표 (대조용 공표 비율)',
     originalLinks: '원자료 링크',
     originalLinkAction: '원자료 링크 ↗',
     numeratorLink: 'e-나라지표 원자료',

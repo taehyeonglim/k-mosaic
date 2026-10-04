@@ -8,6 +8,7 @@ import {
   type Snapshot,
   type SourceMeta,
 } from '../src/lib/schema/index.js';
+import { snapshotToCsv } from '../src/lib/data/csv.js';
 import { validateSnapshot } from '../src/lib/validation/index.js';
 import {
   mergeSourceEntries,
@@ -120,57 +121,39 @@ function buildSourceMeta(snapshot: Snapshot): SourceMeta[] | null {
         isProvisional,
       }) satisfies SourceMeta,
   );
-  const metadata = [numerator, ...denominator];
+  // 전국 학교급별 장기 시계열 — 학생 수(분자)와 대조용 공표 비율. 원자료가 있을 때만 싣는다.
+  const nationwideReferenceDate = `${Math.max(...snapshot.coverage.nationwideYears, latestYear)}-04-01`;
+  const nationwide = (
+    [
+      ['F008402', 'numerator', '학교급별 다문화학생 수'],
+      ['F008401', 'reference', '학교급별 다문화학생 비율'],
+    ] as const
+  ).flatMap(([tableId, role, tableName]) => {
+    const path = resolve(ROOT, `data/raw/enara-${tableId}.json`);
+    if (!existsSync(path)) return [];
+    return [
+      {
+        role,
+        provider: 'e-나라지표 (국가지표체계)',
+        organization: '교육부·한국교육개발원',
+        statisticsName: '교육기본통계',
+        tableId,
+        tableName,
+        accessMethod: 'html-parse' as const,
+        sourceUrl: 'https://www.index.go.kr/unify/idx-info.do?idxCd=F0084',
+        retrievedAt: rawRetrievedAt(path, snapshot.retrievedAt),
+        lastChangedAt: null,
+        referenceDate: nationwideReferenceDate,
+        isProvisional,
+      } satisfies SourceMeta,
+    ];
+  });
+  const metadata = [numerator, ...nationwide, ...denominator];
   for (const entry of metadata) {
     const parsed = SourceMetaSchema.safeParse(entry);
     if (!parsed.success) throw new Error(redact(`출처 메타데이터 검증 실패: ${entry.tableId}`));
   }
   return metadata;
-}
-
-function csvValue(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  const text = String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-}
-
-function makeFullDatasetCsv(snapshot: Snapshot): string {
-  const comments = [
-    '# 출처: e-나라지표 F008403 + KOSIS DT_1963003_002·003·004·009',
-    `# 기준연도: ${snapshot.coverage.years.join(', ')}`,
-    `# 계산식: ${snapshot.rateFormula}`,
-  ];
-  const header = [
-    'year',
-    'regionCode',
-    'regionNameKo',
-    'regionNameEn',
-    'schoolLevel',
-    'studentType',
-    'multiculturalStudentCount',
-    'totalStudentCount',
-    'multiculturalStudentRateComputed',
-    'multiculturalStudentRatePublished',
-    'notes',
-  ];
-  const lines = snapshot.records.map((record) =>
-    [
-      record.year,
-      record.regionCode,
-      record.regionNameKo,
-      record.regionNameEn,
-      record.schoolLevel,
-      record.studentType,
-      record.multiculturalStudentCount,
-      record.totalStudentCount,
-      record.multiculturalStudentRateComputed,
-      record.multiculturalStudentRatePublished,
-      record.notes.join(' | '),
-    ]
-      .map(csvValue)
-      .join(','),
-  );
-  return `\uFEFF${[...comments, header.map(csvValue).join(','), ...lines].join('\r\n')}\r\n`;
 }
 
 export function runBuildPublicDataset(): Snapshot {
@@ -195,7 +178,7 @@ export function runBuildPublicDataset(): Snapshot {
   writeFileSync(SNAPSHOT_PATH, `${redact(JSON.stringify(snapshot, null, 2))}\n`, 'utf8');
   writeFileSync(
     resolve(SNAPSHOT_DIR, 'multicultural-students.v1.csv'),
-    redact(makeFullDatasetCsv(snapshot)),
+    redact(snapshotToCsv(snapshot)),
     'utf8',
   );
   if (sourceEntries !== undefined) writeSourceMetadata(METADATA_PATH, sourceEntries);

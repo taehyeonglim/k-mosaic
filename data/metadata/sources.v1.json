@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "retrievedAt": "2026-08-05T12:11:09.602Z",
+  "retrievedAt": "2026-10-04T02:02:42.135Z",
   "sources": [
     {
       "role": "numerator",
@@ -11,7 +11,7 @@
       "tableName": "시도별 다문화학생 수 및 다문화학생 비율",
       "accessMethod": "html-parse",
       "sourceUrl": "https://www.index.go.kr/unify/idx-info.do?idxCd=F0084",
-      "retrievedAt": "2026-08-05T09:24:23.257Z",
+      "retrievedAt": "2026-10-04T02:02:01.047Z",
       "lastChangedAt": null,
       "referenceDate": "2025-04-01",
       "isProvisional": null
@@ -25,7 +25,7 @@
       "tableName": "초등학교 개황",
       "accessMethod": "openapi",
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
-      "retrievedAt": "2026-08-05T09:24:26.461Z",
+      "retrievedAt": "2026-10-04T02:02:11.162Z",
       "lastChangedAt": "2025-10-31",
       "referenceDate": "2025-04-01",
       "isProvisional": null
@@ -39,7 +39,7 @@
       "tableName": "중학교 개황",
       "accessMethod": "openapi",
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
-      "retrievedAt": "2026-08-05T09:24:28.287Z",
+      "retrievedAt": "2026-10-04T02:02:20.013Z",
       "lastChangedAt": "2025-10-31",
       "referenceDate": "2025-04-01",
       "isProvisional": null
@@ -53,7 +53,7 @@
       "tableName": "고등학교 개황",
       "accessMethod": "openapi",
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
-      "retrievedAt": "2026-08-05T09:24:32.224Z",
+      "retrievedAt": "2026-10-04T02:02:36.807Z",
       "lastChangedAt": "2025-10-31",
       "referenceDate": "2025-04-01",
       "isProvisional": null
@@ -67,7 +67,7 @@
       "tableName": "각종학교 개황",
       "accessMethod": "openapi",
       "sourceUrl": "https://kosis.kr/openapi/Param/statisticsParameterData.do",
-      "retrievedAt": "2026-08-05T09:24:33.896Z",
+      "retrievedAt": "2026-10-04T02:02:42.135Z",
       "lastChangedAt": "2025-10-31",
       "referenceDate": "2025-04-01",
       "isProvisional": null
@@ -96,6 +96,34 @@
       "accessMethod": "html-parse",
       "sourceUrl": "https://www.index.go.kr/unity/potal/eNara/sub/showStblGams3.do?stts_cd=153401&idx_cd=1534&freq=Y&period=N",
       "retrievedAt": "2026-08-05T12:11:09.602Z",
+      "lastChangedAt": null,
+      "referenceDate": "2025-04-01",
+      "isProvisional": null
+    },
+    {
+      "role": "numerator",
+      "provider": "e-나라지표 (국가지표체계)",
+      "organization": "교육부·한국교육개발원",
+      "statisticsName": "교육기본통계",
+      "tableId": "F008402",
+      "tableName": "학교급별 다문화학생 수",
+      "accessMethod": "html-parse",
+      "sourceUrl": "https://www.index.go.kr/unify/idx-info.do?idxCd=F0084",
+      "retrievedAt": "2026-10-04T02:02:04.922Z",
+      "lastChangedAt": null,
+      "referenceDate": "2025-04-01",
+      "isProvisional": null
+    },
+    {
+      "role": "reference",
+      "provider": "e-나라지표 (국가지표체계)",
+      "organization": "교육부·한국교육개발원",
+      "statisticsName": "교육기본통계",
+      "tableId": "F008401",
+      "tableName": "학교급별 다문화학생 비율",
+      "accessMethod": "html-parse",
+      "sourceUrl": "https://www.index.go.kr/unify/idx-info.do?idxCd=F0084",
+      "retrievedAt": "2026-10-04T02:02:05.955Z",
       "lastChangedAt": null,
       "referenceDate": "2025-04-01",
       "isProvisional": null

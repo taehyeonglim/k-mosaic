@@ -140,10 +140,10 @@ describe('출처 메타데이터 병합', () => {
 
   it('새 통계표는 뒤에 붙인다', () => {
     const existing = committedSources();
-    const added = { ...existing[0]!, tableId: 'F008402' };
+    const added = { ...existing[0]!, tableId: 'F008499' };
     const merged = mergeSourceEntries(existing, [added]);
 
-    expect(merged.at(-1)?.tableId).toBe('F008402');
+    expect(merged.at(-1)?.tableId).toBe('F008499');
     expect(merged).toHaveLength(existing.length + 1);
   });
 });
