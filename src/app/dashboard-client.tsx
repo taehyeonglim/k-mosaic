@@ -1,12 +1,11 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import type { ExtendedFeatureCollection as FeatureCollection } from 'd3-geo';
 
 import { TrendChart } from '@/components/charts/TrendChart';
 import { DownloadButtons } from '@/components/dashboard/DownloadButtons';
+import { useDashboard } from '@/components/dashboard/DashboardDataProvider';
 import { FilterBar } from '@/components/dashboard/FilterBar';
-import { MetricCardRow } from '@/components/dashboard/MetricCardRow';
 import {
   RankingTable,
   type RankingTableMetric,
@@ -23,107 +22,32 @@ import { useUrlQuery } from '@/hooks/use-url-query';
 import { ko } from '@/content/ko';
 import { triggerDownload } from '@/lib/browser/download';
 import { BASE_PATH } from '@/lib/site';
-import { readRegions, readYear, toggleRegion } from '@/lib/url-filters';
+import { readDashboardFilters, toggleRegion } from '@/lib/url-filters';
 import { fillTemplate, formatYearRange } from '@/content/template';
-import { type CompactDataset, type CompactRecord, decodeStatRecords } from '@/lib/data/compact';
-import { difference, percentageDifference } from '@/lib/data/compare';
+import { difference } from '@/lib/data/compare';
+import { dashboardScale } from '@/lib/data/dashboard-data';
 import { snapshotToCsv, toCsv } from '@/lib/data/csv';
-import { createSelectors } from '@/lib/data/select';
 import type { LevelStatView, RankingRow, StatView } from '@/lib/data/types';
-import {
-  metricKeySchema,
-  schoolLevelSchema,
-  type MetricKey,
-  type RegionCode,
-  type SchoolLevel,
-  type Snapshot,
-} from '@/lib/schema';
+import { schoolLevelSchema, type RegionCode, type Snapshot } from '@/lib/schema';
 import { formatMetricValue, formatRate } from '@/lib/visualization/format';
-import { createCountScale, createRateScale } from '@/lib/visualization/scale';
 import type { SeriesSlot } from '@/lib/visualization/series-style';
-
-export interface DashboardPayload {
-  geo: FeatureCollection;
-  years: number[];
-  levels: SchoolLevel[];
-  regionCodes: RegionCode[];
-  regionLabels: Record<string, string>;
-  records: CompactRecord[];
-  noteSets: string[][];
-  sources: {
-    role: string;
-    provider: string;
-    organization: string;
-    statisticsName: string;
-    tableId: string;
-    tableName: string;
-    sourceUrl: string;
-    retrievedAt: string;
-    referenceDate: string | null;
-    isProvisional: boolean | null;
-  }[];
-  retrievedAtLabel: string;
-  rateFormula: string;
-  /** 공표 비율 정수 반올림 안내. 해당 연도가 없으면 null. */
-  ratePrecisionNote: string | null;
-  /** 전국 학교급별 장기 시계열(2016~) — 전국 추세 차트가 쓴다. regionScopes 는 ['KR']. */
-  nationwide: CompactDataset;
-}
-
-interface DashboardClientProps {
-  payload: DashboardPayload;
-}
-
-interface FilterState {
-  year: number;
-  level: SchoolLevel;
-  metric: MetricKey;
-  regions: RegionCode[];
-  hasTooManyRegions: boolean;
-}
-
-function readFilters(searchParams: URLSearchParams, years: number[]): FilterState {
-  const requestedLevel = schoolLevelSchema.safeParse(searchParams.get('level'));
-  const requestedMetric = metricKeySchema.safeParse(searchParams.get('metric'));
-  return {
-    year: readYear(searchParams, years),
-    level: requestedLevel.success ? requestedLevel.data : 'all',
-    metric: requestedMetric.success ? requestedMetric.data : 'count',
-    ...readRegions(searchParams),
-  };
-}
 
 async function loadFullSnapshot(): Promise<Snapshot> {
   const snapshotModule = await import('../../data/snapshots/multicultural-students.v1.json');
   return snapshotModule.default as Snapshot;
 }
 
-export function DashboardClient({ payload }: DashboardClientProps) {
+export function DashboardClient() {
+  // payload 와 셀렉터는 히어로와 함께 쓴다 (DashboardDataProvider 가 한 번만 디코딩한다).
+  const { payload, data } = useDashboard();
+  const { selectors, nationwideSelectors } = data;
   const { searchString, updateQuery } = useUrlQuery();
   const [mapLimitReached, setMapLimitReached] = useState(false);
   const filters = useMemo(
-    () => readFilters(new URLSearchParams(searchString), payload.years),
+    () => readDashboardFilters(new URLSearchParams(searchString), payload.years),
     [payload.years, searchString],
   );
 
-  // 서버와 같은 순수 셀렉터 팩토리를 쓴다 — 셀렉터 테스트가 이 화면 경로를 그대로 검증한다.
-  const selectors = useMemo(
-    () =>
-      createSelectors(
-        decodeStatRecords({
-          years: payload.years,
-          regionScopes: ['KR', ...payload.regionCodes],
-          levels: payload.levels,
-          records: payload.records,
-          noteSets: payload.noteSets,
-        }),
-      ),
-    [payload],
-  );
-  const nationwideSelectors = useMemo(
-    () => createSelectors(decodeStatRecords(payload.nationwide)),
-    [payload.nationwide],
-  );
   const currentViews = useMemo(
     () => selectors.selectByRegion(filters.year, filters.level),
     [filters.level, filters.year, selectors],
@@ -131,15 +55,6 @@ export function DashboardClient({ payload }: DashboardClientProps) {
   const currentNational = useMemo(
     () => selectors.selectNational(filters.year, filters.level),
     [filters.level, filters.year, selectors],
-  );
-  const previousNational = useMemo(
-    () => selectors.selectNational(filters.year - 1, filters.level),
-    [filters.level, filters.year, selectors],
-  );
-  const firstYear = payload.years[0] ?? filters.year;
-  const firstNational = useMemo(
-    () => selectors.selectNational(firstYear, filters.level),
-    [firstYear, filters.level, selectors],
   );
   const currentRanking = useMemo(
     () => selectors.selectRanking(filters.year, filters.level, filters.metric),
@@ -157,19 +72,10 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     () => currentViews.map((view) => ({ regionCode: view.regionCode, value: metricValue(view) })),
     [currentViews, metricValue],
   );
-  // 척도는 선택 연도가 아니라 수록 전 연도 값으로 만든다 — 연도를 바꿔도 같은 색이
-  // 같은 값을 뜻해야 연도 간 비교가 가능하다 (ko.map.scaleNote).
-  const scaleValues = useMemo(
-    () =>
-      payload.years.flatMap((year) =>
-        selectors.selectByRegion(year, filters.level).map(metricValue),
-      ),
-    [filters.level, metricValue, payload.years, selectors],
-  );
+  // 지도와 히어로의 타일 모자이크가 같은 척도를 쓴다 (수록 전 연도 기준으로 고정).
   const mapScale = useMemo(
-    () =>
-      filters.metric === 'count' ? createCountScale(scaleValues) : createRateScale(scaleValues),
-    [filters.metric, scaleValues],
+    () => dashboardScale(data, filters.level, filters.metric),
+    [data, filters.level, filters.metric],
   );
   const mapRanks = useMemo(
     () =>
@@ -285,13 +191,6 @@ export function DashboardClient({ payload }: DashboardClientProps) {
       })),
     [payload.regionCodes, payload.regionLabels],
   );
-  const countDelta = difference(currentNational?.count ?? null, previousNational?.count ?? null);
-  const countDeltaPct = percentageDifference(
-    currentNational?.count ?? null,
-    previousNational?.count ?? null,
-  );
-  const firstYearDelta = difference(currentNational?.count ?? null, firstNational?.count ?? null);
-
   // 비교 지역의 계열색 자리 — 고른 순서를 따른다. 한 지역만 골랐어도 범주색을 써서,
   // 지역을 더했을 때 먼저 고른 지역의 색이 바뀌지 않게 한다.
   function regionSlot(code: string): SeriesSlot | undefined {
@@ -341,54 +240,6 @@ export function DashboardClient({ payload }: DashboardClientProps) {
 
   return (
     <div className="space-y-8">
-      <section id="overview" aria-label={ko.overview.title}>
-        <Card title={ko.overview.title} description={ko.app.tagline}>
-          <MetricCardRow
-            items={[
-              {
-                key: 'student-count',
-                label: ko.overview.studentCount,
-                value: currentNational?.count ?? null,
-                unit: 'count',
-              },
-              {
-                key: 'student-rate',
-                label: `${ko.overview.nationwideValue} · ${ko.overview.rate}`,
-                value: currentNational?.rate ?? null,
-                unit: 'percent',
-                note: ko.overview.computedRate,
-              },
-              {
-                key: 'previous-year',
-                label: ko.overview.previousYear,
-                value: countDelta,
-                unit: 'count',
-                delta: countDelta,
-                deltaPct: countDeltaPct,
-                display: 'delta',
-              },
-              {
-                key: 'first-year',
-                label: ko.overview.firstYear,
-                value: firstYearDelta,
-                unit: 'count',
-                delta: firstYearDelta,
-                display: 'delta',
-                note: `${firstYear} ${ko.overview.referenceYear}`,
-              },
-            ]}
-          />
-        </Card>
-      </section>
-
-      <Card title={ko.ethics.termTitle} description={ko.ethics.definition}>
-        <div className="space-y-3 text-sm leading-6 text-[var(--km-color-text-muted)]">
-          <p>{ko.ethics.limitation}</p>
-          <p>{ko.ethics.perspective}</p>
-          <p>{ko.ethics.noCausalInterpretation}</p>
-        </div>
-      </Card>
-
       <section id="filters" aria-label={ko.filters.title}>
         <Card>
           <FilterBar
@@ -579,6 +430,17 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                 />
               </section>
             ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* 용어 안내 (PRD §5.1 필수 문안) — 히어로의 '다문화학생이란?' 링크가 여기로 온다. */}
+      <section id="about-term" className="scroll-mt-6" aria-label={ko.ethics.termTitle}>
+        <Card title={ko.ethics.termTitle} description={ko.ethics.definition}>
+          <div className="space-y-3 text-sm leading-6 text-[var(--km-color-text-muted)]">
+            <p>{ko.ethics.limitation}</p>
+            <p>{ko.ethics.perspective}</p>
+            <p>{ko.ethics.noCausalInterpretation}</p>
           </div>
         </Card>
       </section>
