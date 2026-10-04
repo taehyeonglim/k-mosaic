@@ -1,7 +1,7 @@
 import { appendFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { fetchEnaraTable } from './lib/enara.js';
+import { fetchEnaraLevelTable, fetchEnaraTable } from './lib/enara.js';
 import { redact } from './lib/redact.js';
 import { parseForeignEnaraTable } from './fetch-foreign-students.js';
 
@@ -79,6 +79,15 @@ export async function checkUpstream(): Promise<UpstreamStatus[]> {
       tableId: 'F008403',
       snapshotLatest: snapshotLatestYear('multicultural-students.v1.json'),
       upstreamLatest: Math.max(...multicultural.years),
+    },
+    {
+      // 전국 학교급별 장기 시계열 — 시도별(F008403)보다 먼저 새 연도가 올라올 수 있다.
+      dataset: '다문화학생 (전국 학교급별)',
+      tableId: 'F008402',
+      snapshotLatest: snapshotLatestYear('multicultural-students.v1.json', 'nationwideYears'),
+      upstreamLatest: Math.max(
+        ...(await withRetry('e-나라지표 F008402', () => fetchEnaraLevelTable('F008402'))).years,
+      ),
     },
     {
       dataset: '대학 외국인 유학생 (전국 장기)',
