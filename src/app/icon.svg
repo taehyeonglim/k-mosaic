@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- K-MOSAIC 파비콘 — 모자이크 타일 모티프 (design-system §1.1).
-       브랜드 틸 램프 4단계. 국기·민족·인종 관련 시각 요소 금지 원칙 준수. -->
-  <rect width="64" height="64" rx="12" fill="#0f2b33"/>
-  <rect x="10" y="10" width="20" height="20" rx="4" fill="#73c8c0"/>
-  <rect x="34" y="10" width="20" height="20" rx="4" fill="#367e8e"/>
-  <rect x="10" y="34" width="20" height="20" rx="4" fill="#1f6075"/>
-  <rect x="34" y="34" width="20" height="20" rx="4" fill="#a5e1d5"/>
+  <!-- K-MOSAIC 파비콘 — 헤더 로고와 같은 2×2 타일 (design-system §1.1).
+       잉크 바탕 위에 다크 램프 세 단계와 강조 보라. 국기·민족·인종 관련 시각 요소 금지 원칙 준수. -->
+  <rect width="64" height="64" rx="14" fill="#0b212b"/>
+  <rect x="10" y="10" width="20" height="20" rx="5" fill="#8cddc8"/>
+  <rect x="34" y="10" width="20" height="20" rx="5" fill="#4cb1a9"/>
+  <rect x="10" y="34" width="20" height="20" rx="5" fill="#a996ff"/>
+  <rect x="34" y="34" width="20" height="20" rx="5" fill="#67c8b9"/>
 </svg>

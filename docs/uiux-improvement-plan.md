@@ -1,5 +1,8 @@
 # K-MOSAIC UI/UX 개선 계획
 
+> **2026-10 이후**: 이 문서는 결함 수리 중심의 이전 정비 기록이다. 시각 디자인은 그 뒤 전면 개편됐다 — 현재 규칙은 [design-system.md](./design-system.md), 결정 배경은 [decision-log.md](./decision-log.md)의 DL-011 을 본다.
+
+
 > **작성 근거**: `e2e/screenshots/uiux-audit/` 스크린숏 7장 실측 + `docs/design-system.md`·`docs/product-requirements.md`·`docs/decision-log.md` 대조 + `src/` 전 구현 파일 검토.
 > **범위**: 시각·레이아웃·인터랙션 개선만. 데이터·계산·기능·접근성 속성은 전부 유지한다.
 > **검증 게이트**: `npm run lint && npm run typecheck && npm run test:e2e` (E2E 32개, axe 8개 포함) 전부 통과.

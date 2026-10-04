@@ -56,11 +56,12 @@ async function open(
   // 테마 버튼 위에 남은 마우스가 툴팁을 띄우지 않게 치운다.
   await page.addStyleTag({ content: '.fixed { display: none !important; }' });
   await page.mouse.move(0, 0);
-  // 테마 전환 색상 transition(150ms)이 끝난 뒤 찍는다.
-  await page.waitForTimeout(400);
+  // 테마 전환 색상 transition(150ms)과 차트 그리기가 끝난 뒤 찍는다.
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await page.waitForTimeout(1200);
 }
 
-/** 지도+순위 격자를 지도 카드 높이로 자른다 — 순위 표 4개까지 담으면 지나치게 길다. */
+/** 지도+순위 격자를 지도 카드 높이로 자른다 (두 패널 중 긴 쪽에 맞추지 않는다). */
 async function captureMapRow(page: Page, path: string): Promise<void> {
   const row = page.locator('#filters + div');
   await row.evaluate((element) =>
@@ -75,74 +76,59 @@ async function captureMapRow(page: Page, path: string): Promise<void> {
   });
 }
 
-interface OgFacts {
-  year: number;
-  count: string;
-  rate: string;
+interface Coverage {
   /** 시도별·전국 장기 수록 시작 연도 — 카드 문구에 리터럴로 쓰지 않는다. */
   regionalStart: number;
   nationwideStart: number;
 }
 
-function latestNationalFacts(): OgFacts {
+function coverage(): Coverage {
   const snapshot = JSON.parse(
     readFileSync(resolve(ROOT, 'data/snapshots/multicultural-students.v1.json'), 'utf8'),
-  ) as {
-    coverage: { years: number[]; nationwideYears: number[] };
-    records: {
-      year: number;
-      regionCode: string;
-      schoolLevel: string;
-      multiculturalStudentCount: number | null;
-      multiculturalStudentRateComputed: number | null;
-    }[];
-  };
-  const year = Math.max(...snapshot.coverage.years);
-  const national = snapshot.records.find(
-    (record) => record.year === year && record.regionCode === 'KR' && record.schoolLevel === 'all',
-  );
-  if (
-    national?.multiculturalStudentCount == null ||
-    national.multiculturalStudentRateComputed == null
-  )
-    throw new Error(`${year}년 전국 값이 없습니다.`);
+  ) as { coverage: { years: number[]; nationwideYears: number[] } };
   return {
-    year,
-    count: new Intl.NumberFormat('ko-KR').format(national.multiculturalStudentCount),
-    rate: national.multiculturalStudentRateComputed.toFixed(1),
     regionalStart: Math.min(...snapshot.coverage.years),
     nationwideStart: Math.min(...snapshot.coverage.nationwideYears),
   };
 }
 
-/** 공유 카드: 핵심 수치 + 실제 단계구분도. 수치는 스냅숏에서 읽는다(갱신 후 재생성). */
-function ogHtml(facts: OgFacts, mapPng: string): string {
-  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>
-    * { margin: 0; box-sizing: border-box; }
-    body { width: 1200px; height: 630px; background: #f6f9fa; color: #13262e;
-      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif; }
-    .card { display: grid; grid-template-columns: 1fr 520px; height: 100%; padding: 64px 72px; gap: 32px; }
-    .brand { font-size: 64px; font-weight: 800; letter-spacing: 0.04em; }
-    .sub { margin-top: 12px; font-size: 26px; color: #3d5560; }
-    .facts { margin-top: 56px; display: flex; gap: 48px; }
-    .label { font-size: 20px; color: #4f6670; }
-    .value { margin-top: 6px; font-size: 56px; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .source { position: absolute; bottom: 48px; left: 72px; font-size: 18px; color: #4f6670; }
-    .map { display: flex; align-items: center; justify-content: center; }
-    .map img { max-width: 100%; max-height: 500px; }
-  </style></head><body><div class="card">
-    <div>
-      <div class="brand">K-MOSAIC</div>
-      <div class="sub">대한민국 다문화학생 교육통계 탐색기</div>
-      <div class="facts">
-        <div><div class="label">${facts.year}년 전국 다문화학생</div><div class="value">${facts.count}명</div></div>
-        <div><div class="label">전체 학생 대비</div><div class="value">${facts.rate}%</div></div>
-      </div>
-    </div>
-    <div class="map"><img src="data:image/png;base64,${mapPng}" alt=""></div>
-  </div>
-  <div class="source">출처: 교육부·한국교육개발원 「교육기본통계」 · 17개 시·도 ${facts.regionalStart}년~ · 전국 ${facts.nationwideStart}년~</div>
-  </body></html>`;
+// 공유 카드(Open Graph) 1200×630 — 실제 화면의 히어로(잉크 띠)를 그대로 찍는다.
+// 따로 조판한 카드가 아니라서 수치·색·타일이 사이트와 어긋날 수 없다.
+// 1280×672 로 그려 0.9375배로 줄이면 1200×630 이다 (같은 비율, xl 배치 유지).
+const OG_VIEWPORT = { width: 1280, height: 672 };
+const OG_SCALE = 1200 / OG_VIEWPORT.width;
+
+async function captureOgCard(page: Page, baseUrl: string, path: string): Promise<void> {
+  await page.goto(`${baseUrl}/`, { waitUntil: 'networkidle' });
+  const { regionalStart, nationwideStart } = coverage();
+  // 그림에서는 쓸 수 없는 조작 요소(메뉴·테마 전환·링크)를 숨기고 출처를 적는다.
+  await page.addStyleTag({
+    content: `
+      .fixed, header nav, header dl, header [role='group'], #overview a { display: none !important; }
+      .ink-band { height: ${OG_VIEWPORT.height}px; overflow: hidden; }
+    `,
+  });
+  await page.evaluate(
+    ({ source, caption }) => {
+      const overview = document.querySelector('#overview');
+      const line = document.createElement('p');
+      line.textContent = source;
+      line.style.cssText =
+        'margin-top: 0.75rem; font-size: 0.8125rem; color: var(--km-color-text-muted);';
+      overview?.append(line);
+      const mosaicCaption = document.querySelector('.ink-band nav:not(header nav) > p');
+      if (mosaicCaption !== null) mosaicCaption.textContent = caption;
+    },
+    {
+      source: `출처: 교육부·한국교육개발원 「교육기본통계」 · 17개 시·도 ${regionalStart}년~ · 전국 ${nationwideStart}년~`,
+      caption: '17개 시·도 · 학생 수',
+    },
+  );
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await page.screenshot({
+    path,
+    clip: { x: 0, y: 0, width: OG_VIEWPORT.width, height: OG_VIEWPORT.height },
+  });
 }
 
 async function main(): Promise<void> {
@@ -165,6 +151,14 @@ async function main(): Promise<void> {
         deviceScaleFactor: 1.25,
       });
       for (const theme of ['light', 'dark'] as const) {
+        // README 첫 그림 — 히어로(잉크 띠)와 필터까지. 지도 중간에서 잘리지 않게 필터 아래에서 끊는다.
+        await open(desktop, baseUrl, '/', theme);
+        const filters = await desktop.locator('#filters').boundingBox();
+        if (filters === null) throw new Error('필터 영역을 찾지 못했습니다.');
+        await desktop.screenshot({
+          path: resolve(IMAGES_DIR, `dashboard-hero-${theme}.png`),
+          clip: { x: 0, y: 0, width: 1440, height: Math.ceil(filters.y + filters.height + 28) },
+        });
         await open(desktop, baseUrl, '/?regions=41,11', theme);
         await captureMapRow(desktop, resolve(IMAGES_DIR, `dashboard-map-${theme}.png`));
         // 섹션은 옆 칸 높이로 늘어나므로 안쪽 카드만 찍는다.
@@ -186,12 +180,8 @@ async function main(): Promise<void> {
       await open(mobile, baseUrl, '/', 'light');
       await mobile.screenshot({ path: resolve(IMAGES_DIR, 'mobile-light.png') });
 
-      // 공유 카드(Open Graph) 1200×630 — 라이트 테마 지도를 잘라 카드에 넣는다.
-      await open(desktop, baseUrl, '/', 'light');
-      const map = await desktop.locator('svg[role="group"]').first().screenshot();
-      const og = await browser.newPage({ viewport: { width: 1200, height: 630 } });
-      await og.setContent(ogHtml(latestNationalFacts(), map.toString('base64')));
-      await og.screenshot({ path: OG_PATH });
+      const og = await browser.newPage({ viewport: OG_VIEWPORT, deviceScaleFactor: OG_SCALE });
+      await captureOgCard(og, baseUrl, OG_PATH);
     } finally {
       await browser.close();
     }

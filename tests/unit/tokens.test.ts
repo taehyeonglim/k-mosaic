@@ -160,11 +160,11 @@ describe('지도 순차 램프', () => {
     }
   });
 
-  it('이전 토큰 이름(map-count·map-rate)은 새 램프의 별칭이다', () => {
-    for (const step of RAMP) {
-      expect(color(light, `--km-map-count-${step}`)).toBe(`var(--km-ramp-${step})`);
-      expect(color(light, `--km-map-rate-${step}`)).toBe(`var(--km-ramp-${step})`);
-    }
+  it('이전 토큰 이름(map-count·map-rate)은 남아 있지 않다 — 램프는 하나다', () => {
+    const css = readGlobalsCss();
+    expect(css).not.toContain('--km-map-count-');
+    expect(css).not.toContain('--km-map-rate-');
+    expect(css).not.toContain('--color-map-');
   });
 });
 

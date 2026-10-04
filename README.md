@@ -17,8 +17,8 @@ Korea Multicultural Student Data Explorer
 </div>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-map-dark.png">
-  <img alt="17개 시·도 다문화학생 수 단계구분도와 지역 순위 화면" src="docs/images/dashboard-map-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-hero-dark.png">
+  <img alt="전국 다문화학생 수와 17개 시·도 타일 모자이크가 있는 첫 화면" src="docs/images/dashboard-hero-light.png">
 </picture>
 
 17개 시·도의 다문화학생 수와 비율을 **지도·순위·시계열**로 탐색합니다.
@@ -53,6 +53,7 @@ flowchart LR
 
 ## 주요 기능
 
+- **전국 개요와 타일 모자이크** — 첫 화면에 전국 수치와 17개 시·도 타일. 타일은 지역 페이지로 이어지고, 핵심 수치는 정적 HTML에 들어 있어 스크립트 없이도 읽힘
 - **단계구분도** — 학생 수·비율 전환, 키보드 조작, 연도 간 고정 척도, 결측 사선 패턴, 표 대체 표현
 - **지역 순위 4종** — 학생 수·비율·절대 증가·증가율. 동률은 공동 순위, 순위가 교육의 우열이 아님을 함께 표시
 - **시계열·지역 비교** — 전국 10년 추세(2016~)와 최대 3개 지역 비교(2020~), 결측 구간 단절
@@ -63,7 +64,12 @@ flowchart LR
 - **접근성** — WCAG 2.1 A/AA 자동 검사(axe), 라이트·다크 테마, 모바일 360px
 
 <details>
-<summary>시계열 · 대학 외국인 유학생 페이지 화면</summary>
+<summary>지도·순위 · 시계열 · 대학 외국인 유학생 페이지 화면</summary>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-map-dark.png">
+  <img alt="17개 시·도 다문화학생 수 단계구분도와 지역 순위 화면" src="docs/images/dashboard-map-light.png">
+</picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-trend-dark.png">

@@ -7,7 +7,7 @@ export const ko = {
     metaTitle: 'K-MOSAIC — 대한민국 다문화학생 교육통계',
     metaDescription:
       '17개 시·도 다문화학생 수와 비율을 지도·순위·시계열로 탐색합니다. 모든 수치에 출처·통계표 ID·계산식을 표시합니다.',
-    ogImageAlt: 'K-MOSAIC — 전국 다문화학생 수와 비율, 17개 시·도 단계구분도',
+    ogImageAlt: 'K-MOSAIC — 전국 다문화학생 수와 비율, 17개 시·도 타일 모자이크',
   },
   common: {
     nationwide: '전국',
