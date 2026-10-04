@@ -11,6 +11,10 @@ export const ko = {
   },
   common: {
     nationwide: '전국',
+    geoSourceAttribution: '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형',
+    geoProcessingAttribution: '가공: vuski/admdongkor — CC BY 4.0',
+    geoAttribution:
+      '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형 · 가공: vuski/admdongkor — CC BY 4.0',
   },
   nav: {
     overview: '전국 개요',
@@ -65,6 +69,12 @@ export const ko = {
     selected: '선택됨',
     keyboardHint: 'Tab으로 지역을 이동하고 Enter 또는 Space로 선택합니다.',
     scaleNote: '연도별 비교를 위해 기본 척도를 고정합니다.',
+    insetAriaNote: ', 울릉도·독도는 실제 위치가 아닌 인셋으로 표시',
+    insetGroupLabel: '울릉도·독도 인셋 — 실제 위치가 아닌 확대 표현입니다.',
+    insetDescription:
+      '울릉도와 독도는 본토와 실제 위치 관계를 유지한 지도가 아니라, 식별을 위한 인셋으로 확대해 표시합니다.',
+    insetTitle: '도서 인셋',
+    insetSubtitle: '실제 위치 아님',
   },
   ranking: {
     title: '지역 순위',
@@ -171,7 +181,8 @@ export const ko = {
   },
   foreignStudents: {
     metaTitle: '대학 외국인 유학생 통계',
-    metaDescription: '고등교육기관(대학) 재적 외국인 학생의 시도별 현황과 전국 장기 추세를 확인합니다.',
+    metaDescription:
+      '고등교육기관(대학) 재적 외국인 학생의 시도별 현황과 전국 장기 추세를 확인합니다.',
     appSubtitle: '고등교육기관(대학) 외국인 유학생 통계 시각화·분석 페이지',
     mainLink: '대학 외국인 유학생 통계 보기',
     backToOverview: '메인 화면으로 돌아가기',
@@ -241,8 +252,6 @@ export const ko = {
       nationwideCsv: '전국 장기 추세 CSV',
       sourceLabel: '고등교육기관 외국인 유학생 통계',
     },
-    geoAttribution:
-      '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형 · 가공: vuski/admdongkor — CC BY 4.0',
     ethicsNote: '개인을 식별할 수 없는 시도 단위 집계 통계만 다룹니다.',
   },
   footer: {

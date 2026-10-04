@@ -23,9 +23,6 @@ export const metadata: Metadata = pageMetadata({
   path: 'sources/',
 });
 
-const GEO_ATTRIBUTION =
-  '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형 · 가공: vuski/admdongkor — CC BY 4.0';
-
 function formattedDate(value: string): string {
   return new Intl.DateTimeFormat('ko-KR', {
     dateStyle: 'medium',
@@ -179,7 +176,7 @@ export default function SourcesPage() {
         </div>
       </PageShell>
       <AppFooter
-        geoAttribution={GEO_ATTRIBUTION}
+        geoAttribution={ko.common.geoAttribution}
         dataAttribution={ko.sources.organizationValue}
         ethicsNote={ko.ethics.aggregateOnly}
       />

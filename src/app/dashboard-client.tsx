@@ -1,7 +1,5 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import type { ExtendedFeatureCollection as FeatureCollection } from 'd3-geo';
 
@@ -17,11 +15,15 @@ import {
 } from '@/components/dashboard/RankingTable';
 import { RegionDetailPanel, type RegionDetailData } from '@/components/dashboard/RegionDetailPanel';
 import { SourcePanel } from '@/components/dashboard/SourcePanel';
-import { MapLegend } from '@/components/map/MapLegend';
+import { RegionMapCard } from '@/components/map/RegionMapCard';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { useUrlQuery } from '@/hooks/use-url-query';
 import { ko } from '@/content/ko';
+import { triggerDownload } from '@/lib/browser/download';
+import { BASE_PATH } from '@/lib/site';
+import { readRegions, readYear, toggleRegion } from '@/lib/url-filters';
 import { fillTemplate, formatYearRange } from '@/content/template';
 import { type CompactRecord, decodeStatRecords } from '@/lib/data/compact';
 import { difference, percentageDifference } from '@/lib/data/compare';
@@ -30,24 +32,14 @@ import { createSelectors } from '@/lib/data/select';
 import type { LevelStatView, RankingRow, StatView } from '@/lib/data/types';
 import {
   metricKeySchema,
-  regionCodeSchema,
   schoolLevelSchema,
   type MetricKey,
   type RegionCode,
-  type RegionScope,
   type SchoolLevel,
   type Snapshot,
 } from '@/lib/schema';
-import { formatCount, formatRate } from '@/lib/visualization/format';
+import { formatMetricValue, formatRate } from '@/lib/visualization/format';
 import { createCountScale, createRateScale } from '@/lib/visualization/scale';
-
-const ChoroplethMap = dynamic(
-  () => import('@/components/map/ChoroplethMap').then((module) => module.ChoroplethMap),
-  {
-    ssr: false,
-    loading: () => <p className="text-small text-[var(--km-color-text-muted)]">{ko.map.title}</p>,
-  },
-);
 
 export interface DashboardPayload {
   geo: FeatureCollection;
@@ -73,7 +65,6 @@ export interface DashboardPayload {
   rateFormula: string;
   /** 공표 비율 정수 반올림 안내. 해당 연도가 없으면 null. */
   ratePrecisionNote: string | null;
-  dictionary: string;
 }
 
 interface DashboardClientProps {
@@ -88,35 +79,14 @@ interface FilterState {
   hasTooManyRegions: boolean;
 }
 
-interface FilterUpdates {
-  year?: number;
-  level?: SchoolLevel;
-  metric?: MetricKey;
-  regions?: RegionCode[];
-}
-
 function readFilters(searchParams: URLSearchParams, years: number[]): FilterState {
-  const defaultYear = years[years.length - 1] ?? years[0] ?? 0;
-  const requestedYear = Number(searchParams.get('year'));
-  const year =
-    Number.isInteger(requestedYear) && years.includes(requestedYear) ? requestedYear : defaultYear;
   const requestedLevel = schoolLevelSchema.safeParse(searchParams.get('level'));
-  const level = requestedLevel.success ? requestedLevel.data : 'all';
   const requestedMetric = metricKeySchema.safeParse(searchParams.get('metric'));
-  const metric = requestedMetric.success ? requestedMetric.data : 'count';
-  const regionTokens = (searchParams.get('regions') ?? '').split(',').filter(Boolean);
-  const parsedRegions = regionTokens.flatMap((token) => {
-    const parsed = regionCodeSchema.safeParse(token);
-    return parsed.success ? [parsed.data] : [];
-  });
-  const regions = Array.from(new Set(parsedRegions)).slice(0, 3);
-
   return {
-    year,
-    level,
-    metric,
-    regions,
-    hasTooManyRegions: parsedRegions.length > 3,
+    year: readYear(searchParams, years),
+    level: requestedLevel.success ? requestedLevel.data : 'all',
+    metric: requestedMetric.success ? requestedMetric.data : 'count',
+    ...readRegions(searchParams),
   };
 }
 
@@ -125,43 +95,12 @@ async function loadFullSnapshot(): Promise<Snapshot> {
   return snapshotModule.default as Snapshot;
 }
 
-function triggerDownload(content: string, filename: string, mimeType: string): void {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
-
 export function DashboardClient({ payload }: DashboardClientProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const searchString = searchParams.toString();
+  const { searchString, updateQuery } = useUrlQuery();
   const [mapLimitReached, setMapLimitReached] = useState(false);
   const filters = useMemo(
     () => readFilters(new URLSearchParams(searchString), payload.years),
     [payload.years, searchString],
-  );
-
-  const updateQuery = useCallback(
-    (updates: FilterUpdates) => {
-      const next = new URLSearchParams(searchString);
-      if (updates.year !== undefined) next.set('year', String(updates.year));
-      if (updates.level !== undefined) next.set('level', updates.level);
-      if (updates.metric !== undefined) next.set('metric', updates.metric);
-      if (updates.regions !== undefined) {
-        if (updates.regions.length === 0) next.delete('regions');
-        else next.set('regions', updates.regions.join(','));
-      }
-      const query = next.toString();
-      router.push(query.length > 0 ? `${pathname}?${query}` : pathname, { scroll: false });
-    },
-    [pathname, router, searchString],
   );
 
   // 서버와 같은 순수 셀렉터 팩토리를 쓴다 — 셀렉터 테스트가 이 화면 경로를 그대로 검증한다.
@@ -352,24 +291,9 @@ export function DashboardClient({ payload }: DashboardClientProps) {
   const firstYearDelta = difference(currentNational?.count ?? null, firstNational?.count ?? null);
 
   function handleMapSelection(code: string | null): void {
-    if (code === null) {
-      if (selectedRegion !== null) {
-        updateQuery({ regions: filters.regions.filter((region) => region !== selectedRegion) });
-      }
-      return;
-    }
-    const parsed = regionCodeSchema.safeParse(code);
-    if (!parsed.success) return;
-    if (filters.regions.includes(parsed.data)) {
-      updateQuery({ regions: filters.regions.filter((region) => region !== parsed.data) });
-      return;
-    }
-    if (filters.regions.length >= 3) {
-      setMapLimitReached(true);
-      return;
-    }
-    setMapLimitReached(false);
-    updateQuery({ regions: [...filters.regions, parsed.data] });
+    const next = toggleRegion(filters.regions, code, selectedRegion);
+    setMapLimitReached(next.limitReached);
+    if (next.regions !== null) updateQuery({ regions: next.regions });
   }
 
   function downloadFiltered(): void {
@@ -398,11 +322,12 @@ export function DashboardClient({ payload }: DashboardClientProps) {
   }
 
   function downloadDictionary(): void {
-    triggerDownload(
-      payload.dictionary,
-      'k-mosaic-data-dictionary.md',
-      'text/markdown;charset=utf-8',
-    );
+    // 데이터 사전은 payload 에 싣지 않고 정적 파일(app/data-dictionary.md)에서 받는다.
+    void fetch(`${BASE_PATH}/data-dictionary.md`)
+      .then((response) => response.text())
+      .then((markdown) =>
+        triggerDownload(markdown, 'k-mosaic-data-dictionary.md', 'text/markdown;charset=utf-8'),
+      );
   }
 
   return (
@@ -483,45 +408,25 @@ export function DashboardClient({ payload }: DashboardClientProps) {
       </section>
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.65fr)]">
-        <Card title={ko.map.title} description={ko.map.description}>
-          <ChoroplethMap
-            geo={payload.geo}
-            data={mapData}
-            scale={mapScale}
-            selectedRegion={selectedRegion}
-            onSelectRegion={handleMapSelection}
-            formatValue={(value) =>
-              filters.metric === 'count'
-                ? formatCount(value, ko.missing.value)
-                : formatRate(value, ko.missing.value)
-            }
-            regionLabels={payload.regionLabels}
-            ranks={mapRanks}
-            year={filters.year}
-            metricLabel={ko.filters.metrics[filters.metric]}
-            missingLabel={ko.map.missingLegend}
-          />
-          <div className="mt-4 space-y-3">
-            <MapLegend
-              scale={mapScale}
-              metricLabel={ko.filters.metrics[filters.metric]}
-              formatValue={(value) =>
-                filters.metric === 'count'
-                  ? formatCount(value, ko.missing.value)
-                  : formatRate(value, ko.missing.value)
-              }
-              missingLabel={ko.map.missingLegend}
-              kind={mapScale.kind}
-            />
-            <p className="text-small text-[var(--km-color-text-muted)]">{ko.map.keyboardHint}</p>
-            <p className="text-small text-[var(--km-color-text-muted)]">{ko.map.scaleNote}</p>
-            {mapLimitReached && filters.regions.length >= 3 ? (
-              <p className="text-small text-destructive" role="alert">
-                {ko.errors.tooManyRegions}
-              </p>
-            ) : null}
-          </div>
-        </Card>
+        <RegionMapCard
+          title={ko.map.title}
+          description={ko.map.description}
+          geo={payload.geo}
+          data={mapData}
+          scale={mapScale}
+          selectedRegion={selectedRegion}
+          onSelectRegion={handleMapSelection}
+          formatValue={(value) => formatMetricValue(filters.metric, value, ko.missing.value)}
+          regionLabels={payload.regionLabels}
+          ranks={mapRanks}
+          year={filters.year}
+          metricLabel={ko.filters.metrics[filters.metric]}
+          missingLabel={ko.map.missingLegend}
+          notes={[ko.map.keyboardHint, ko.map.scaleNote]}
+          limitWarning={
+            mapLimitReached && filters.regions.length >= 3 ? ko.errors.tooManyRegions : null
+          }
+        />
 
         <Card title={ko.ranking.title}>
           <div className="space-y-5">
@@ -531,11 +436,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
             </p>
             <RankingBarChart
               rows={rankingChartRows}
-              formatValue={(value) =>
-                filters.metric === 'count'
-                  ? formatCount(value, ko.missing.value)
-                  : formatRate(value, ko.missing.value)
-              }
+              formatValue={(value) => formatMetricValue(filters.metric, value, ko.missing.value)}
               highlightRegion={selectedRegion ?? undefined}
             />
             <RankingTable
@@ -629,9 +530,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                   }))}
                   metric={filters.metric}
                   formatValue={(value) =>
-                    filters.metric === 'count'
-                      ? formatCount(value, ko.missing.value)
-                      : formatRate(value, ko.missing.value)
+                    formatMetricValue(filters.metric, value, ko.missing.value)
                   }
                 />
               </section>
@@ -648,9 +547,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                     }))}
                     metric={filters.metric}
                     formatValue={(value) =>
-                      filters.metric === 'count'
-                        ? formatCount(value, ko.missing.value)
-                        : formatRate(value, ko.missing.value)
+                      formatMetricValue(filters.metric, value, ko.missing.value)
                     }
                   />
                 ) : (

@@ -28,3 +28,12 @@ export function formatDelta(v: number | null, missing: string): string {
   }
   return `${v > 0 ? '+' : '-'}${deltaFormatter.format(Math.abs(v))}`;
 }
+
+/** 지표에 맞는 표시 형식 — 학생 수는 '명', 비율은 소수 1자리 '%'. */
+export function formatMetricValue(
+  metric: 'count' | 'rate',
+  value: number | null,
+  missing: string,
+): string {
+  return metric === 'count' ? formatCount(value, missing) : formatRate(value, missing);
+}

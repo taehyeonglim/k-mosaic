@@ -10,6 +10,9 @@ import { ko } from '@/content/ko';
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://taehyeonglim.github.io/k-mosaic/';
 
+/** 배포 경로 접두사(GitHub Pages 프로젝트 페이지면 /k-mosaic). 클라이언트에서 정적 파일을 받을 때 쓴다. */
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
 /** 사이트 기준 상대 경로('sources/')를 절대 URL 로 만든다. 앞의 / 는 붙이지 않는다. */
 export function absoluteUrl(path = ''): string {
   return new URL(path.replace(/^\//, ''), SITE_URL).toString();

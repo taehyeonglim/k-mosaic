@@ -9,9 +9,7 @@ import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { PageShell } from '@/components/layout/PageShell';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
-import { SourcePanel } from '@/components/dashboard/SourcePanel';
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ko } from '@/content/ko';
 import { pageMetadata } from '@/lib/site';
@@ -157,7 +155,7 @@ export default function ForeignStudentsPage() {
         </div>
       </PageShell>
       <AppFooter
-        geoAttribution={ko.foreignStudents.geoAttribution}
+        geoAttribution={ko.common.geoAttribution}
         dataAttribution={ko.sources.organizationValue}
         ethicsNote={ko.foreignStudents.ethicsNote}
       />

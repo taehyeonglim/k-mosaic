@@ -18,9 +18,6 @@ import {
 } from '@/lib/visualization/projection';
 import type { ColorScale } from '@/lib/visualization/scale';
 
-const GEO_SOURCE_ATTRIBUTION = '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형';
-const GEO_PROCESSING_ATTRIBUTION = '가공: vuski/admdongkor — CC BY 4.0';
-
 export interface ChoroplethMapProps {
   geo: FeatureCollection;
   data: { regionCode: string; value: number | null }[];
@@ -210,9 +207,7 @@ export function ChoroplethMap({
             const pathData = mainFeature === undefined ? '' : (pathGenerator(mainFeature) ?? '');
             const ariaValue = value === null ? missingLabel : formatValue(value);
             const ariaRank = rank === null ? missingLabel : rank;
-            const insetNote = insetFeatureCodes.has(code)
-              ? ', 울릉도·독도는 실제 위치가 아닌 인셋으로 표시'
-              : '';
+            const insetNote = insetFeatureCodes.has(code) ? ko.map.insetAriaNote : '';
 
             return (
               <g key={code}>
@@ -254,15 +249,8 @@ export function ChoroplethMap({
           })}
         </g>
         {projectionLayout.insetBox !== null && insetPathGenerator !== null ? (
-          <g
-            role="group"
-            aria-label="울릉도·독도 인셋 — 실제 위치가 아닌 확대 표현입니다."
-            pointerEvents="none"
-          >
-            <desc id={insetNoticeId}>
-              울릉도와 독도는 본토와 실제 위치 관계를 유지한 지도가 아니라, 식별을 위한 인셋으로
-              확대해 표시합니다.
-            </desc>
+          <g role="group" aria-label={ko.map.insetGroupLabel} pointerEvents="none">
+            <desc id={insetNoticeId}>{ko.map.insetDescription}</desc>
             <rect
               x={projectionLayout.insetBox.x}
               y={projectionLayout.insetBox.y}
@@ -282,10 +270,10 @@ export function ChoroplethMap({
               fontWeight="600"
             >
               <tspan x={projectionLayout.insetBox.x + 8} dy="0">
-                도서 인셋
+                {ko.map.insetTitle}
               </tspan>
               <tspan x={projectionLayout.insetBox.x + 8} dy="13">
-                실제 위치 아님
+                {ko.map.insetSubtitle}
               </tspan>
             </text>
             {geoParts.inset.features.map((feature) => {
@@ -334,8 +322,8 @@ export function ChoroplethMap({
       </div>
 
       <footer className="mt-2 text-small text-[var(--km-color-text-muted)]">
-        <p>{GEO_SOURCE_ATTRIBUTION}</p>
-        <p>{GEO_PROCESSING_ATTRIBUTION}</p>
+        <p>{ko.common.geoSourceAttribution}</p>
+        <p>{ko.common.geoProcessingAttribution}</p>
       </footer>
     </div>
   );

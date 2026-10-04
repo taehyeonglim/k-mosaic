@@ -1,38 +1,32 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ExtendedFeatureCollection as FeatureCollection } from 'd3-geo';
 
 import { TrendChart } from '@/components/charts/TrendChart';
 import { DownloadButtons } from '@/components/dashboard/DownloadButtons';
 import { RankingTable, type RankingTableRow } from '@/components/dashboard/RankingTable';
 import { SourcePanel, type SourcePanelSource } from '@/components/dashboard/SourcePanel';
-import { MapLegend } from '@/components/map/MapLegend';
+import { RegionMapCard } from '@/components/map/RegionMapCard';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { MetricCardRow } from '@/components/dashboard/MetricCardRow';
 import { SelectField } from '@/components/ui/SelectField';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { useUrlQuery } from '@/hooks/use-url-query';
 import { ko } from '@/content/ko';
+import { triggerDownload } from '@/lib/browser/download';
+import { readRegions, readYear, toggleRegion } from '@/lib/url-filters';
 import { fillTemplate, formatYearRange } from '@/content/template';
 import { difference, percentageDifference } from '@/lib/data/compare';
 import { markedYearPairs } from '@/lib/data/foreign-duplicates';
-import { toForeignCsv, type ForeignRankingRow, type ForeignTrendSeries } from '@/lib/data/foreign';
+import type { ForeignRankingRow, ForeignTrendSeries } from '@/lib/data/foreign';
+import { toForeignCsv } from '@/lib/data/foreign-csv';
 import type { ForeignNationwideStat, ForeignStudentStat } from '@/lib/schema/foreign-student';
-import { metricKeySchema, regionCodeSchema, type MetricKey, type RegionCode } from '@/lib/schema';
-import { formatCount, formatRate } from '@/lib/visualization/format';
+import { metricKeySchema, type MetricKey, type RegionCode } from '@/lib/schema';
+import { formatCount, formatMetricValue } from '@/lib/visualization/format';
 import { createCountScale, createRateScale } from '@/lib/visualization/scale';
-
-const ChoroplethMap = dynamic(
-  () => import('@/components/map/ChoroplethMap').then((module) => module.ChoroplethMap),
-  {
-    ssr: false,
-    loading: () => <p className="text-small text-[var(--km-color-text-muted)]">{ko.map.title}</p>,
-  },
-);
 
 export interface ForeignStudentsPayload {
   geo: FeatureCollection;
@@ -66,30 +60,12 @@ interface FilterState {
   hasTooManyRegions: boolean;
 }
 
-interface FilterUpdates {
-  year?: number;
-  metric?: MetricKey;
-  regions?: RegionCode[];
-}
-
 function readFilters(searchParams: URLSearchParams, years: number[]): FilterState {
-  const defaultYear = years[years.length - 1] ?? years[0] ?? 0;
-  const requestedYear = Number(searchParams.get('year'));
-  const year =
-    Number.isInteger(requestedYear) && years.includes(requestedYear) ? requestedYear : defaultYear;
   const requestedMetric = metricKeySchema.safeParse(searchParams.get('metric'));
-  const metric = requestedMetric.success ? requestedMetric.data : 'count';
-  const regionTokens = (searchParams.get('regions') ?? '').split(',').filter(Boolean);
-  const parsedRegions = regionTokens.flatMap((token) => {
-    const parsed = regionCodeSchema.safeParse(token);
-    return parsed.success ? [parsed.data] : [];
-  });
-
   return {
-    year,
-    metric,
-    regions: Array.from(new Set(parsedRegions)).slice(0, 3),
-    hasTooManyRegions: parsedRegions.length > 3,
+    year: readYear(searchParams, years),
+    metric: requestedMetric.success ? requestedMetric.data : 'count',
+    ...readRegions(searchParams),
   };
 }
 
@@ -108,42 +84,12 @@ function seriesForMetric(
   }));
 }
 
-function triggerDownload(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
-
 export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const searchString = searchParams.toString();
+  const { searchString, updateQuery } = useUrlQuery();
   const [mapLimitReached, setMapLimitReached] = useState(false);
   const filters = useMemo(
     () => readFilters(new URLSearchParams(searchString), payload.years),
     [payload.years, searchString],
-  );
-
-  const updateQuery = useCallback(
-    (updates: FilterUpdates) => {
-      const next = new URLSearchParams(searchString);
-      if (updates.year !== undefined) next.set('year', String(updates.year));
-      if (updates.metric !== undefined) next.set('metric', updates.metric);
-      if (updates.regions !== undefined) {
-        if (updates.regions.length === 0) next.delete('regions');
-        else next.set('regions', updates.regions.join(','));
-      }
-      const query = next.toString();
-      router.push(query.length > 0 ? `${pathname}?${query}` : pathname, { scroll: false });
-    },
-    [pathname, router, searchString],
   );
 
   const currentRecords = useMemo(
@@ -287,24 +233,9 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
   );
 
   function handleMapSelection(code: string | null): void {
-    if (code === null) {
-      if (selectedRegion !== null) {
-        updateQuery({ regions: filters.regions.filter((region) => region !== selectedRegion) });
-      }
-      return;
-    }
-    const parsed = regionCodeSchema.safeParse(code);
-    if (!parsed.success) return;
-    if (filters.regions.includes(parsed.data)) {
-      updateQuery({ regions: filters.regions.filter((region) => region !== parsed.data) });
-      return;
-    }
-    if (filters.regions.length >= 3) {
-      setMapLimitReached(true);
-      return;
-    }
-    setMapLimitReached(false);
-    updateQuery({ regions: [...filters.regions, parsed.data] });
+    const next = toggleRegion(filters.regions, code, selectedRegion);
+    setMapLimitReached(next.limitReached);
+    if (next.regions !== null) updateQuery({ regions: next.regions });
   }
 
   function downloadFiltered(): void {
@@ -410,52 +341,25 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.65fr)]">
         <section id="foreign-map" aria-label={ko.foreignStudents.map.title}>
-          <Card
+          <RegionMapCard
             title={ko.foreignStudents.map.title}
             description={ko.foreignStudents.map.description}
-          >
-            <ChoroplethMap
-              geo={payload.geo}
-              data={mapData}
-              scale={mapScale}
-              selectedRegion={selectedRegion}
-              onSelectRegion={handleMapSelection}
-              formatValue={(value) =>
-                filters.metric === 'count'
-                  ? formatCount(value, ko.missing.value)
-                  : formatRate(value, ko.missing.value)
-              }
-              regionLabels={payload.regionLabels}
-              ranks={mapRanks}
-              year={filters.year}
-              metricLabel={ko.foreignStudents.filters.metrics[filters.metric]}
-              missingLabel={ko.missing.label}
-            />
-            <div className="mt-4 space-y-3">
-              <MapLegend
-                scale={mapScale}
-                metricLabel={ko.foreignStudents.filters.metrics[filters.metric]}
-                formatValue={(value) =>
-                  filters.metric === 'count'
-                    ? formatCount(value, ko.missing.value)
-                    : formatRate(value, ko.missing.value)
-                }
-                missingLabel={ko.missing.label}
-                kind={mapScale.kind}
-              />
-              <p className="text-small text-[var(--km-color-text-muted)]">
-                {ko.foreignStudents.map.keyboardHint}
-              </p>
-              <p className="text-small text-[var(--km-color-text-muted)]">
-                {ko.foreignStudents.map.scaleNote}
-              </p>
-              {mapLimitReached && filters.regions.length >= 3 ? (
-                <p className="text-small text-destructive" role="alert">
-                  {ko.errors.tooManyRegions}
-                </p>
-              ) : null}
-            </div>
-          </Card>
+            geo={payload.geo}
+            data={mapData}
+            scale={mapScale}
+            selectedRegion={selectedRegion}
+            onSelectRegion={handleMapSelection}
+            formatValue={(value) => formatMetricValue(filters.metric, value, ko.missing.value)}
+            regionLabels={payload.regionLabels}
+            ranks={mapRanks}
+            year={filters.year}
+            metricLabel={ko.foreignStudents.filters.metrics[filters.metric]}
+            missingLabel={ko.missing.label}
+            notes={[ko.foreignStudents.map.keyboardHint, ko.foreignStudents.map.scaleNote]}
+            limitWarning={
+              mapLimitReached && filters.regions.length >= 3 ? ko.errors.tooManyRegions : null
+            }
+          />
         </section>
 
         <section id="foreign-ranking" aria-label={ko.foreignStudents.ranking.title}>
@@ -524,9 +428,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
                   }))}
                   metric={filters.metric}
                   formatValue={(value) =>
-                    filters.metric === 'count'
-                      ? formatCount(value, ko.missing.value)
-                      : formatRate(value, ko.missing.value)
+                    formatMetricValue(filters.metric, value, ko.missing.value)
                   }
                   annotations={duplicateAnnotations}
                 />
