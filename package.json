@@ -25,6 +25,7 @@
     "data:build": "tsx scripts/build-public-dataset.ts",
     "data:build-foreign": "tsx scripts/build-foreign-dataset.ts",
     "data:refresh": "tsx scripts/refresh-data.ts",
+    "data:check-upstream": "tsx scripts/check-upstream.ts",
     "check:imports": "tsx scripts/security/check-import-extensions.ts"
   },
   "dependencies": {

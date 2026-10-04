@@ -2,7 +2,7 @@
 
 > **문서 상태**: 1차 조사 완료 (2026-08-05)
 > **조사 방법**: korean-stats-mcp 원격 MCP 서버 + KOSIS OpenAPI 직접 호출 + e-나라지표 HTML
-> **재현 방법**: `scripts/probe/verify-denominator.mjs`, `scripts/probe/build-snapshot.mjs`
+> **재현 방법**: `scripts/probe/verify-denominator.mjs`(모수 역검증), `pnpm data:refresh`(스냅숏 생성 — [operations.md](operations.md))
 
 ---
 
@@ -347,7 +347,7 @@ KOSIS 교육기본통계의 시도 코드는 행정표준코드가 아닌 자체
 ```bash
 cp .env.example .env.local          # KOSIS_API_KEY 입력
 node scripts/probe/verify-denominator.mjs   # 모수 역검증 (§5 표 재생성)
-node scripts/probe/build-snapshot.mjs       # 스냅숏 생성
+pnpm data:refresh                           # 스냅숏 생성 (검증 게이트 포함)
 ```
 
 산출물:

@@ -43,8 +43,7 @@ k-mosaic/
 ├── scripts/
 │   ├── probe/         # 탐색 프로토타입 (기획 단계 산출물)
 │   │   ├── regions.mjs
-│   │   ├── verify-denominator.mjs
-│   │   └── build-snapshot.mjs
+│   │   └── verify-denominator.mjs
 │   ├── inspect-mcp.ts        # MCP 도구·스키마 점검
 │   ├── discover-tables.ts    # 통계표 탐색·목록화
 │   ├── fetch-multicultural-stats.ts  # 분자 수집 (e-나라지표)

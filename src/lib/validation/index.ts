@@ -400,6 +400,27 @@ export function validateSnapshot(s: Snapshot, context: ValidationContext = {}): 
     ),
   );
 
+  // e-나라지표(분자)가 KOSIS(분모)보다 먼저 새 연도를 반영하면, 그 연도는 비율이 전부
+  // 결측인 채로 다른 규칙을 모두 통과한다. 수록 연도마다 전국 분모가 있어야 공개한다.
+  const yearsWithoutDenominator = years.filter((year) => {
+    const national = s.records.find(
+      (record) =>
+        record.year === year && record.regionCode === 'KR' && record.schoolLevel === 'all',
+    );
+    return national?.totalStudentCount === null || national?.totalStudentCount === undefined;
+  });
+  results.push(
+    result(
+      'V9',
+      '분모 연도 누락 금지',
+      'block',
+      yearsWithoutDenominator.length === 0,
+      yearsWithoutDenominator.length === 0
+        ? '모든 수록 연도에 전국 분모(전체 학생 수)가 있습니다.'
+        : `분모가 없는 연도: ${yearsWithoutDenominator.join(', ')} — KOSIS 반영 후 다시 갱신하세요.`,
+    ),
+  );
+
   const duplicateRegionCodes: string[] = [];
   for (const year of years) {
     for (const schoolLevel of levels) {
