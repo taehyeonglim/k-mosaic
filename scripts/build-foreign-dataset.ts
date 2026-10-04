@@ -10,8 +10,13 @@ import {
   type ForeignSnapshot,
   type ForeignStudentStat,
 } from '../src/lib/schema/foreign-student.js';
-import { SourceMetaSchema, type SourceMeta } from '../src/lib/schema/source.js';
+import type { SourceMeta } from '../src/lib/schema/source.js';
 import { validateForeignSnapshot } from '../src/lib/validation/foreign.js';
+import {
+  mergeSourceEntries,
+  readSourceEntries,
+  writeSourceMetadata,
+} from './lib/source-metadata.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW_DIR = resolve(ROOT, 'data/raw');
@@ -294,22 +299,6 @@ function makeForeignCsv(snapshot: ForeignSnapshot): string {
   ].join('\r\n')}\r\n`;
 }
 
-function readExistingSourceEntries(): SourceMeta[] {
-  if (!existsSync(resolve(METADATA_DIR, 'sources.v1.json'))) return [];
-  const raw = readJson(resolve(METADATA_DIR, 'sources.v1.json'));
-  const entries = Array.isArray(raw)
-    ? raw
-    : isRecord(raw) && Array.isArray(raw.sources)
-      ? raw.sources
-      : [];
-  return entries.map((entry, index) => {
-    const parsed = SourceMetaSchema.safeParse(entry);
-    if (!parsed.success)
-      throw new Error(redact(`기존 출처 메타데이터 ${index}건이 올바르지 않습니다.`));
-    return parsed.data;
-  });
-}
-
 function latestKosisChangedAt(raw: KosisRaw): string | null {
   return (
     raw.cells
@@ -357,16 +346,10 @@ function makeSourceMetadata(
       isProvisional: null,
     },
   ];
-  const newById = new Map(newEntries.map((entry) => [entry.tableId, entry]));
-  const merged = readExistingSourceEntries().map((entry) => newById.get(entry.tableId) ?? entry);
-  for (const entry of newEntries) {
-    if (!merged.some((candidate) => candidate.tableId === entry.tableId)) merged.push(entry);
-  }
-  for (const entry of merged) {
-    const parsed = SourceMetaSchema.safeParse(entry);
-    if (!parsed.success) throw new Error(redact(`출처 메타데이터 검증 실패: ${entry.tableId}`));
-  }
-  return merged;
+  return mergeSourceEntries(
+    readSourceEntries(resolve(METADATA_DIR, 'sources.v1.json')),
+    newEntries,
+  );
 }
 
 function writeJson(path: string, value: unknown): void {
@@ -391,15 +374,8 @@ export function runBuildForeignDataset(): ForeignSnapshot {
   });
   const sourceMeta = makeSourceMetadata(kosis, enara, snapshot);
 
-  mkdirSync(SNAPSHOT_DIR, { recursive: true });
-  mkdirSync(METADATA_DIR, { recursive: true });
-  writeJson(resolve(METADATA_DIR, 'sources.v1.json'), {
-    schemaVersion: 1,
-    retrievedAt: snapshot.retrievedAt,
-    sources: sourceMeta,
-  });
-
-  const report = validateForeignSnapshot(snapshot);
+  // 메타데이터는 검증을 통과한 뒤에만 기록한다 — 기록할 항목으로 먼저 검증한다.
+  const report = validateForeignSnapshot(snapshot, { sourceEntries: sourceMeta });
   for (const validation of report.results) {
     if (!validation.passed)
       console.warn(redact(`[${validation.severity}] ${validation.id}: ${validation.detail}`));
@@ -407,6 +383,9 @@ export function runBuildForeignDataset(): ForeignSnapshot {
   if (!report.passed)
     throw new Error(redact('외국인 학생 차단 수준 검증 실패로 공개 스냅숏을 갱신하지 않습니다.'));
 
+  mkdirSync(SNAPSHOT_DIR, { recursive: true });
+  mkdirSync(METADATA_DIR, { recursive: true });
+  writeSourceMetadata(resolve(METADATA_DIR, 'sources.v1.json'), sourceMeta);
   writeJson(resolve(SNAPSHOT_DIR, 'foreign-students.v1.json'), snapshot);
   writeFileSync(
     resolve(SNAPSHOT_DIR, 'foreign-students.v1.csv'),

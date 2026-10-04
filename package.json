@@ -21,6 +21,7 @@
     "data:fetch-foreign": "tsx scripts/fetch-foreign-students.ts",
     "data:normalize": "tsx scripts/normalize-stats.ts",
     "data:validate": "tsx scripts/validate-stats.ts",
+    "data:validate-foreign": "tsx scripts/validate-foreign.ts",
     "data:build": "tsx scripts/build-public-dataset.ts",
     "data:build-foreign": "tsx scripts/build-foreign-dataset.ts",
     "data:refresh": "tsx scripts/refresh-data.ts",

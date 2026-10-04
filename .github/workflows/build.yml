@@ -45,10 +45,34 @@ jobs:
       - name: 단위·통합 테스트
         run: pnpm test
 
+      # PR 에서는 base 브랜치의 스냅숏을 비교 기준으로 넘겨 연도 커버리지 축소(V8·F5)를 잡는다.
+      # 비교 기준이 없으면 검증기는 커밋된 파일 자신과 비교하므로 축소를 볼 수 없다.
+      # checkout 은 fetch-depth 1 이라 base 브랜치를 따로 받아야 한다.
+      - name: 비교 기준 스냅숏 준비 (PR)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_REF"
+          mkdir -p "$RUNNER_TEMP/base"
+          for name in multicultural-students foreign-students; do
+            path="data/snapshots/$name.v1.json"
+            if git cat-file -e "FETCH_HEAD:$path" 2>/dev/null; then
+              git show "FETCH_HEAD:$path" > "$RUNNER_TEMP/base/$name.v1.json"
+            fi
+          done
+
       # 검증 게이트 — 실패하면 배포하지 않는다.
       # 오염된 데이터가 공개되는 것보다 배포가 멈추는 편이 낫다.
-      - name: 데이터 검증
-        run: pnpm data:validate
+      - name: 데이터 검증 — 다문화학생
+        run: |
+          base="$RUNNER_TEMP/base/multicultural-students.v1.json"
+          if [ -f "$base" ]; then pnpm data:validate --previous "$base"; else pnpm data:validate; fi
+
+      - name: 데이터 검증 — 대학 외국인 유학생
+        run: |
+          base="$RUNNER_TEMP/base/foreign-students.v1.json"
+          if [ -f "$base" ]; then pnpm data:validate-foreign --previous "$base"; else pnpm data:validate-foreign; fi
 
       - name: 빌드 (정적 내보내기)
         env:

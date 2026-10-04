@@ -9,6 +9,11 @@ import {
   type SourceMeta,
 } from '../src/lib/schema/index.js';
 import { validateSnapshot } from '../src/lib/validation/index.js';
+import {
+  mergeSourceEntries,
+  readSourceEntries,
+  writeSourceMetadata,
+} from './lib/source-metadata.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const NORMALIZED_PATH = resolve(ROOT, 'data/normalized/multicultural-students.v1.json');
@@ -170,7 +175,14 @@ function makeFullDatasetCsv(snapshot: Snapshot): string {
 
 export function runBuildPublicDataset(): Snapshot {
   const snapshot = readNormalizedSnapshot();
-  const report = validateSnapshot(snapshot);
+  // 원자료가 있으면 새 출처 항목을 기존 파일(외국인 유학생 출처 포함)과 병합하고,
+  // 병합 결과로 검증한다. 메타데이터는 검증을 통과한 뒤에만 기록한다.
+  const sourceMeta = buildSourceMeta(snapshot);
+  const sourceEntries =
+    sourceMeta === null
+      ? undefined
+      : mergeSourceEntries(readSourceEntries(METADATA_PATH), sourceMeta);
+  const report = validateSnapshot(snapshot, { sourceEntries });
   for (const validation of report.results) {
     if (!validation.passed)
       console.warn(redact(`[${validation.severity}] ${validation.id}: ${validation.detail}`));
@@ -178,7 +190,6 @@ export function runBuildPublicDataset(): Snapshot {
   if (!report.passed)
     throw new Error(redact('차단 수준 검증 실패로 공개 스냅숏을 갱신하지 않습니다.'));
 
-  const sourceMeta = buildSourceMeta(snapshot);
   mkdirSync(SNAPSHOT_DIR, { recursive: true });
   mkdirSync(METADATA_DIR, { recursive: true });
   writeFileSync(SNAPSHOT_PATH, `${redact(JSON.stringify(snapshot, null, 2))}\n`, 'utf8');
@@ -187,13 +198,7 @@ export function runBuildPublicDataset(): Snapshot {
     redact(makeFullDatasetCsv(snapshot)),
     'utf8',
   );
-  if (sourceMeta !== null) {
-    writeFileSync(
-      METADATA_PATH,
-      `${redact(JSON.stringify({ schemaVersion: 1, retrievedAt: snapshot.retrievedAt, sources: sourceMeta }, null, 2))}\n`,
-      'utf8',
-    );
-  }
+  if (sourceEntries !== undefined) writeSourceMetadata(METADATA_PATH, sourceEntries);
   console.log(redact(`공개 데이터셋 생성: ${snapshot.records.length}개 레코드`));
   return snapshot;
 }
