@@ -80,6 +80,8 @@ src 수정은 하지 않았으며, 위 결함은 테스트 실패와 함께 남�
 
 ## 산출물
 
+> 아래 스크린숏은 `pnpm test:e2e` 실행 때마다 `e2e/screenshots/`에 다시 만들어지는 산출물이라 저장소에 커밋하지 않는다(링크는 E2E를 실행한 로컬에서만 열린다). 문서용 현재 화면은 [docs/images/](images/)에 있고 `pnpm docs:screenshots`로 다시 만든다.
+
 | 화면 | 파일 |
 |---|---|
 | 데스크톱 메인 | [desktop-main.png](../e2e/screenshots/desktop-main.png) |

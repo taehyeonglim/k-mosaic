@@ -87,7 +87,7 @@ export interface MulticulturalStudentStat {
 
 | 필드 | 타입 | 필수 | 설명 | 함정 |
 |---|---|---|---|---|
-| `year` | number | ✅ | 2020~2025 (시도별), 2016~2025 (전국 학교급별) | 조사 기준일 미확인 |
+| `year` | number | ✅ | 2020~2025 (시도별), 2016~2025 (전국 학교급별) | 조사 기준일은 매년 4월 1일 ([data-audit §10.2](data-audit.md)) |
 | `regionCode` | RegionScope | ✅ | `'KR'`은 전국 집계 | KOSIS 자체 코드(`07a`)와 다름 |
 | `regionNameKo` | string | ✅ | 강원특별자치도(2023~), 전북특별자치도(2024~) | **시계열 중 변경됨** |
 | `regionNameEn` | string | ✅ | 잠정 매핑 | 공식 영문 표기 미확인 |
@@ -164,8 +164,8 @@ export interface SourceRef {
   sourceUrl: string;
   retrievedAt: string;       // ISO 8601
   lastChangedAt: string | null; // 출처가 밝힌 자료수정일 (KOSIS LST_CHN_DE)
-  referenceDate: string | null; // 조사 기준일 — 현재 미확인
-  isProvisional: boolean | null; // 잠정치 여부 — 현재 미확인
+  referenceDate: string | null; // 조사 기준일 — 최신 수록연도의 YYYY-04-01
+  isProvisional: boolean | null; // 잠정치 여부 — 출처가 구분을 제공하지 않아 null
 }
 ```
 
@@ -177,7 +177,7 @@ export interface SourceRef {
 | 분모 | KOSIS OpenAPI | `DT_1963003_004` 고등학교 개황 | OpenAPI |
 | 분모 | KOSIS OpenAPI | `DT_1963003_009` 각종학교 개황 | OpenAPI |
 
-> `referenceDate`와 `isProvisional`은 **현재 확인되지 않았다**. `null`로 두고 UI에서 "미확인"으로 표시하며, 확인 전까지 임의의 값을 넣지 않는다.
+> `referenceDate`는 교육기본통계 조사 기준일(매년 4월 1일)로 확정되어([data-audit §10.2](data-audit.md)) 최신 수록연도의 `YYYY-04-01`을 넣는다. `isProvisional`은 출처가 구분을 제공하지 않아 `null`로 두고 UI에서 "미확인"으로 표시한다 — 임의의 값을 넣지 않는다.
 
 ---
 
@@ -199,7 +199,7 @@ export interface SourceRef {
 |---|---|---|
 | 전년 대비 증감 인원 | `count[y] - count[y-1]` | 어느 한쪽 `null`이면 `null` |
 | 전년 대비 증가율 | `(count[y]/count[y-1] - 1) × 100` | 분모 0 또는 `null` 방지 |
-| 전국 평균과의 차이 | `rate[region] - rate['KR']` | "평균"이 아니라 **전국 집계 비율**임을 명시 |
+| 전국 값과의 차이 | `rate[region] - rate['KR']` | "평균"이 아니라 **전국 집계 비율**임을 명시 |
 | 지역 순위 | 값 내림차순 | 동률 처리 규칙은 PRD §4 참조 |
 
 > ⚠️ `rate['KR']`은 17개 시도 비율의 산술평균이 **아니라** 전국 합계 기반 비율이다. UI에서 "전국 평균"이라는 표현을 쓰지 않고 **"전국 값"**으로 표기한다.

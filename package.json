@@ -15,6 +15,7 @@
     "typecheck": "tsx scripts/security/check-import-extensions.ts && tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:e2e": "playwright test --pass-with-no-tests",
+    "docs:screenshots": "pnpm build && tsx scripts/capture-screenshots.ts",
     "mcp:inspect": "tsx scripts/inspect-mcp.ts",
     "data:discover": "tsx scripts/discover-tables.ts",
     "data:fetch": "tsx scripts/fetch-multicultural-stats.ts && tsx scripts/fetch-total-students.ts",
