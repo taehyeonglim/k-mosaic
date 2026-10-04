@@ -344,7 +344,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
             geo={payload.geo}
             data={mapData}
             scale={mapScale}
-            selectedRegion={selectedRegion}
+            selectedRegions={filters.regions}
             onSelectRegion={handleMapSelection}
             formatValue={(value) => formatMetricValue(filters.metric, value, ko.missing.value)}
             regionLabels={payload.regionLabels}

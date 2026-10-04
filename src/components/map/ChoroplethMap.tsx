@@ -23,7 +23,8 @@ export interface ChoroplethMapProps {
   geo: FeatureCollection;
   data: { regionCode: string; value: number | null }[];
   scale: ColorScale;
-  selectedRegion: string | null;
+  /** 비교 중인 지역 전부 — 고른 지역마다 선택 링을 그린다 (마지막에 고른 지역만이 아니다). */
+  selectedRegions: readonly string[];
   onSelectRegion(code: string | null): void;
   formatValue(v: number | null): string;
   regionLabels: Record<string, string>;
@@ -52,7 +53,7 @@ export function ChoroplethMap({
   geo,
   data,
   scale,
-  selectedRegion,
+  selectedRegions,
   onSelectRegion,
   formatValue,
   regionLabels,
@@ -168,12 +169,14 @@ export function ChoroplethMap({
     if (event.key === 'Escape') {
       event.preventDefault();
       setFocusedRegion(null);
-      onSelectRegion(null);
+      // 지금 있는 지역이 선택돼 있으면 그 지역을, 아니면 마지막에 고른 지역을 해제한다.
+      onSelectRegion(selectedRegions.includes(code) ? code : null);
       return;
     }
     if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
       event.preventDefault();
-      onSelectRegion(selectedRegion === code ? null : code);
+      // 고른 지역을 다시 누르면 해제된다 — 더하고 빼는 판단은 부모(toggleRegion)가 한다.
+      onSelectRegion(code);
     }
   }
 
@@ -209,7 +212,7 @@ export function ChoroplethMap({
             const value = dataByCode.get(code) ?? null;
             const label = regionLabels[code] ?? feature.properties?.nameKo ?? code;
             const rank = ranks[code] ?? null;
-            const selected = selectedRegion === code;
+            const selected = selectedRegions.includes(code);
             const mainFeature = mainFeatureByCode.get(code);
             const pathData = mainFeature === undefined ? '' : (pathGenerator(mainFeature) ?? '');
             const ariaValue = value === null ? missingLabel : formatValue(value);
@@ -229,7 +232,7 @@ export function ChoroplethMap({
                 stroke="var(--km-color-surface)"
                 strokeWidth={1}
                 strokeLinejoin="round"
-                onClick={() => onSelectRegion(selected ? null : code)}
+                onClick={() => onSelectRegion(code)}
                 onKeyDown={(event) => handleKeyDown(event, code)}
                 onMouseEnter={() => setHoveredRegion(code)}
                 onMouseLeave={() => setHoveredRegion(null)}
@@ -246,27 +249,31 @@ export function ChoroplethMap({
         {/* 겹쳐 그리는 외곽선 — 장식이므로 보조기술에 노출하지 않고 클릭을 가로채지 않는다.
             강조 보라만으로는 가장 짙은 단계 위에서 1.9:1 이라, 표면색 헤일로를 먼저 깐다. */}
         <g aria-hidden="true" fill="none" pointerEvents="none" strokeLinejoin="round">
-          {hoveredRegion !== null && hoveredRegion !== selectedRegion ? (
+          {hoveredRegion !== null && !selectedRegions.includes(hoveredRegion) ? (
             <path d={outlinePath(hoveredRegion)} stroke="var(--km-color-text)" strokeWidth={1.5} />
           ) : null}
-          {selectedRegion !== null ? (
-            <>
-              <path
-                aria-hidden="true"
-                d={outlinePath(selectedRegion)}
-                data-map-selection="halo"
-                stroke="var(--km-color-surface)"
-                strokeWidth={6}
-              />
-              <path
-                aria-hidden="true"
-                d={outlinePath(selectedRegion)}
-                data-map-selection="ring"
-                stroke="var(--km-color-accent2)"
-                strokeWidth={2.5}
-              />
-            </>
-          ) : null}
+          {/* 헤일로를 모두 깐 뒤에 링을 모두 그린다 — 맞닿은 지역(서울·경기)을 함께 골라도
+              한 지역의 헤일로가 이웃 지역의 링을 덮지 않는다. */}
+          {selectedRegions.map((code) => (
+            <path
+              aria-hidden="true"
+              d={outlinePath(code)}
+              data-map-selection="halo"
+              key={`halo-${code}`}
+              stroke="var(--km-color-surface)"
+              strokeWidth={6}
+            />
+          ))}
+          {selectedRegions.map((code) => (
+            <path
+              aria-hidden="true"
+              d={outlinePath(code)}
+              data-map-selection="ring"
+              key={`ring-${code}`}
+              stroke="var(--km-color-accent2)"
+              strokeWidth={2.5}
+            />
+          ))}
           {focusedRegion !== null ? (
             <>
               <path
