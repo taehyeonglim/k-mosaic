@@ -1,6 +1,6 @@
 # K-MOSAIC 구현 로드맵
 
-> **인수인계 대상**: 구현 에이전트 (Luna Max)
+> **상태**: 2026-08 MVP 구현·배포 완료. 이 문서는 기획 단계의 작업 분해 기록이다. 현재 운영 절차는 [operations.md](./operations.md)를 본다.
 > **전제**: 기획 단계 완료. 데이터 가용성 검증, 아키텍처·기술 결정 완료.
 > **읽는 순서**: [data-audit.md](./data-audit.md) → [ADR-001](./adr/001-data-ingestion-architecture.md) → [data-dictionary-draft.md](./data-dictionary-draft.md) → [architecture.md](./architecture.md) → 이 문서
 
@@ -56,7 +56,7 @@ C. 디자인 시스템 ──→ D. 프론트엔드
 | ID | 작업 | 난도 | 완료 조건 |
 |---|---|---|---|
 | A7 | e-나라지표 데이터 이용 조건 확인 | 낮 | 이용약관 근거를 문서에 기록 |
-| A8 | 조사 기준일(4/1 여부) 확인 | 낮 | 출처 문서 인용 확보 |
+| A8 | 조사 기준일(4/1 여부) 확인 ✅ | 낮 | 출처 문서 인용 확보 — [data-audit §10.2](./data-audit.md) |
 | A9 | 잠정치/확정치 구분 확인 | 낮 | 동일 |
 | A10 | KESS 학생 유형별 데이터 조사 | 중 | 제공 여부 확정 + 스키마 기록 |
 | A11 | 2020년 이전 시도별 데이터 확보 가능성 | 중 | 가능/불가 판정 |
@@ -77,7 +77,7 @@ C. 디자인 시스템 ──→ D. 프론트엔드
 | B6 | 검증 게이트 (`validate-stats`, V1~V8) | B5 | **높** | 의도적 오염 데이터를 차단 |
 | B7 | 스냅숏 생성 (`build-public-dataset`) | B6 | 중 | 멱등. 재실행 diff = `retrievedAt`만 |
 | B8 | CSV 내보내기 (UTF-8 BOM + 출처 주석) | B7 | 낮 | Excel에서 한글 정상 |
-| B9 | 갱신 절차 문서화 | B7 | 낮 | 제3자가 따라 실행 가능 |
+| B9 | 갱신 절차 문서화 ✅ | B7 | 낮 | 제3자가 따라 실행 가능 — [operations.md](./operations.md) |
 
 **B3와 B6이 이 프로젝트의 핵심 리스크 지점이다.** 다른 어떤 작업보다 리뷰를 두껍게 한다.
 

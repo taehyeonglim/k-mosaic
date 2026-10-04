@@ -1,0 +1,26 @@
+# 의존성 점검. 자동 머지하지 않는다 — PR CI(빌드·E2E·axe)를 통과한 뒤 사람이 머지한다.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Seoul
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: '정비'
+    groups:
+      # 패치·마이너는 한 PR 로 묶는다. 메이저는 개별 PR 로 받아 따로 검토한다.
+      minor-and-patch:
+        update-types: ['minor', 'patch']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+      timezone: Asia/Seoul
+    commit-message:
+      prefix: '정비'
+    groups:
+      actions:
+        patterns: ['*']

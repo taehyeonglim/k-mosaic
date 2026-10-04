@@ -1,0 +1,34 @@
+# 연례 데이터 갱신 때 version·date-released 를 함께 갱신한다 (docs/operations.md §2.5).
+cff-version: 1.2.0
+message: >-
+  이 소프트웨어·데이터셋을 인용할 때는 아래 정보를 쓰고, 원자료(교육부·한국교육개발원
+  「교육기본통계」)도 함께 밝혀 주세요.
+type: software
+title: 'K-MOSAIC: Korea Multicultural Student Data Explorer'
+abstract: >-
+  An interactive explorer of multicultural-student statistics for Korea's 17
+  provinces. The numerator comes from the e-Nara index (F008403), the
+  denominator from KOSIS education statistics (elementary, middle, high and
+  miscellaneous schools), and every share is computed and validated before a
+  snapshot is committed.
+authors:
+  - family-names: Lim
+    given-names: Taehyeong
+version: 0.2.0
+date-released: '2026-10-04'
+license: MIT
+url: 'https://taehyeonglim.github.io/k-mosaic/'
+repository-code: 'https://github.com/taehyeonglim/k-mosaic'
+keywords:
+  - multicultural students
+  - education statistics
+  - Korea
+  - open data
+  - data visualization
+references:
+  - type: data
+    title: 교육기본통계 (Statistical Yearbook of Education)
+    authors:
+      - name: 교육부 (Ministry of Education)
+      - name: 한국교육개발원 (Korean Educational Development Institute)
+    url: 'https://www.index.go.kr/unify/idx-info.do?idxCd=F0084'

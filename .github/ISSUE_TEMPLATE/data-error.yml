@@ -1,0 +1,51 @@
+name: 데이터 오류 제보
+description: 화면의 수치가 원자료와 다르거나, 출처·계산식·주석이 잘못된 경우
+title: '데이터 오류: '
+labels: ['data-error']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        제보해 주셔서 감사합니다. 원자료(e-나라지표·KOSIS)와 대조할 수 있도록 아래를 채워 주세요.
+        참고: 비율은 공표치가 아니라 직접 계산값이며(2025년 공표치는 정수 반올림), 결측은 0이 아니라 "데이터 없음"입니다.
+  - type: dropdown
+    id: dataset
+    attributes:
+      label: 데이터셋
+      options:
+        - 다문화학생 (메인 화면)
+        - 대학 외국인 유학생 (/foreign-students)
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: 화면 주소 (필터 포함 URL)
+      description: 필터 상태가 URL에 담깁니다. 주소창의 URL을 그대로 붙여 주세요.
+      placeholder: https://taehyeonglim.github.io/k-mosaic/?year=2025&level=all&metric=rate&regions=11
+    validations:
+      required: true
+  - type: input
+    id: scope
+    attributes:
+      label: 연도 · 지역 · 학교급 · 지표
+      placeholder: 2025 · 서울특별시 · 중학교 · 비율
+    validations:
+      required: true
+  - type: input
+    id: shown
+    attributes:
+      label: 화면에 표시된 값
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 원자료의 값과 출처
+      description: 통계표 ID(예 F008403, DT_1963003_002)와 링크, 조회한 날짜를 적어 주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: 기타

@@ -260,8 +260,8 @@ export const redact = (s: unknown) =>
 | 항목 | 선택 |
 |---|---|
 | 방식 | 정적 사이트 (Next.js `output: 'export'`) |
-| 후보 | Vercel / Cloudflare Pages / GitHub Pages |
-| 환경변수 | **런타임 없음**. CI 시크릿에만 `KOSIS_API_KEY` |
+| 운영 | GitHub Pages (`out/`은 Vercel·Cloudflare Pages·Netlify에도 그대로 배포 가능) |
+| 환경변수 | **런타임·CI 모두 없음**. `KOSIS_API_KEY`는 로컬 데이터 갱신(`.env.local`)에만 ([operations.md](operations.md)) |
 | 캐시 | 스냅숏은 파일명에 버전 포함 → 불변 캐싱 |
 | 데이터 갱신 | 수집 스크립트 실행 → 검증 통과 → 커밋 → 재배포 |
 

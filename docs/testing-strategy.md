@@ -109,7 +109,7 @@
 
 | 테스트 | 기대 |
 |---|---|
-| `selectNational(2025)` | 202,208명 / 4.02% |
+| `selectNational(2025)` | 202,208명 / 4.0238% (표시 4.0%, [DL-007](decision-log.md)) |
 | `selectNational(2022)` | **168,645명** (외부 공표치와 일치) |
 | `selectByRegion(2025,'all')` 길이 | 17 |
 | `selectRanking(2025,'all','count')` 1위 | 경기(41) |
