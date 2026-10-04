@@ -167,3 +167,4 @@ Next.js 16 App Router(정적 내보내기) · TypeScript strict · Zod(스냅숏
 | 대학 외국인 유학생 | KOSIS 고등교육기관 개황 · [e-나라지표 1534](https://www.index.go.kr/unify/idx-info.do?idxCd=1534) | `DT_1963003_010_S` · `153401` |
 | 원자료 작성 | 교육부·한국교육개발원 「교육기본통계」 | |
 | 행정경계 | 통계청 SGIS — 공공누리 제1유형 (가공: [vuski/admdongkor](https://github.com/vuski/admdongkor), CC BY 4.0) | [geo-source.md](docs/geo-source.md) |
+| 서체 | [Pretendard](https://github.com/orioncactus/pretendard) — SIL Open Font License 1.1 (자체 호스팅) | |
