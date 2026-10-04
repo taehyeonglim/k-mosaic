@@ -154,4 +154,20 @@ test.describe('r4-e2e 접근성 검증', () => {
     expect(audit.imagesHaveAlt).toBe(true);
     expect(audit.svgWithoutSemantics).toBe(0);
   });
+
+  test('외국인 유학생 페이지도 키보드만으로 지역을 선택해 추세를 연다', async ({ page }) => {
+    const response = await page.goto('/foreign-students/', { waitUntil: 'networkidle' });
+    expect(response?.ok()).toBe(true);
+
+    const prompt = page.getByText('지역을 선택하면 시도별 추세가 표시됩니다.', { exact: true });
+    await expect(prompt).toBeVisible();
+
+    const seoulPath = page.locator('path[role="button"][aria-label^="서울특별시,"]');
+    await expect(seoulPath).toHaveCount(1);
+    await seoulPath.focus();
+    await seoulPath.press('Enter');
+
+    await expect(page).toHaveURL(/regions=11/);
+    await expect(prompt).toHaveCount(0);
+  });
 });

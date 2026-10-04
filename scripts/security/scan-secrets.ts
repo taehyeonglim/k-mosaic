@@ -5,7 +5,16 @@ import { dirname, resolve } from 'node:path';
 import { redact } from '../../src/lib/mcp/index.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const SCAN_DIRS = ['out', '.next', 'coverage', 'playwright-report', 'test-results', 'logs'];
+// E2E 리포트는 playwright.config.ts 가 e2e/playwright-report 에 쓴다 (루트 경로는 구버전 호환).
+const SCAN_DIRS = [
+  'out',
+  '.next',
+  'coverage',
+  'e2e/playwright-report',
+  'playwright-report',
+  'test-results',
+  'logs',
+];
 
 function localKosisKey(): string | null {
   if (process.env.KOSIS_API_KEY) return process.env.KOSIS_API_KEY;

@@ -5,6 +5,12 @@ const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const pages = [
   { name: '/', path: '/', readyHeading: '전국 개요', readyHeadingCount: 1 },
   { name: '/sources', path: '/sources/', readyHeading: '출처 및 계산식', readyHeadingCount: 3 },
+  {
+    name: '/foreign-students',
+    path: '/foreign-students/',
+    readyHeading: '외국인 유학생 출처 및 계산식',
+    readyHeadingCount: 1,
+  },
 ];
 const themes = ['light', 'dark'] as const;
 const viewports = [

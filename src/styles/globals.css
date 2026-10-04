@@ -420,7 +420,9 @@
     align-items: center;
     border: 1px solid color-mix(in srgb, var(--km-color-quality-note) 55%, transparent);
     border-radius: 9999px;
-    background-color: color-mix(in srgb, var(--km-color-quality-note) 10%, transparent);
+    /* 불투명하게 섞는다 — 같은 색으로 옅게 칠한 안내 영역 안에 놓이면 반투명 배경이
+       겹쳐 대비가 4.16:1 로 떨어졌다 (axe color-contrast, /foreign-students 라이트). */
+    background-color: color-mix(in srgb, var(--km-color-quality-note) 10%, var(--km-color-surface));
     padding: 0.125rem 0.5rem;
     color: var(--km-color-quality-note);
     font-size: 0.75rem;
