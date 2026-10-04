@@ -10,7 +10,7 @@ export interface SelectFieldProps {
 
 export function SelectField({ label, value, options, onChange, id }: SelectFieldProps) {
   return (
-    <div className="form-label min-w-0">
+    <div className="form-label min-w-0 sm:w-32">
       <label htmlFor={id}>{label}</label>
       <select
         className="form-select w-full"

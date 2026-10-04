@@ -7,8 +7,8 @@ import { Suspense } from 'react';
 import geoJson from '../../../public/geo/sido.geo.json';
 import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { PageShell } from '@/components/layout/PageShell';
-import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ko } from '@/content/ko';
 import { pageMetadata } from '@/lib/site';
@@ -117,16 +117,19 @@ export default function ForeignStudentsPage() {
       />
       <PageShell>
         <div className="space-y-8">
+          <PageHeader
+            title={ko.foreignStudents.metaTitle}
+            description={ko.foreignStudents.metaDescription}
+          />
+
+          {/* 모집단 안내 — 다문화학생(초·중등)과 다른 학생 집단임을 페이지 맨 위에서 밝힌다. */}
           <section
             aria-labelledby="foreign-population-notice-title"
-            className="space-y-3 rounded-[var(--km-radius-lg)] border border-quality-note/55 bg-quality-note/10 p-4 sm:p-5"
+            className="space-y-2 rounded-[var(--km-radius-lg)] border border-quality-note/45 bg-quality-note/10 p-4 sm:p-5"
           >
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 id="foreign-population-notice-title" className="text-base font-semibold">
-                {ko.foreignStudents.populationNoticeLabel}
-              </h2>
-              <Badge tone="caution">{ko.foreignStudents.populationNoticeLabel}</Badge>
-            </div>
+            <h3 id="foreign-population-notice-title" className="text-sm font-semibold">
+              {ko.foreignStudents.populationNoticeLabel}
+            </h3>
             <p className="max-w-4xl text-sm leading-6">{ko.foreignStudents.populationNotice}</p>
             {/* 해시 전용 href 도 next/link 가 처리한다 (basePath 유지). */}
             <Link

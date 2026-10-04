@@ -140,6 +140,8 @@ export const ko = {
     studentTypeUnavailable:
       '이 통계는 학생 유형별(국내출생·중도입국·외국인가정) 구분을 제공하지 않습니다.',
     selectPrompt: '지역을 선택하면 상세 정보가 표시됩니다.',
+    // 닫기 버튼의 이름 — 무엇을 닫는지 지역 이름과 함께 알린다.
+    close: '{region} 선택 해제',
   },
   // 시·도별 정적 페이지 (/regions/[code]/). {region}·{year} 등은 데이터에서 채운다.
   regionPage: {

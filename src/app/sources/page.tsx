@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { PageShell } from '@/components/layout/PageShell';
 import { SourcePanel } from '@/components/dashboard/SourcePanel';
 import { Card } from '@/components/ui/Card';
@@ -43,6 +44,7 @@ export default function SourcesPage() {
       />
       <PageShell>
         <div className="space-y-8">
+          <PageHeader title={ko.nav.sources} description={ko.sources.metaDescription} />
           <Card title={ko.sources.title} description={ko.sources.tableNameValue}>
             <div className="space-y-4">
               <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">

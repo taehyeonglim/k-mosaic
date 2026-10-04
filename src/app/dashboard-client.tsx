@@ -29,7 +29,7 @@ import { dashboardScale } from '@/lib/data/dashboard-data';
 import { snapshotToCsv, toCsv } from '@/lib/data/csv';
 import type { LevelStatView, RankingRow, StatView } from '@/lib/data/types';
 import { schoolLevelSchema, type RegionCode, type Snapshot } from '@/lib/schema';
-import { formatMetricValue, formatRate } from '@/lib/visualization/format';
+import { formatMetricValue } from '@/lib/visualization/format';
 import type { SeriesSlot } from '@/lib/visualization/series-style';
 
 async function loadFullSnapshot(): Promise<Snapshot> {
@@ -154,7 +154,6 @@ export function DashboardClient() {
         rate: difference(currentRate, selectedPrevious?.rate ?? null),
       },
       schoolLevels,
-      trend: selectedDetail.trend,
       notes: selectedDetail.notes,
     };
   }, [
@@ -308,110 +307,80 @@ export function DashboardClient() {
         </section>
       </div>
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
-        <section id="region-detail" className="min-w-0" aria-label={ko.regionDetail.title}>
-          <Card title={ko.regionDetail.title}>
-            {selectedDetailData ? (
-              <div className="space-y-5">
-                <RegionDetailPanel
-                  detail={
-                    filters.metric === 'count'
-                      ? selectedDetailData
-                      : { ...selectedDetailData, trend: [] }
-                  }
-                  onClose={() =>
-                    updateQuery({
-                      regions:
-                        selectedRegion === null
-                          ? filters.regions
-                          : filters.regions.filter((region) => region !== selectedRegion),
-                    })
-                  }
-                  nationalLabel={ko.overview.nationwideValue}
-                  seriesSlot={selectedRegion === null ? undefined : regionSlot(selectedRegion)}
-                />
-                {filters.metric === 'rate' && selectedRegion !== null ? (
-                  <section className="space-y-2" aria-label={ko.filters.metrics.rate}>
-                    <h3 className="font-medium">
-                      {ko.trend.title} · {ko.filters.metrics.rate}
-                    </h3>
-                    <TrendChart
-                      series={selectedTrend
-                        .filter((series) => series.regionCode === selectedRegion)
-                        .map((series) => ({
-                          regionCode: series.regionCode,
-                          label: series.regionNameKo,
-                          points: series.points,
-                          slot: regionSlot(series.regionCode),
-                        }))}
-                      metric="rate"
-                      formatValue={(value) => formatRate(value, ko.missing.value)}
-                    />
-                  </section>
-                ) : null}
-              </div>
-            ) : (
-              <EmptyState description={ko.regionDetail.selectPrompt} />
-            )}
-          </Card>
-        </section>
+      {/* 지역 상세와 시계열은 각각 한 줄을 다 쓴다 — 반쪽 폭에 넣으면 차트가 좁아진다. */}
+      <section id="region-detail" className="min-w-0" aria-label={ko.regionDetail.title}>
+        <Card title={ko.regionDetail.title}>
+          {selectedDetailData ? (
+            <RegionDetailPanel
+              detail={selectedDetailData}
+              onClose={() =>
+                updateQuery({
+                  regions:
+                    selectedRegion === null
+                      ? filters.regions
+                      : filters.regions.filter((region) => region !== selectedRegion),
+                })
+              }
+              nationalLabel={ko.overview.nationwideValue}
+            />
+          ) : (
+            <EmptyState description={ko.regionDetail.selectPrompt} />
+          )}
+        </Card>
+      </section>
 
-        <section id="trend" className="min-w-0" aria-label={ko.trend.title}>
-          <Card
-            title={ko.trend.title}
-            description={fillTemplate(ko.trend.coverageNote, {
-              ...formatYearRange(payload.years),
-              nationwideStart: formatYearRange(payload.nationwide.years).start,
-              nationwideEnd: formatYearRange(payload.nationwide.years).end,
-            })}
-          >
-            {/* 패널이 반쪽 폭이 되는 xl 에서는 두 차트를 위아래로 쌓는다 (좁으면 읽기 어렵다). */}
-            <div className="grid min-w-0 gap-8 lg:grid-cols-2 xl:grid-cols-1">
-              <section className="min-w-0 space-y-3" aria-labelledby="national-trend-title">
-                <h3 id="national-trend-title" className="text-base font-medium">
-                  {ko.trend.nationwide}
-                </h3>
+      <section id="trend" className="min-w-0" aria-label={ko.trend.title}>
+        <Card
+          title={ko.trend.title}
+          description={fillTemplate(ko.trend.coverageNote, {
+            ...formatYearRange(payload.years),
+            nationwideStart: formatYearRange(payload.nationwide.years).start,
+            nationwideEnd: formatYearRange(payload.nationwide.years).end,
+          })}
+        >
+          <div className="grid min-w-0 gap-8 lg:grid-cols-2 lg:items-end">
+            <section className="min-w-0 space-y-3" aria-labelledby="national-trend-title">
+              <h3 id="national-trend-title" className="text-base font-medium">
+                {ko.trend.nationwide}
+              </h3>
+              <TrendChart
+                series={nationwideTrend.map((series) => ({
+                  regionCode: series.regionCode,
+                  label: series.regionNameKo,
+                  points: series.points,
+                }))}
+                metric={filters.metric}
+                formatValue={(value) => formatMetricValue(filters.metric, value, ko.missing.value)}
+              />
+            </section>
+            <section className="min-w-0 space-y-3" aria-labelledby="selected-trend-title">
+              <h3 id="selected-trend-title" className="text-base font-medium">
+                {ko.trend.selectedRegions}
+              </h3>
+              {selectedTrend.length > 0 ? (
                 <TrendChart
-                  series={nationwideTrend.map((series) => ({
+                  series={selectedTrend.map((series) => ({
                     regionCode: series.regionCode,
                     label: series.regionNameKo,
                     points: series.points,
+                    slot: regionSlot(series.regionCode),
                   }))}
                   metric={filters.metric}
                   formatValue={(value) =>
                     formatMetricValue(filters.metric, value, ko.missing.value)
                   }
                 />
-              </section>
-              <section className="min-w-0 space-y-3" aria-labelledby="selected-trend-title">
-                <h3 id="selected-trend-title" className="text-base font-medium">
-                  {ko.trend.selectedRegions}
-                </h3>
-                {selectedTrend.length > 0 ? (
-                  <TrendChart
-                    series={selectedTrend.map((series) => ({
-                      regionCode: series.regionCode,
-                      label: series.regionNameKo,
-                      points: series.points,
-                      slot: regionSlot(series.regionCode),
-                    }))}
-                    metric={filters.metric}
-                    formatValue={(value) =>
-                      formatMetricValue(filters.metric, value, ko.missing.value)
-                    }
-                  />
-                ) : (
-                  <EmptyState description={ko.regionDetail.selectPrompt} />
-                )}
-              </section>
-            </div>
-            <div className="mt-4 space-y-1 text-small text-[var(--km-color-text-muted)]">
-              <p>{ko.trend.missingSegment}</p>
-              <p>{ko.trend.maxRegionsNote}</p>
-            </div>
-          </Card>
-        </section>
-      </div>
+              ) : (
+                <EmptyState description={ko.regionDetail.selectPrompt} />
+              )}
+            </section>
+          </div>
+          <div className="mt-4 space-y-1 text-small text-[var(--km-color-text-muted)]">
+            <p>{ko.trend.missingSegment}</p>
+            <p>{ko.trend.maxRegionsNote}</p>
+          </div>
+        </Card>
+      </section>
 
       <section id="ranking-change" aria-label={ko.ranking.changeTitle}>
         <Card title={ko.ranking.changeTitle} description={ko.ranking.changeDescription}>
