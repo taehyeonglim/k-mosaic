@@ -121,7 +121,8 @@ export const ko = {
     formula: '계산식',
     formulaValue: '다문화학생 수 ÷ (초+중+고+각종 학생수) × 100',
     notes: '주석',
-    ratePrecisionNote: '2025년 공표 비율은 정수로 반올림되어 있어 표시에는 계산값을 사용합니다.',
+    // {years} 는 공표 비율이 정수로 반올림된 연도 — 자료에서 판별해 채운다.
+    ratePrecisionNote: '{years}년 공표 비율은 정수로 반올림되어 있어 표시에는 계산값을 사용합니다.',
     schoolLevelNote:
       '분모는 초등학교·중학교·고등학교·각종학교 학생수이며, 유치원·특수학교는 제외합니다.',
     sourceStatusNote:
@@ -199,10 +200,11 @@ export const ko = {
     },
     trend: {
       title: '시계열',
+      // 연도 자리표시자는 스냅숏 수록 연도에서 채운다 (연례 갱신 때 문구를 고치지 않는다).
       coverageNote:
-        '시도별 추세는 2022~2025년, 전국 장기 추세는 2018~2025년으로 수록 기간이 다릅니다.',
-      regionalTitle: '시도별 추세 (2022~2025)',
-      nationwideTitle: '전국 장기 추세 (2018~2025)',
+        '시도별 추세는 {regionalStart}~{regionalEnd}년, 전국 장기 추세는 {nationwideStart}~{nationwideEnd}년으로 수록 기간이 다릅니다.',
+      regionalTitle: '시도별 추세 ({start}~{end})',
+      nationwideTitle: '전국 장기 추세 ({start}~{end})',
       degreeAndTraining: '학위+연수',
       degreeOnly: '학위',
       selectPrompt: '지역을 선택하면 시도별 추세가 표시됩니다.',
@@ -218,8 +220,8 @@ export const ko = {
       formulaValue: '외국인 학생 비율 = 외국인 학생수(학위과정) ÷ 재적 학생수 × 100',
       regionalRole: '시도별 분자·분모',
       nationwideRole: '전국 장기 추세',
-      regionalNote: '시도별 자료는 2022~2025년 고등교육기관 재적학생 기준입니다.',
-      nationwideNote: '전국 장기 자료는 2018~2025년 학위+연수와 학위 계열을 제공합니다.',
+      regionalNote: '시도별 자료는 {start}~{end}년 고등교육기관 재적학생 기준입니다.',
+      nationwideNote: '전국 장기 자료는 {start}~{end}년 학위+연수와 학위 계열을 제공합니다.',
     },
     download: {
       title: '다운로드',

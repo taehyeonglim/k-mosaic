@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { codeFromOfficial, REGION_BY_CODE, REGION_ORDER } from '../src/lib/constants/regions.js';
+import { assertContiguousYears, retainHistoricalYears } from '../src/lib/data/years.js';
 import { redact, type KosisCell } from '../src/lib/mcp/index.js';
 import {
   foreignNationwideStatSchema,
@@ -25,8 +26,9 @@ const METADATA_DIR = resolve(ROOT, 'data/metadata');
 const KOSIS_TABLE_ID = 'DT_1963003_010_S';
 const ENARA_STATISTICS_CODE = '153401';
 const ENARA_INDEX_CODE = '1534';
-const REGIONAL_YEARS = [2022, 2023, 2024, 2025] as const;
-const NATIONWIDE_YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025] as const;
+const SNAPSHOT_PATH = resolve(SNAPSHOT_DIR, 'foreign-students.v1.json');
+// 수록 연도는 원자료에서 파생한다 — 연례 갱신 때 코드를 고치지 않기 위함이다.
+//   시도별: KOSIS DT_1963003_010_S 셀의 PRD_DE / 전국 장기: e-나라지표 153401 의 연도 행
 const KOSIS_METRICS = {
   enrolledStudentCount: '재적 학생수',
   foreignStudentCount: '외국인 학생수(학위과정)',
@@ -106,12 +108,11 @@ function readEnaraRaw(): EnaraRaw {
   ) {
     throw new Error(redact('e-나라지표 외국인 학생 원자료 구조가 올바르지 않습니다.'));
   }
-  const years = raw.years.map(Number);
-  if (
-    years.length !== NATIONWIDE_YEARS.length ||
-    years.some((year, index) => year !== NATIONWIDE_YEARS[index])
-  ) {
-    throw new Error(redact('e-나라지표 외국인 학생 원자료의 연도 구조가 2018~2025와 다릅니다.'));
+  let years: number[];
+  try {
+    years = assertContiguousYears(raw.years.map(Number), 'e-나라지표 153401');
+  } catch (error) {
+    throw new Error(redact(error instanceof Error ? error.message : String(error)));
   }
   const rows = raw.rows.map((row, index) => {
     const parsed = foreignNationwideStatSchema.safeParse(row);
@@ -120,8 +121,9 @@ function readEnaraRaw(): EnaraRaw {
     return parsed.data;
   });
   if (
-    rows.length !== NATIONWIDE_YEARS.length ||
-    new Set(rows.map((row) => row.year)).size !== rows.length
+    rows.length !== years.length ||
+    new Set(rows.map((row) => row.year)).size !== rows.length ||
+    rows.some((row) => !years.includes(row.year))
   ) {
     throw new Error(redact('e-나라지표 외국인 학생 원자료의 연도 행이 중복되거나 누락되었습니다.'));
   }
@@ -148,6 +150,7 @@ function parseSourceNumber(value: unknown, label: string): number | null {
 }
 
 function extractKosisMetrics(raw: KosisRaw): {
+  years: number[];
   enrolledStudentCount: Map<string, number | null>;
   foreignStudentCount: Map<string, number | null>;
 } {
@@ -155,6 +158,7 @@ function extractKosisMetrics(raw: KosisRaw): {
     enrolledStudentCount: new Map<string, number | null>(),
     foreignStudentCount: new Map<string, number | null>(),
   };
+  const periods = new Set<number>();
   for (const [index, cell] of raw.cells.entries()) {
     const metric = (Object.entries(KOSIS_METRICS).find(([, label]) => cell.C2_NM === label)?.[0] ??
       null) as keyof typeof KOSIS_METRICS | null;
@@ -162,11 +166,12 @@ function extractKosisMetrics(raw: KosisRaw): {
     if (cell.C3_NM === '남자' || cell.C3_NM === '여자') continue;
     if (cell.UNIT_NM !== '명') continue;
     const period = Number(cell.PRD_DE);
-    if (!REGIONAL_YEARS.includes(period as (typeof REGIONAL_YEARS)[number])) {
+    if (!Number.isInteger(period)) {
       throw new Error(
-        redact(`KOSIS ${KOSIS_TABLE_ID}의 연도가 범위를 벗어났습니다: ${cell.PRD_DE}`),
+        redact(`KOSIS ${KOSIS_TABLE_ID}의 연도를 해석할 수 없습니다: ${cell.PRD_DE}`),
       );
     }
+    periods.add(period);
     const regionName = cell.C1_NM;
     if (typeof regionName !== 'string' || regionName.length === 0)
       throw new Error(redact(`KOSIS ${KOSIS_TABLE_ID} 셀 ${index}의 지역명이 없습니다.`));
@@ -185,7 +190,13 @@ function extractKosisMetrics(raw: KosisRaw): {
         redact(`KOSIS ${KOSIS_TABLE_ID}에서 ${KOSIS_METRICS[metric]}(명) 셀을 찾지 못했습니다.`),
       );
   }
-  return maps;
+  let years: number[];
+  try {
+    years = assertContiguousYears([...periods], `KOSIS ${KOSIS_TABLE_ID}`);
+  } catch (error) {
+    throw new Error(redact(error instanceof Error ? error.message : String(error)));
+  }
+  return { years, ...maps };
 }
 
 function round4(value: number): number {
@@ -196,7 +207,7 @@ function makeRegionalRecords(raw: KosisRaw): ForeignStudentStat[] {
   const metrics = extractKosisMetrics(raw);
   const codes = ['KR', ...REGION_ORDER] as const;
   const records: ForeignStudentStat[] = [];
-  for (const year of REGIONAL_YEARS) {
+  for (const year of metrics.years) {
     for (const regionCode of codes) {
       const key = `${year}|${regionCode}`;
       const foreignStudentCount = metrics.foreignStudentCount.get(key) ?? null;
@@ -356,21 +367,42 @@ function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${redact(JSON.stringify(value, null, 2))}\n`, 'utf8');
 }
 
+function readPreviousSnapshot(): ForeignSnapshot | null {
+  if (!existsSync(SNAPSHOT_PATH)) return null;
+  return parseForeignSnapshot(readJson(SNAPSHOT_PATH));
+}
+
+function uniqueYears(rows: readonly { year: number }[]): number[] {
+  return [...new Set(rows.map((row) => row.year))].sort((left, right) => left - right);
+}
+
 export function runBuildForeignDataset(): ForeignSnapshot {
   const kosis = readKosisRaw();
   const enara = readEnaraRaw();
-  const records = makeRegionalRecords(kosis);
+  // 업스트림이 오래된 연도를 빼도 공개 데이터는 줄지 않게 이전 검증 스냅숏에서 보존한다.
+  const previous = readPreviousSnapshot();
+  const regional = retainHistoricalYears(makeRegionalRecords(kosis), previous?.records ?? []);
+  const nationwide = retainHistoricalYears(enara.rows, previous?.nationwide ?? []);
+  for (const [label, retained] of [
+    ['시도별', regional.retainedYears],
+    ['전국 장기', nationwide.retainedYears],
+  ] as const) {
+    if (retained.length > 0)
+      console.log(
+        redact(`외국인 ${label}: 업스트림 제공 범위 밖 연도 보존 ${retained.join(', ')}`),
+      );
+  }
   const snapshot = parseForeignSnapshot({
     schemaVersion: 1,
     retrievedAt: [kosis.retrievedAt, enara.retrievedAt].sort().at(-1),
     coverage: {
-      years: [...REGIONAL_YEARS],
-      nationwideYears: [...NATIONWIDE_YEARS],
+      years: uniqueYears(regional.records),
+      nationwideYears: uniqueYears(nationwide.records),
       regionCount: REGION_ORDER.length,
     },
     rateFormula: 'foreignStudentRateComputed = foreignStudentCount / enrolledStudentCount * 100',
-    records,
-    nationwide: enara.rows,
+    records: regional.records,
+    nationwide: nationwide.records,
   });
   const sourceMeta = makeSourceMetadata(kosis, enara, snapshot);
 
@@ -386,7 +418,7 @@ export function runBuildForeignDataset(): ForeignSnapshot {
   mkdirSync(SNAPSHOT_DIR, { recursive: true });
   mkdirSync(METADATA_DIR, { recursive: true });
   writeSourceMetadata(resolve(METADATA_DIR, 'sources.v1.json'), sourceMeta);
-  writeJson(resolve(SNAPSHOT_DIR, 'foreign-students.v1.json'), snapshot);
+  writeJson(SNAPSHOT_PATH, snapshot);
   writeFileSync(
     resolve(SNAPSHOT_DIR, 'foreign-students.v1.csv'),
     redact(makeForeignCsv(snapshot)),

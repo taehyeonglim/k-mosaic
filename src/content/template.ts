@@ -14,6 +14,16 @@ export function fillTemplate(
   });
 }
 
+/** 공표 비율 정수 반올림 안내 — 해당 연도가 없으면 null (안내를 표시하지 않는다). */
+export function formatRatePrecisionNote(
+  template: string,
+  roundedYears: readonly number[],
+): string | null {
+  return roundedYears.length === 0
+    ? null
+    : fillTemplate(template, { years: roundedYears.join('·') });
+}
+
 export function formatYearRange(years: readonly number[]): { start: number; end: number } {
   if (years.length === 0) throw new Error('수록 연도가 비어 있습니다.');
   return { start: Math.min(...years), end: Math.max(...years) };

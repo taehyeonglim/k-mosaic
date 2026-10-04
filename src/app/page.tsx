@@ -12,7 +12,12 @@ import { PageShell } from '@/components/layout/PageShell';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ko } from '@/content/ko';
-import { selectAvailableYears, selectSourceMeta } from '@/lib/data/selectors';
+import { formatRatePrecisionNote } from '@/content/template';
+import {
+  selectAvailableYears,
+  selectIntegerRoundedYears,
+  selectSourceMeta,
+} from '@/lib/data/selectors';
 import { loadSnapshot } from '@/lib/data/snapshot';
 import { REGION_BY_CODE, REGION_ORDER } from '@/lib/constants/regions';
 import type { RegionScope, SchoolLevel } from '@/lib/schema';
@@ -92,6 +97,10 @@ function buildPayload(snapshot: ReturnType<typeof loadSnapshot>): DashboardPaylo
     sources: sourcePanelSources(),
     retrievedAtLabel: formattedDate(snapshot.retrievedAt),
     rateFormula: ko.sources.formulaValue,
+    ratePrecisionNote: formatRatePrecisionNote(
+      ko.sources.ratePrecisionNote,
+      selectIntegerRoundedYears(),
+    ),
     dictionary: readFileSync(join(process.cwd(), 'docs/data-dictionary-draft.md'), 'utf8'),
   };
 }

@@ -74,6 +74,8 @@ export interface DashboardPayload {
   }[];
   retrievedAtLabel: string;
   rateFormula: string;
+  /** 공표 비율 정수 반올림 안내. 해당 연도가 없으면 null. */
+  ratePrecisionNote: string | null;
   dictionary: string;
 }
 
@@ -899,7 +901,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
             sources={payload.sources}
             rateFormula={payload.rateFormula}
             notes={[
-              ko.sources.ratePrecisionNote,
+              ...(payload.ratePrecisionNote !== null ? [payload.ratePrecisionNote] : []),
               ko.sources.schoolLevelNote,
               ko.sources.sourceStatusNote,
             ]}

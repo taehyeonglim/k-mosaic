@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { assertContiguousYears } from '../src/lib/data/years.js';
 import { fetchKosisTable, redact, type KosisCell } from '../src/lib/mcp/index.js';
 import type { ForeignNationwideStat } from '../src/lib/schema/foreign-student.js';
 
@@ -8,7 +9,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW_DIR = resolve(ROOT, 'data/raw');
 const KOSIS_TABLE_ID = 'DT_1963003_010_S';
 const KOSIS_START_YEAR = 2022;
-const KOSIS_END_YEAR = 2025;
+// 끝 연도는 올해로 둔다. KOSIS 는 범위 안에서 공표된 연도만 돌려주고(2026-10 실측),
+// 미공표 연도만 요청하면 err=30 을 낸다. 고정 연도를 두면 새 연도가 공표돼도 수집하지 못한다.
+const KOSIS_END_YEAR = new Date().getFullYear();
 const ENARA_STATISTICS_CODE = '153401';
 const ENARA_INDEX_CODE = '1534';
 const ENARA_ENDPOINT = 'https://www.index.go.kr/unity/potal/eNara/sub/showStblGams3.do';
@@ -101,16 +104,18 @@ export function parseForeignEnaraTable(html: string): ForeignEnaraTable {
 
   const rows = parseHtmlRows(tableMatch[1]);
   const firstRow = rows[0];
-  const years = firstRow?.cells
-    .filter((cell) => /^\d{4}$/.test(cell.text))
-    .map((cell) => Number(cell.text));
-  const expectedYears = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
-  if (
-    years === undefined ||
-    years.length !== expectedYears.length ||
-    years.some((year, index) => year !== expectedYears[index])
-  ) {
-    throw new Error(redact('e-나라지표 153401 연도 구조가 2018~2025와 다릅니다.'));
+  const headerYears =
+    firstRow?.cells.filter((cell) => /^\d{4}$/.test(cell.text)).map((cell) => Number(cell.text)) ??
+    [];
+  // 연도는 고정하지 않는다 — 연속된 오름차순이면 받아들이고, 행·셀 순서는 아래에서 단언한다.
+  let years: number[];
+  try {
+    years = assertContiguousYears(headerYears, 'e-나라지표 153401');
+  } catch (error) {
+    throw new Error(redact(error instanceof Error ? error.message : String(error)));
+  }
+  if (years.some((year, index) => year !== headerYears[index])) {
+    throw new Error(redact('e-나라지표 153401 연도 머리글이 오름차순이 아닙니다.'));
   }
 
   const dataRows = rows.filter((row) => row.cells.some((cell) => cell.tag === 'td'));
@@ -231,15 +236,23 @@ async function fetchKosisWithRowLimitFallback(): Promise<KosisCell[]> {
     if (!/err=(?:31|41)\b/.test(message)) throw new Error(message);
     const cells: KosisCell[] = [];
     for (let year = KOSIS_START_YEAR; year <= KOSIS_END_YEAR; year += 1) {
-      cells.push(
-        ...(await fetchKosisTable({
-          orgId: '334',
-          tblId: KOSIS_TABLE_ID,
-          objLevels: 2,
-          startYear: year,
-          endYear: year,
-        })),
-      );
+      try {
+        cells.push(
+          ...(await fetchKosisTable({
+            orgId: '334',
+            tblId: KOSIS_TABLE_ID,
+            objLevels: 2,
+            startYear: year,
+            endYear: year,
+          })),
+        );
+      } catch (yearError) {
+        // 아직 공표되지 않은 연도(err=30)는 건너뛴다. 그 밖의 오류는 그대로 던진다.
+        const yearMessage = redact(
+          yearError instanceof Error ? yearError.message : String(yearError),
+        );
+        if (!/err=30\b/.test(yearMessage)) throw new Error(yearMessage);
+      }
     }
     return cells;
   }

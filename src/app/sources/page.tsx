@@ -7,8 +7,12 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { SourcePanel } from '@/components/dashboard/SourcePanel';
 import { Card } from '@/components/ui/Card';
 import { ko } from '@/content/ko';
-import { fillTemplate, formatYearRange } from '@/content/template';
-import { selectAvailableYears, selectSourceMeta } from '@/lib/data/selectors';
+import { fillTemplate, formatRatePrecisionNote, formatYearRange } from '@/content/template';
+import {
+  selectAvailableYears,
+  selectIntegerRoundedYears,
+  selectSourceMeta,
+} from '@/lib/data/selectors';
 import { loadSnapshot } from '@/lib/data/snapshot';
 
 const GEO_ATTRIBUTION =
@@ -42,6 +46,10 @@ export default function SourcesPage() {
   const years = selectAvailableYears();
   const latestYear = years[years.length - 1] ?? 0;
   const sources = sourcePanelSources();
+  const ratePrecisionNote = formatRatePrecisionNote(
+    ko.sources.ratePrecisionNote,
+    selectIntegerRoundedYears(),
+  );
   const referenceDate =
     sources.find((source) => source.referenceDate !== null)?.referenceDate ?? ko.sources.unknown;
   const provisional = sources.find((source) => source.isProvisional !== null)?.isProvisional;
@@ -136,7 +144,7 @@ export default function SourcesPage() {
             description={fillTemplate(ko.trend.coverageNote, formatYearRange(years))}
           >
             <div className="space-y-3 text-sm leading-6 text-[var(--km-color-text-muted)]">
-              <p>{ko.sources.ratePrecisionNote}</p>
+              {ratePrecisionNote !== null ? <p>{ratePrecisionNote}</p> : null}
               <p>{ko.trend.missingSegment}</p>
               <p>{ko.ethics.noCausalInterpretation}</p>
             </div>
@@ -148,7 +156,7 @@ export default function SourcesPage() {
               rateFormula={ko.sources.formulaValue}
               showCommonMeta={false}
               notes={[
-                ko.sources.ratePrecisionNote,
+                ...(ratePrecisionNote !== null ? [ratePrecisionNote] : []),
                 ko.sources.schoolLevelNote,
                 ko.sources.sourceStatusNote,
               ]}

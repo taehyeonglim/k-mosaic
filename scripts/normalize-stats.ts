@@ -11,12 +11,18 @@ import {
   type SchoolLevel,
   type Snapshot,
 } from '../src/lib/schema/index.js';
+import {
+  assertContiguousYears,
+  integerRoundedYears,
+  retainHistoricalYears,
+} from '../src/lib/data/years.js';
 import { redact, type EnaraRow, type KosisCell } from '../src/lib/mcp/index.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW_DIR = resolve(ROOT, 'data/raw');
 const NORMALIZED_DIR = resolve(ROOT, 'data/normalized');
 const ENARA_FILE = resolve(RAW_DIR, 'enara-F008403.json');
+const SNAPSHOT_PATH = resolve(ROOT, 'data/snapshots/multicultural-students.v1.json');
 const LEVELS: SchoolLevel[] = ['all', 'elementary', 'middle', 'high', 'other'];
 const DENOMINATOR_LEVELS = {
   elementary: 'DT_1963003_002',
@@ -174,6 +180,15 @@ function normalize(
   denominatorMaps: Readonly<Record<keyof typeof DENOMINATOR_LEVELS, Map<string, DenominatorValue>>>,
 ): Snapshot {
   const { count: countMap, rate: rateMap } = makeSourceMaps(numeratorRows);
+  // 공표 비율이 모두 정수(x.0)인 연도 — 연도를 리터럴로 지정하지 않고 자료 모양으로 판별한다.
+  const roundedYears = new Set(
+    integerRoundedYears(
+      [...rateMap.entries()].map(([key, published]) => ({
+        year: Number(key.split('|')[0]),
+        published,
+      })),
+    ),
+  );
   const codes: RegionScope[] = ['KR', ...REGIONS.map((region) => region.code)];
   const records: MulticulturalStudentStat[] = [];
   for (const year of years) {
@@ -190,7 +205,7 @@ function normalize(
         const notes: string[] = [];
         if (denominator.incomplete) notes.push('분모 일부 학교급 결측 — 비율 계산 불가');
         if (count === null) notes.push('원자료 결측(-) — 0명이 아님');
-        if (year === 2025 && publishedRate !== null) {
+        if (roundedYears.has(year) && publishedRate !== null) {
           notes.push('공표 비율이 정수 반올림됨 — 표시에는 계산값을 사용');
         }
         const computedRate =
@@ -237,7 +252,35 @@ export function runNormalizeStats(): Snapshot {
     high: extractDenominator(DENOMINATOR_LEVELS.high),
     other: extractDenominator(DENOMINATOR_LEVELS.other),
   } as const;
-  const snapshot = normalize(enara.retrievedAt, enara.years, enara.rows, denominatorMaps);
+  let years: number[];
+  try {
+    years = assertContiguousYears(enara.years, 'e-나라지표 F008403');
+  } catch (error) {
+    throw new Error(redact(error instanceof Error ? error.message : String(error)));
+  }
+  const normalized = normalize(enara.retrievedAt, years, enara.rows, denominatorMaps);
+  // e-나라지표 시도별 표는 최근 6개년만 제공한다. 새 연도가 추가되며 가장 오래된 연도가
+  // 빠지면, 이전에 검증된 공개 스냅숏의 그 연도 레코드를 보존한다.
+  const previous = existsSync(SNAPSHOT_PATH)
+    ? parseSnapshot(JSON.parse(readFileSync(SNAPSHOT_PATH, 'utf8')))
+    : null;
+  const { records, retainedYears } = retainHistoricalYears(
+    normalized.records,
+    previous?.records ?? [],
+  );
+  const snapshot =
+    retainedYears.length === 0
+      ? normalized
+      : parseSnapshot({
+          ...normalized,
+          coverage: {
+            ...normalized.coverage,
+            years: [...new Set(records.map((record) => record.year))].sort((a, b) => a - b),
+          },
+          records,
+        });
+  if (retainedYears.length > 0)
+    console.log(redact(`업스트림 제공 범위 밖 연도 보존: ${retainedYears.join(', ')}`));
   mkdirSync(NORMALIZED_DIR, { recursive: true });
   writeFileSync(
     resolve(NORMALIZED_DIR, 'multicultural-students.v1.json'),

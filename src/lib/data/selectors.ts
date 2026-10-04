@@ -9,6 +9,7 @@ import type {
   SourceMeta,
 } from '../schema/index';
 import { snapshotIndex, snapshotKey, sourceMeta } from './snapshot';
+import { integerRoundedYears } from './years';
 import type {
   LevelStatView,
   RankingRow,
@@ -187,6 +188,16 @@ export function selectRegionDetail(
 export function selectAvailableYears(): number[] {
   return [...new Set([...snapshotIndex.values()].map((record) => record.year))].sort(
     (left, right) => left - right,
+  );
+}
+
+/** 공표 비율이 정수로 반올림돼 계산값으로만 표시하는 연도 (CLAUDE.md §3.5). */
+export function selectIntegerRoundedYears(): number[] {
+  return integerRoundedYears(
+    [...snapshotIndex.values()].map((record) => ({
+      year: record.year,
+      published: record.multiculturalStudentRatePublished,
+    })),
   );
 }
 
