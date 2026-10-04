@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { ExtendedFeatureCollection as FeatureCollection } from 'd3-geo';
 
-import { RankingBarChart } from '@/components/charts/RankingBarChart';
 import { TrendChart } from '@/components/charts/TrendChart';
 import { DownloadButtons } from '@/components/dashboard/DownloadButtons';
 import { FilterBar } from '@/components/dashboard/FilterBar';
@@ -41,6 +40,7 @@ import {
 } from '@/lib/schema';
 import { formatMetricValue, formatRate } from '@/lib/visualization/format';
 import { createCountScale, createRateScale } from '@/lib/visualization/scale';
+import type { SeriesSlot } from '@/lib/visualization/series-style';
 
 export interface DashboardPayload {
   geo: FeatureCollection;
@@ -201,10 +201,6 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     () => rankingRowsByMetric[filters.metric],
     [filters.metric, rankingRowsByMetric],
   );
-  const rankingChartRows = useMemo(
-    () => rankingRows.filter((row) => row.value !== null),
-    [rankingRows],
-  );
   const selectedRegion = filters.regions[filters.regions.length - 1] ?? null;
   const selectedDetail = useMemo(
     () =>
@@ -295,6 +291,13 @@ export function DashboardClient({ payload }: DashboardClientProps) {
     previousNational?.count ?? null,
   );
   const firstYearDelta = difference(currentNational?.count ?? null, firstNational?.count ?? null);
+
+  // 비교 지역의 계열색 자리 — 고른 순서를 따른다. 한 지역만 골랐어도 범주색을 써서,
+  // 지역을 더했을 때 먼저 고른 지역의 색이 바뀌지 않게 한다.
+  function regionSlot(code: string): SeriesSlot | undefined {
+    const index = filters.regions.indexOf(code as RegionCode);
+    return index >= 0 && index < 3 ? ((index + 1) as SeriesSlot) : undefined;
+  }
 
   function handleMapSelection(code: string | null): void {
     const next = toggleRegion(filters.regions, code, selectedRegion);
@@ -434,44 +437,24 @@ export function DashboardClient({ payload }: DashboardClientProps) {
           }
         />
 
-        <Card title={ko.ranking.title}>
-          <div className="space-y-5">
-            <Badge tone="info">{ko.ranking.interpretationNote}</Badge>
-            <p className="text-small text-[var(--km-color-text-muted)]" role="note">
-              {ko.ranking.missingNote}
-            </p>
-            <RankingBarChart
-              rows={rankingChartRows}
-              formatValue={(value) => formatMetricValue(filters.metric, value, ko.missing.value)}
-              highlightRegion={selectedRegion ?? undefined}
-            />
-            <RankingTable
-              metric={filters.metric}
-              rows={rankingRows}
-              excludedRegions={[]}
-              caption={ko.filters.metrics[filters.metric]}
-              highlightRegions={filters.regions}
-            />
-            <div className="grid min-w-0 gap-5">
-              {(['deltaAbs', 'deltaPct'] as const).map((rankingMetric) => (
-                <section className="min-w-0 space-y-3" key={rankingMetric}>
-                  <h3 className="text-base font-medium">
-                    {rankingMetric === 'deltaAbs' ? ko.ranking.deltaAbs : ko.ranking.deltaPct}
-                  </h3>
-                  <RankingTable
-                    metric={rankingMetric}
-                    rows={rankingRowsByMetric[rankingMetric]}
-                    excludedRegions={[]}
-                    caption={
-                      rankingMetric === 'deltaAbs' ? ko.ranking.deltaAbs : ko.ranking.deltaPct
-                    }
-                    highlightRegions={filters.regions}
-                  />
-                </section>
-              ))}
+        {/* 순위는 막대를 곁들인 표 하나로 보여 준다 (막대 차트와 표를 따로 두지 않는다). */}
+        <section id="ranking" className="min-w-0" aria-label={ko.ranking.title}>
+          <Card title={ko.ranking.title}>
+            <div className="space-y-4">
+              <Badge tone="info">{ko.ranking.interpretationNote}</Badge>
+              <p className="text-small text-[var(--km-color-text-muted)]" role="note">
+                {ko.ranking.missingNote}
+              </p>
+              <RankingTable
+                metric={filters.metric}
+                rows={rankingRows}
+                excludedRegions={[]}
+                caption={ko.filters.metrics[filters.metric]}
+                highlightRegions={filters.regions}
+              />
             </div>
-          </div>
-        </Card>
+          </Card>
+        </section>
       </div>
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-2">
@@ -494,6 +477,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                     })
                   }
                   nationalLabel={ko.overview.nationwideValue}
+                  seriesSlot={selectedRegion === null ? undefined : regionSlot(selectedRegion)}
                 />
                 {filters.metric === 'rate' && selectedRegion !== null ? (
                   <section className="space-y-2" aria-label={ko.filters.metrics.rate}>
@@ -507,6 +491,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                           regionCode: series.regionCode,
                           label: series.regionNameKo,
                           points: series.points,
+                          slot: regionSlot(series.regionCode),
                         }))}
                       metric="rate"
                       formatValue={(value) => formatRate(value, ko.missing.value)}
@@ -529,7 +514,8 @@ export function DashboardClient({ payload }: DashboardClientProps) {
               nationwideEnd: formatYearRange(payload.nationwide.years).end,
             })}
           >
-            <div className="grid min-w-0 gap-8 lg:grid-cols-2">
+            {/* 패널이 반쪽 폭이 되는 xl 에서는 두 차트를 위아래로 쌓는다 (좁으면 읽기 어렵다). */}
+            <div className="grid min-w-0 gap-8 lg:grid-cols-2 xl:grid-cols-1">
               <section className="min-w-0 space-y-3" aria-labelledby="national-trend-title">
                 <h3 id="national-trend-title" className="text-base font-medium">
                   {ko.trend.nationwide}
@@ -556,6 +542,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                       regionCode: series.regionCode,
                       label: series.regionNameKo,
                       points: series.points,
+                      slot: regionSlot(series.regionCode),
                     }))}
                     metric={filters.metric}
                     formatValue={(value) =>
@@ -574,6 +561,27 @@ export function DashboardClient({ payload }: DashboardClientProps) {
           </Card>
         </section>
       </div>
+
+      <section id="ranking-change" aria-label={ko.ranking.changeTitle}>
+        <Card title={ko.ranking.changeTitle} description={ko.ranking.changeDescription}>
+          <div className="grid min-w-0 gap-x-8 gap-y-6 lg:grid-cols-2">
+            {(['deltaAbs', 'deltaPct'] as const).map((rankingMetric) => (
+              <section className="min-w-0 space-y-2" key={rankingMetric}>
+                <h3 className="text-sm font-semibold">
+                  {rankingMetric === 'deltaAbs' ? ko.ranking.deltaAbs : ko.ranking.deltaPct}
+                </h3>
+                <RankingTable
+                  metric={rankingMetric}
+                  rows={rankingRowsByMetric[rankingMetric]}
+                  excludedRegions={[]}
+                  caption={rankingMetric === 'deltaAbs' ? ko.ranking.deltaAbs : ko.ranking.deltaPct}
+                  highlightRegions={filters.regions}
+                />
+              </section>
+            ))}
+          </div>
+        </Card>
+      </section>
 
       <section id="sources" aria-label={ko.sources.title}>
         <Card>

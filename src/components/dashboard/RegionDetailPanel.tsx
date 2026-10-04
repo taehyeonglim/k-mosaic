@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { ko } from '@/content/ko';
+import type { SeriesSlot } from '@/lib/visualization/series-style';
 import { TrendChart } from '@/components/charts/TrendChart';
 import { formatCount, formatDelta, formatRate } from '@/lib/visualization/format';
 import {
@@ -37,6 +38,8 @@ export interface RegionDetailPanelProps {
   detail: RegionDetailData;
   onClose(): void;
   nationalLabel: string;
+  /** 비교 시계열에서 이 지역이 쓰는 계열색 자리 — 같은 화면의 다른 차트와 색을 맞춘다. */
+  seriesSlot?: SeriesSlot;
 }
 
 function formatCountDelta(value: number | null): string {
@@ -49,7 +52,12 @@ function formatRateDelta(value: number | null): string {
   return value === null ? formatted : `${formatted}%`;
 }
 
-export function RegionDetailPanel({ detail, onClose, nationalLabel }: RegionDetailPanelProps) {
+export function RegionDetailPanel({
+  detail,
+  onClose,
+  nationalLabel,
+  seriesSlot,
+}: RegionDetailPanelProps) {
   return (
     <aside className="space-y-5" aria-labelledby="region-detail-title">
       <div className="flex items-start justify-between gap-4">
@@ -150,7 +158,14 @@ export function RegionDetailPanel({ detail, onClose, nationalLabel }: RegionDeta
             {ko.trend.title}
           </h3>
           <TrendChart
-            series={[{ regionCode: detail.regionCode, label: detail.label, points: detail.trend }]}
+            series={[
+              {
+                regionCode: detail.regionCode,
+                label: detail.label,
+                points: detail.trend,
+                slot: seriesSlot,
+              },
+            ]}
             metric="count"
             formatValue={(value) => formatCount(value, ko.missing.value)}
           />

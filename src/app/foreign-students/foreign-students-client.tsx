@@ -27,6 +27,7 @@ import type { ForeignNationwideStat, ForeignStudentStat } from '@/lib/schema/for
 import { metricKeySchema, type MetricKey, type RegionCode } from '@/lib/schema';
 import { formatCount, formatMetricValue } from '@/lib/visualization/format';
 import { createCountScale, createRateScale } from '@/lib/visualization/scale';
+import type { SeriesSlot } from '@/lib/visualization/series-style';
 
 export interface ForeignStudentsPayload {
   geo: FeatureCollection;
@@ -420,10 +421,12 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
               </h3>
               {selectedTrend.length > 0 ? (
                 <TrendChart
+                  // 계열색 자리는 고른 순서를 따른다 — 지역을 더해도 먼저 고른 지역의 색이 유지된다.
                   series={selectedTrend.map((series) => ({
                     regionCode: series.regionCode,
                     label: series.regionNameKo,
                     points: seriesForMetric(series, filters.metric),
+                    slot: (filters.regions.indexOf(series.regionCode) + 1) as SeriesSlot,
                   }))}
                   metric={filters.metric}
                   formatValue={(value) =>

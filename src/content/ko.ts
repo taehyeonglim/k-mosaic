@@ -92,6 +92,8 @@ export const ko = {
     rate: '비율 순위',
     deltaAbs: '절대 증가 인원 순위',
     deltaPct: '증가율 순위',
+    changeTitle: '전년 대비 변화',
+    changeDescription: '선택한 연도와 그 전년을 비교한 증감 인원과 증가율입니다.',
     rank: '순위',
     region: '지역',
     value: '값',

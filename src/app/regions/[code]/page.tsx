@@ -88,11 +88,13 @@ export default async function RegionPage({ params }: { params: Promise<{ code: s
     regionCode === 'KR'
       ? ko.common.nationwide
       : REGION_BY_CODE[regionCode as RegionCode].officialKo;
+  // 이 지역은 두 차트에서 같은 계열색(자리 1)을 쓰고, 전국 값은 중립색 점선(기준 계열)이다.
   const toSeries = (series: typeof countTrend) =>
     series.map((item) => ({
       regionCode: item.regionCode,
       label: label(item.regionCode),
       points: item.points,
+      ...(item.regionCode === 'KR' ? { reference: true } : { slot: 1 as const }),
     }));
   const range = formatYearRange(years);
 
