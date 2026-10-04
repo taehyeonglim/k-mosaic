@@ -113,6 +113,34 @@ export const ko = {
       '이 통계는 학생 유형별(국내출생·중도입국·외국인가정) 구분을 제공하지 않습니다.',
     selectPrompt: '지역을 선택하면 상세 정보가 표시됩니다.',
   },
+  // 시·도별 정적 페이지 (/regions/[code]/). {region}·{year} 등은 데이터에서 채운다.
+  regionPage: {
+    metaTitle: '{region} 다문화학생 통계',
+    metaDescription:
+      '{region}의 다문화학생 수와 비율을 학교급별·연도별로 확인합니다. {year}년 {count}, 전체 학생의 {rate}.',
+    // 분모(전체 학생 수)가 원자료에서 결측이면 비율을 0이나 '—'로 쓰지 않고 이유를 밝힌다.
+    metaDescriptionRateMissing:
+      '{region}의 다문화학생 수와 비율을 학교급별·연도별로 확인합니다. {year}년 {count} (분모 결측으로 비율은 계산하지 않음).',
+    heading: '{region} 다문화학생',
+    subtitle: '{year}년 4월 1일 기준 · 시도별 자료 {start}~{end}년',
+    navigationLabel: '지역 페이지 이동',
+    backToDashboard: '전국 지도로 돌아가기',
+    compareInDashboard: '대시보드에서 다른 지역과 비교',
+    summaryTitle: '{year}년 요약',
+    rankLabel: '학생 수 순위',
+    rankValue: '17개 시·도 중 {rank}위',
+    rankTied: '공동',
+    rateLabel: '전체 학생 대비 비율',
+    nationwideDifferenceLabel: '전국 값과의 차이',
+    nationwideDifferenceNote: '전국 값 {rate}',
+    trendTitle: '연도별 추세',
+    countTrend: '학생 수',
+    rateTrend: '비율 — 전국 값과 비교',
+    tableTitle: '연도별 수치',
+    tableCaption: '{region} 연도별 다문화학생 수와 비율',
+    otherRegions: '다른 시·도',
+    openRegionPage: '지역 페이지 열기',
+  },
   sources: {
     title: '출처 및 계산식',
     metaDescription:

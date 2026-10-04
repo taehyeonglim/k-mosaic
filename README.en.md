@@ -58,6 +58,7 @@ flowchart LR
 - **Choropleth map** — count/share toggle, keyboard navigation, scale fixed across years, hatched missing regions, table alternative
 - **Four rankings** — count, share, absolute change, growth rate; ties share a rank, with a note that rankings do not measure educational quality
 - **Time series & comparison** — ten-year national trend (2016–) plus up to three regions (2020–), gaps not interpolated
+- **Province pages** — a static page per province, e.g. [`/regions/11/`](https://taehyeonglim.github.io/k-mosaic/regions/11/), with summary, school-level breakdown, trend and yearly table (for sharing and search)
 - **Shareable views** — year, school level, metric and region filters live in the URL
 - **Sources & methodology** — table IDs, publishers, formula and reference date reachable from every view
 - **Downloads** — filtered CSV with provenance comments, full CSV/JSON, data dictionary

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { ko } from '@/content/ko';
 import { TrendChart } from '@/components/charts/TrendChart';
 import { formatCount, formatDelta, formatRate } from '@/lib/visualization/format';
@@ -56,6 +58,10 @@ export function RegionDetailPanel({ detail, onClose, nationalLabel }: RegionDeta
           <h2 id="region-detail-title" className="text-xl font-medium">
             {detail.label}
           </h2>
+          {/* 지역별 정적 페이지 — 공유·검색용 (basePath 를 붙이도록 next/link 사용) */}
+          <Link className="text-small underline" href={`/regions/${detail.regionCode}/`}>
+            {ko.regionPage.openRegionPage}
+          </Link>
         </div>
         <button type="button" className="btn btn-ghost" aria-label={detail.label} onClick={onClose}>
           ×
