@@ -1,4 +1,4 @@
-import { redact } from '../src/lib/mcp/index.js';
+import { redact } from './lib/redact.js';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { DENOMINATOR_TABLES } from './fetch-total-students.js';

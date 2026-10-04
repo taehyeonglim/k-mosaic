@@ -16,7 +16,9 @@ import {
   integerRoundedYears,
   retainHistoricalYears,
 } from '../src/lib/data/years.js';
-import { redact, type EnaraRow, type KosisCell } from '../src/lib/mcp/index.js';
+import type { EnaraRow } from './lib/enara.js';
+import type { KosisCell } from './lib/kosis.js';
+import { redact } from './lib/redact.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW_DIR = resolve(ROOT, 'data/raw');

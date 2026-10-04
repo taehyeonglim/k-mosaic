@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchEnaraTable } from '@/lib/mcp';
+import { fetchEnaraTable } from '../../scripts/lib/enara';
 
 const fixture = readFileSync(new URL('../fixtures/enara-F008403.html', import.meta.url), 'utf8');
 

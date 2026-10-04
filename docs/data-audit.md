@@ -2,7 +2,7 @@
 
 > **문서 상태**: 1차 조사 완료 (2026-08-05)
 > **조사 방법**: korean-stats-mcp 원격 MCP 서버 + KOSIS OpenAPI 직접 호출 + e-나라지표 HTML
-> **재현 방법**: `scripts/probe/verify-denominator.mjs`(모수 역검증), `pnpm data:refresh`(스냅숏 생성 — [operations.md](operations.md))
+> **재현 방법**: `pnpm data:verify-denominator`(모수 역검증), `pnpm data:refresh`(스냅숏 생성 — [operations.md](operations.md))
 
 ---
 
@@ -281,7 +281,7 @@ KOSIS 개황표의 `학교현황별` 축에는 `학생수`라는 이름이 **두
 
 KOSIS 교육기본통계의 시도 코드는 행정표준코드가 아닌 자체 순번이며, 세종이 울산(`07`)과 경기(`08`) 사이에 **`07a`**로 삽입돼 있다.
 
-**대응**: `scripts/probe/regions.mjs`의 매핑표로 행정표준코드(`36`)와 연결. 코드 파싱 로직에 숫자 가정을 두지 않는다.
+**대응**: `src/lib/constants/regions.ts`의 매핑표(`kosisEduC1`)로 행정표준코드(`36`)와 연결. 코드 파싱 로직에 숫자 가정을 두지 않는다.
 
 ### 6.7 🟡 표마다 분류축 개수가 다르다
 
@@ -346,7 +346,7 @@ KOSIS 교육기본통계의 시도 코드는 행정표준코드가 아닌 자체
 
 ```bash
 cp .env.example .env.local          # KOSIS_API_KEY 입력
-node scripts/probe/verify-denominator.mjs   # 모수 역검증 (§5 표 재생성)
+pnpm data:verify-denominator                # 모수 역검증 (§5 표 재생성)
 pnpm data:refresh                           # 스냅숏 생성 (검증 게이트 포함)
 ```
 

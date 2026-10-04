@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { listMcpTools, redact } from '../src/lib/mcp/index.js';
+import { listMcpTools } from './lib/mcp.js';
+import { redact } from './lib/redact.js';
 
 const MCP_ENDPOINT = 'https://mcp.gomdori.app/stats';
 

@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { fetchKosisTable, redact, type KosisCell } from '../src/lib/mcp/index.js';
+import { fetchKosisTable, type KosisCell } from './lib/kosis.js';
+import { redact } from './lib/redact.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW_DIR = resolve(ROOT, 'data/raw');

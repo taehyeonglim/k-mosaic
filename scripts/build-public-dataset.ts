@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { redact } from '../src/lib/mcp/index.js';
+import { redact } from './lib/redact.js';
 import {
   parseSnapshot,
   SourceMetaSchema,

@@ -1,7 +1,8 @@
 import { appendFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { fetchEnaraTable, redact } from '../src/lib/mcp/index.js';
+import { fetchEnaraTable } from './lib/enara.js';
+import { redact } from './lib/redact.js';
 import { parseForeignEnaraTable } from './fetch-foreign-students.js';
 
 // 업스트림에 스냅숏보다 새로운 연도가 공표됐는지 확인한다 (키 불필요 — e-나라지표만 조회).

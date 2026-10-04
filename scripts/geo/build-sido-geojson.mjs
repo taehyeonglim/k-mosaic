@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { REGIONS } from '../probe/regions.mjs';
+// .mjs 지만 tsx 로 실행해 TypeScript 매핑표(단일 출처)를 직접 쓴다.
+import { REGIONS } from '../../src/lib/constants/regions.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const OUTPUT_PATH = join(ROOT, 'public/geo/sido.geo.json');

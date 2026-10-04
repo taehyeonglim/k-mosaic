@@ -47,7 +47,7 @@
 
 근거: 후보 조합별 공표치 대조에서 이 조합만 ±0.05%p 이내 100% 일치. 특수학교를 넣으면 81.3%로 하락한다.
 
-**이 정의를 바꾸려면 `verify-denominator.mjs`를 다시 돌려 근거를 갱신하라.**
+**이 정의를 바꾸려면 `pnpm data:verify-denominator`를 다시 돌려 근거를 갱신하라.**
 
 ---
 
@@ -103,7 +103,8 @@ pnpm data:refresh                           # 연례 갱신 (키 필요) — 절
 pnpm data:validate                          # 다문화 검증 게이트 (V1~V9, X1~X11)
 pnpm data:validate-foreign                  # 외국인 유학생 검증 게이트 (F1~F5, X3·X5·X9~X12)
 pnpm data:check-upstream                    # 새 연도 공표 확인 (키 불필요)
-node scripts/probe/verify-denominator.mjs   # 모수 역검증 (키 필요)
+pnpm data:verify-denominator               # 모수 역검증 (키 필요)
+pnpm geo:build                              # 시도 경계 GeoJSON 재생성 (geo-source.md)
 ```
 
 스냅숏은 **반드시 `pnpm data:*` 파이프라인으로만** 만든다. 검증을 통과하기 전에는 스냅숏·메타데이터를 쓰지 않는다 (금지 #10). 예전 `scripts/probe/build-snapshot.mjs`는 검증 없이 덮어써서 삭제했다.
