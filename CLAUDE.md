@@ -77,20 +77,45 @@ KOSIS 개황표의 `학교현황별` 축에는 `학생수`가 **두 번** 등장
 
 ### 3.4 세종 코드가 `07a`
 
-KOSIS 교육기본통계 시도 코드는 행정표준코드가 아니다. 세종이 울산(`07`)과 경기(`08`) 사이에 `07a`로 삽입돼 있다. 숫자 파싱을 가정하지 마라. 매핑표는 `scripts/probe/regions.mjs`.
+KOSIS 교육기본통계 시도 코드는 행정표준코드가 아니다. 세종이 울산(`07`)과 경기(`08`) 사이에 `07a`로 삽입돼 있다. 숫자 파싱을 가정하지 마라. 매핑표는 `src/lib/constants/regions.ts` (`kosisEduC1`).
 
 ### 3.5 2025년 비율은 정수로 뭉개져 있다
 
-전남 7.0 / 충남 6.0 / 세종 1.0 — 전부 `x.0`. 표시에는 **항상 계산값**을 쓰고, 공표치는 `multiculturalStudentRatePublished`로 대조용 보존한다.
+전남 7.0 / 충남 6.0 / 세종 1.0 — 90개 중 89개가 `x.0` (1 미만 값 하나만 0.4). 표시에는 **항상 계산값**을 쓰고, 공표치는 `multiculturalStudentRatePublished`로 대조용 보존한다.
+
+반올림 연도는 리터럴(`year === 2025`)로 지정하지 않는다. `integerRoundedYears()`(`src/lib/data/years.ts`)가 정수 비율 80% 기준으로 판별한다 — 2026년 이후에도 같은 처리가 적용된다.
+
+### 3.6 연도는 원자료에서 파생한다
+
+연도 배열·연도 비교를 리터럴로 두지 마라. 연례 갱신 때 코드를 고치게 된다.
+
+- 수록 연도: e-나라·KOSIS 원자료에서 파생 (`assertContiguousYears`)
+- e-나라 시도별 표는 **최근 6개년만** 준다. 빠진 과거 연도는 이전 스냅숏에서 보존한다 (`retainHistoricalYears`)
+- 화면 문구의 연도는 `{start}~{end}` 템플릿으로 두고 스냅숏에서 채운다 (`src/content/template.ts`)
+- 테스트 기대값도 스냅숏에서 파생한다 (`e2e/helpers.ts` `readSnapshotFacts`). 단, 2022년 168,645명 같은 외부 교차검증 값은 리터럴로 둔다
 
 ---
 
 ## 4. 명령어
 
 ```bash
-node scripts/probe/verify-denominator.mjs   # 모수 역검증
-node scripts/probe/build-snapshot.mjs       # 스냅숏 생성
+pnpm data:refresh                           # 연례 갱신 (키 필요) — 절차는 docs/operations.md
+pnpm data:validate                          # 다문화 검증 게이트 (V1~V9, X1~X11)
+pnpm data:validate-foreign                  # 외국인 유학생 검증 게이트 (F1~F5, X3·X5·X9~X12)
+pnpm data:check-upstream                    # 새 연도 공표 확인 (키 불필요)
+node scripts/probe/verify-denominator.mjs   # 모수 역검증 (키 필요)
 ```
+
+스냅숏은 **반드시 `pnpm data:*` 파이프라인으로만** 만든다. 검증을 통과하기 전에는 스냅숏·메타데이터를 쓰지 않는다 (금지 #10). 예전 `scripts/probe/build-snapshot.mjs`는 검증 없이 덮어써서 삭제했다.
+
+데이터셋은 두 개다. **둘을 직접 비교하지 마라** ([DL-008](docs/decision-log.md)).
+
+| 데이터셋 | 집단 | 출처 | 스냅숏 |
+|---|---|---|---|
+| 다문화학생 | 초·중등 (각종학교 포함) | e-나라 F008403 ÷ KOSIS 개황표 4종 | `multicultural-students.v1.json` |
+| 대학 외국인 유학생 | 고등교육기관 재적 | KOSIS `DT_1963003_010_S` + e-나라 153401 | `foreign-students.v1.json` |
+
+출처 메타데이터(`sources.v1.json`)는 두 데이터셋이 공유한다. 화면에서 출처를 읽을 때는 `selectSourceMeta(dataset)`로 반드시 데이터셋을 지정한다.
 
 ---
 
@@ -135,6 +160,7 @@ data/metadata/    ✅ 커밋
 ## 8. 작업 전 읽을 것
 
 1. [docs/data-audit.md](docs/data-audit.md) — 무엇이 있고 없는지
-2. [docs/adr/001-data-ingestion-architecture.md](docs/adr/001-data-ingestion-architecture.md) — 왜 정적 스냅숏인지
-3. [docs/data-dictionary-draft.md](docs/data-dictionary-draft.md) — 스키마·검증 규칙
-4. [docs/implementation-roadmap.md](docs/implementation-roadmap.md) — 작업 순서와 수용 기준
+2. [docs/operations.md](docs/operations.md) — 데이터 갱신 런북·배포·보안
+3. [docs/adr/001-data-ingestion-architecture.md](docs/adr/001-data-ingestion-architecture.md) — 왜 정적 스냅숏인지
+4. [docs/data-dictionary-draft.md](docs/data-dictionary-draft.md) — 스키마·검증 규칙
+5. [docs/implementation-roadmap.md](docs/implementation-roadmap.md) — 작업 순서와 수용 기준

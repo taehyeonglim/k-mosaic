@@ -58,6 +58,28 @@ describe('검증 입력 주입 — 다문화학생', () => {
   });
 });
 
+describe('분모 연도 누락 (V9)', () => {
+  it('분자만 공표되고 KOSIS 분모가 아직 없는 연도는 차단한다', () => {
+    const snapshot = structuredClone(loadSnapshot());
+    const latest = Math.max(...snapshot.coverage.years);
+    for (const record of snapshot.records) {
+      if (record.year !== latest) continue;
+      record.totalStudentCount = null;
+      record.multiculturalStudentRateComputed = null;
+      record.notes = [...record.notes, '분모 일부 학교급 결측 — 비율 계산 불가'];
+    }
+    const report = validateSnapshot(snapshot, { previousSnapshot: null });
+
+    expect(rule(report, 'V9').passed).toBe(false);
+    expect(rule(report, 'V9').detail).toContain(String(latest));
+    expect(report.passed).toBe(false);
+  });
+
+  it('커밋된 스냅숏은 모든 연도에 전국 분모가 있다', () => {
+    expect(rule(validateSnapshot(loadSnapshot()), 'V9').passed).toBe(true);
+  });
+});
+
 describe('검증 입력 주입 — 외국인 유학생', () => {
   it('주입한 출처 항목에 153401 이 없으면 X10 이 실패한다', () => {
     const entries = committedSources().filter((entry) => entry.tableId !== '153401');

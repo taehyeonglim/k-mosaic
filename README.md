@@ -80,74 +80,21 @@ pnpm dev          # http://localhost:3000
 
 ---
 
-## 5. 환경변수 설정
+## 5. 운영 — 데이터 갱신 · 배포 · 보안
 
-API 키는 **데이터 갱신 스크립트에만** 필요합니다.
+운영 절차는 [docs/operations.md](docs/operations.md)에 있습니다.
 
-```bash
-cp .env.example .env.local
-```
+| 작업 | 명령 | API 키 |
+|---|---|---|
+| 연례 데이터 갱신 | `pnpm data:refresh` | ✅ 필요 (`.env.local`) |
+| 검증 게이트 | `pnpm data:validate` · `pnpm data:validate-foreign` | ❌ |
+| 새 연도 공표 확인 | `pnpm data:check-upstream` (GitHub Actions가 주기 실행) | ❌ |
+| 정적 빌드 | `pnpm build` → `out/` | ❌ |
 
-`.env.local`을 열어 값을 채웁니다.
+**검증에 실패하면 스냅숏을 갱신하지 않습니다.** 오염된 새 데이터보다 검증된 옛 데이터가 낫기 때문입니다. `main`에 머지하면 GitHub Pages로 자동 배포됩니다.
 
-```bash
-KOSIS_API_KEY=your_new_api_key_here
-```
 
-키 발급: [KOSIS OpenAPI](https://kosis.kr/openapi/) (무료, 즉시 발급)
-
-> `.env.local`은 `.gitignore` 대상입니다. 실제 키를 다른 파일에 넣지 마세요.
-
----
-
-## 6. MCP 연결
-
-`korean-stats-mcp`는 **데이터 탐색 단계에서만** 사용하며 런타임에는 호출하지 않습니다 ([DL-003](docs/decision-log.md)).
-
-```bash
-pnpm mcp:inspect          # MCP 도구 목록·입력 스키마 조회
-```
-
-원격 엔드포인트 `https://mcp.gomdori.app/stats` (키 불필요)를 사용합니다.
-
-> ⚠️ **KOSIS OpenAPI에는 다문화학생 통계가 등록되어 있지 않습니다.** 6개 독립 경로로 확인했습니다 ([data-audit.md](docs/data-audit.md)). MCP로 다시 검색하지 마세요.
-
----
-
-## 7. 데이터 탐색
-
-```bash
-pnpm data:discover        # 통계표 탐색·목록화
-```
-
----
-
-## 8. 데이터 갱신
-
-교육기본통계는 **연 1회** 갱신됩니다.
-
-```bash
-pnpm data:refresh         # fetch → normalize → validate → build
-```
-
-단계별 실행:
-
-```bash
-pnpm data:fetch           # e-나라지표(분자) + KOSIS(분모) 수집
-pnpm data:normalize       # 정규화
-pnpm data:validate        # 검증 게이트 (V1~V8, X1~X11)
-pnpm data:build           # 스냅숏·공개 데이터 생성
-pnpm data:fetch-foreign   # 대학 외국인 유학생 수집
-pnpm data:build-foreign   # 대학 외국인 유학생 스냅숏
-```
-
-**검증에 실패하면 스냅숏을 갱신하지 않습니다.** 오염된 새 데이터보다 검증된 옛 데이터가 낫기 때문입니다.
-
-갱신 후 `data/snapshots/`와 `data/metadata/`를 커밋하고 재배포합니다.
-
----
-
-## 9. 테스트
+## 6. 테스트
 
 ```bash
 pnpm typecheck
@@ -167,58 +114,7 @@ E2E 산출물: `e2e/screenshots/`, `e2e/playwright-report/`, [`docs/qa-report.md
 
 ---
 
-## 10. 빌드
-
-```bash
-pnpm build                # 정적 내보내기 → out/
-pnpm start                # out/ 로컬 서빙
-```
-
-`build` 스크립트는 `KOSIS_API_KEY=` 를 앞에 두어 실행합니다. Next.js가 `.env.local`을 자동 로드해 **빌드 캐시에 키가 남는 것을 막기 위함**입니다 ([architecture.md §5.5](docs/architecture.md)).
-
----
-
-## 11. 배포
-
-**GitHub Pages로 자동 배포**됩니다. `main` 브랜치에 푸시하면 `.github/workflows/deploy.yml`이 실행됩니다.
-
-```
-push → typecheck → lint → test → data:validate → build → 비밀정보 스캔 → Pages 배포
-```
-
-**검증 게이트가 배포를 막습니다.** `data:validate`가 실패하면 오염된 데이터가 공개되지 않습니다.
-
-### 최초 설정
-
-1. 저장소 **Settings → Pages → Source**를 **GitHub Actions**로 설정
-2. `main`에 푸시하면 자동 배포
-
-### 경로 설정
-
-프로젝트 페이지(`username.github.io/k-mosaic/`)는 경로 접두사가 필요합니다. 워크플로가 저장소 이름으로 자동 주입합니다.
-
-```yaml
-env:
-  NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
-```
-
-- **사용자 페이지**(`username.github.io`)나 **커스텀 도메인**으로 바꾸려면 이 환경변수를 제거하세요
-- 커스텀 도메인은 `public/CNAME` 파일을 추가합니다
-- `public/.nojekyll`이 Jekyll의 `_next/` 무시를 차단합니다 — **삭제하지 마세요**
-
-### 보안
-
-- **런타임 환경변수 없음.** 배포 워크플로에 `KOSIS_API_KEY`가 필요하지 않습니다
-- 키는 데이터 갱신(로컬 `pnpm data:refresh`)에만 씁니다
-- **`.next/`를 캐시·업로드하지 마세요** — 빌드 캐시에 환경 스냅숏이 들어갈 수 있습니다
-
-### 다른 플랫폼
-
-`out/` 디렉터리를 그대로 올리면 됩니다 (Vercel · Cloudflare Pages · Netlify 등). 이 경우 `NEXT_PUBLIC_BASE_PATH`는 비웁니다.
-
----
-
-## 12. 데이터 출처
+## 7. 데이터 출처
 
 | 역할 | 출처 | 통계표 |
 |---|---|---|
@@ -237,7 +133,7 @@ env:
 
 ---
 
-## 13. 통계 해석상 유의사항
+## 8. 통계 해석상 유의사항
 
 **"다문화학생"** 은 교육부·한국교육개발원 「교육기본통계」의 공식 분류로, 국제결혼가정 자녀(국내출생·중도입국)와 외국인가정 자녀를 포함합니다.
 
@@ -264,24 +160,7 @@ env:
 
 ---
 
-## 14. 보안 주의사항
-
-- API 키는 `.env.local`에만 존재하며 `.gitignore` 대상입니다
-- 정적 배포이므로 **런타임에 키가 존재하지 않습니다**
-- KOSIS는 쿼리스트링 인증이므로 로그에 URL 전문을 남기지 않습니다 (`redact()` 필수)
-- 빌드 산출물·소스맵·git 이력 검사:
-
-```bash
-npx tsx scripts/security/scan-secrets.ts
-```
-
-> 비밀정보 검사는 **바이트 단위 비교**로 합니다. 이 환경의 `grep`은 ugrep이며 바이너리 처리 의미론이 달라 실제 유출을 놓친 사례가 있습니다 ([architecture.md §5.5](docs/architecture.md)).
-
-키가 노출되었다면 [KOSIS OpenAPI 관리](https://kosis.kr/openapi/)에서 즉시 재발급하세요. 정적 배포이므로 재발급이 서비스에 영향을 주지 않습니다.
-
----
-
-## 15. 라이선스
+## 9. 라이선스
 
 **코드**: [MIT License](LICENSE) © 2026 Taehyeong Lim
 
@@ -295,6 +174,7 @@ npx tsx scripts/security/scan-secrets.ts
 
 | 문서 | 내용 |
 |---|---|
+| [**operations.md**](docs/operations.md) | ★ 운영 — 데이터 갱신 런북·배포·보안 |
 | [project-brief.md](docs/project-brief.md) | 프로젝트 개요·원칙 |
 | [**data-audit.md**](docs/data-audit.md) | ★ 데이터 가용성 감사 — 모든 조사 증거 |
 | [product-requirements.md](docs/product-requirements.md) | 제품 요구사항·수용 기준 |

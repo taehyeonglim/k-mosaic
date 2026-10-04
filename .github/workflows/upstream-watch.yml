@@ -1,0 +1,77 @@
+name: Upstream watch
+
+# 교육기본통계 새 연도 공표를 감시한다. 데이터를 자동 갱신하지 않는다 — 갱신은 사람이
+# 로컬에서 검증 보고서를 검토하며 한다 (docs/operations.md). 이 워크플로는 이슈만 연다.
+#
+# e-나라지표만 조회하므로 KOSIS_API_KEY 가 필요 없다.
+# 공표는 보통 8월 말(보도자료) → 10~12월(KOSIS·e-나라 반영)이다. 그 기간에는 주 1회,
+# 나머지 기간에는 월 1회 확인한다.
+
+on:
+  schedule:
+    - cron: '0 0 * 9-12 1' # 9~12월 매주 월요일 09:00 KST
+    - cron: '0 0 1 1-8 *' # 1~8월 매월 1일 09:00 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: upstream-watch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+
+      - name: 업스트림 최신 연도 확인
+        id: upstream
+        run: pnpm data:check-upstream
+
+      # 같은 공표에 대해 매주 이슈가 쌓이지 않게, data-refresh 라벨의 열린 이슈가 있으면 만들지 않는다.
+      - name: 갱신 이슈 열기
+        if: steps.upstream.outputs.new_year == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUMMARY: ${{ steps.upstream.outputs.summary }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          gh label create data-refresh --color 0E8A16 \
+            --description '교육기본통계 새 연도 공표 — 데이터 갱신 필요' --force
+          open=$(gh issue list --label data-refresh --state open --json number --jq 'length')
+          if [ "$open" -gt 0 ]; then
+            echo "이미 열린 data-refresh 이슈가 있어 새로 만들지 않는다."
+            exit 0
+          fi
+          {
+            echo "업스트림에 스냅숏보다 새로운 연도가 공표되었습니다."
+            echo
+            echo '```'
+            echo "$SUMMARY"
+            echo '```'
+            echo
+            echo "## 갱신 절차"
+            echo "[docs/operations.md]($REPO_URL/blob/main/docs/operations.md) 의 **데이터 갱신 런북**을 따르세요."
+            echo
+            echo "- [ ] 0단계: KOSIS 분모 4개 표(DT_1963003_002·003·004·009)와 DT_1963003_010_S 에 새 연도가 반영됐는지 확인"
+            echo "- [ ] 로컬에서 \`pnpm data:refresh\` 실행 (키 필요)"
+            echo "- [ ] 검증 보고서·커버리지 diff 검토"
+            echo "- [ ] README·README.en 수치, CITATION.cff, 스크린숏 갱신"
+            echo "- [ ] PR 생성 (검증 보고서 첨부) → CI 통과 → 머지"
+          } > "$RUNNER_TEMP/issue.md"
+          gh issue create --label data-refresh \
+            --title "데이터 갱신: 교육기본통계 새 연도 공표" \
+            --body-file "$RUNNER_TEMP/issue.md"
