@@ -11,6 +11,9 @@ export const foreignStudentStatSchema = z
     enrolledStudentCount: z.number().finite().nonnegative().nullable(),
     foreignStudentRateComputed: z.number().finite().min(0).max(100).nullable(),
     notes: z.array(z.string()),
+    // 인접 연도와 시도별 값이 전부 같은 구간이면 그 다른 연도 (DL-009). 없으면 null.
+    // 이 필드 도입 전 스냅숏도 읽을 수 있게 기본값을 둔다.
+    sourceDuplicateOf: z.number().int().nullable().default(null),
   })
   .strict();
 

@@ -18,6 +18,7 @@ import { SelectField } from '@/components/ui/SelectField';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ko } from '@/content/ko';
 import { fillTemplate, formatYearRange } from '@/content/template';
+import { markedYearPairs } from '@/lib/data/foreign-duplicates';
 import { toForeignCsv, type ForeignRankingRow, type ForeignTrendSeries } from '@/lib/data/foreign';
 import type { ForeignNationwideStat, ForeignStudentStat } from '@/lib/schema/foreign-student';
 import { metricKeySchema, regionCodeSchema, type MetricKey, type RegionCode } from '@/lib/schema';
@@ -227,16 +228,17 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
     () => formatYearRange(payload.nationwideTrend.map((row) => row.year)),
     [payload.nationwideTrend],
   );
-  const duplicateYears = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          payload.regionalRecords
-            .filter((record) => record.notes.includes(ko.foreignStudents.trend.sourceDuplicateNote))
-            .map((record) => record.year),
-        ),
-      ).sort((left, right) => left - right),
+  // 동일 연도 구간은 스냅숏의 타입 표식(sourceDuplicateOf)으로 찾는다 — 주석 문구 비교 금지.
+  const duplicatePairs = useMemo(
+    () => markedYearPairs(payload.regionalRecords),
     [payload.regionalRecords],
+  );
+  const duplicateNotices = useMemo(
+    () =>
+      duplicatePairs.map(([earlier, later]) =>
+        fillTemplate(ko.foreignStudents.trend.duplicateYearNotice, { earlier, later }),
+      ),
+    [duplicatePairs],
   );
   const selectedDuplicateYears = useMemo(
     () =>
@@ -247,7 +249,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
               (record) =>
                 record.regionCode !== 'KR' &&
                 filters.regions.includes(record.regionCode) &&
-                record.notes.includes(ko.foreignStudents.trend.sourceDuplicateNote),
+                record.sourceDuplicateOf !== null,
             )
             .map((record) => record.year),
         ),
@@ -494,12 +496,16 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
             nationwideEnd: nationwideRange.end,
           })}
         >
-          {duplicateYears.length > 0 ? (
+          {duplicatePairs.length > 0 ? (
             <div className="mb-6 space-y-3" role="note">
-              <Badge tone="caution">{ko.foreignStudents.trend.duplicateYearNotice}</Badge>
-              <p className="text-small text-[var(--km-color-text-muted)]">
-                {ko.foreignStudents.trend.sourceDuplicateNote}
-              </p>
+              {duplicatePairs.map(([earlier, later], index) => (
+                <div className="space-y-2" key={`${earlier}-${later}`}>
+                  <Badge tone="caution">{duplicateNotices[index]}</Badge>
+                  <p className="text-small text-[var(--km-color-text-muted)]">
+                    {fillTemplate(ko.foreignStudents.trend.sourceDuplicateNote, { year: earlier })}
+                  </p>
+                </div>
+              ))}
             </div>
           ) : null}
           <div className="grid min-w-0 gap-8 lg:grid-cols-2">
@@ -551,7 +557,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
             notes={[
               fillTemplate(ko.foreignStudents.sources.regionalNote, regionalRange),
               fillTemplate(ko.foreignStudents.sources.nationwideNote, nationwideRange),
-              ko.foreignStudents.trend.duplicateYearNotice,
+              ...duplicateNotices,
             ]}
           />
         </Card>

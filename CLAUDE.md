@@ -101,7 +101,7 @@ KOSIS 교육기본통계 시도 코드는 행정표준코드가 아니다. 세�
 ```bash
 pnpm data:refresh                           # 연례 갱신 (키 필요) — 절차는 docs/operations.md
 pnpm data:validate                          # 다문화 검증 게이트 (V1~V9, X1~X11)
-pnpm data:validate-foreign                  # 외국인 유학생 검증 게이트 (F1~F5, X3·X5·X9~X12)
+pnpm data:validate-foreign                  # 외국인 유학생 검증 게이트 (F1~F11)
 pnpm data:check-upstream                    # 새 연도 공표 확인 (키 불필요)
 pnpm data:verify-denominator               # 모수 역검증 (키 필요)
 pnpm geo:build                              # 시도 경계 GeoJSON 재생성 (geo-source.md)

@@ -70,4 +70,30 @@ test.describe('회귀 방지', () => {
       page.getByRole('heading', { name: `시도별 추세 (${range(coverage.years)})` }),
     ).toBeVisible();
   });
+
+  test('외국인 유학생 동일 연도 구간 안내는 스냅숏 표식과 일치한다', async ({ page }) => {
+    const snapshot = JSON.parse(
+      readFileSync(resolve(process.cwd(), 'data/snapshots/foreign-students.v1.json'), 'utf8'),
+    ) as { records: { year: number; sourceDuplicateOf: number | null }[] };
+    const pairs = [
+      ...new Set(
+        snapshot.records
+          .filter((record) => record.sourceDuplicateOf !== null)
+          .map((record) =>
+            [record.year, record.sourceDuplicateOf as number].sort((a, b) => a - b).join('|'),
+          ),
+      ),
+    ].map((key) => key.split('|').map(Number) as [number, number]);
+
+    await page.goto('/foreign-students/', { waitUntil: 'networkidle' });
+    for (const [earlier, later] of pairs) {
+      await expect(
+        page
+          .getByRole('note')
+          .getByText(`${later}년 수치가 출처에서 ${earlier}년과 동일하게 제공됩니다.`, {
+            exact: false,
+          }),
+      ).toBeVisible();
+    }
+  });
 });

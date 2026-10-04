@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { REGION_ORDER } from '../constants/regions';
+import { findIdenticalAdjacentYears } from '../data/foreign-duplicates';
 import type { ForeignSnapshot, ForeignStudentStat } from '../schema/foreign-student';
 import type { RegionCode } from '../schema/dimensions';
 import type {
@@ -10,10 +11,6 @@ import type {
   ValidationSeverity,
 } from './index';
 
-const X12_NOTE = '출처에서 2022년과 값이 동일함 — 확인 필요';
-// X12 주석·화면 문구는 이 구간을 전제로 쓰였다. 다른 구간이 나오면 문구가 틀리므로
-// 사람이 검토할 때까지 차단한다 (개선계획 P11 에서 연도 무관 표식으로 교체 예정).
-const KNOWN_IDENTICAL_YEAR_PAIRS = ['2022=2023'];
 const EXPECTED_SOURCE_TABLE_IDS = ['DT_1963003_010_S', '153401'] as const;
 
 function result(
@@ -79,44 +76,6 @@ function coverageList(previous: unknown, key: 'years' | 'nationwideYears'): numb
 function sourceTableId(entry: Record<string, unknown>): string | null {
   const value = entry.tableId ?? entry.tableCode ?? entry.tblId;
   return value === undefined || value === null ? null : String(value);
-}
-
-function annotateIdenticalAdjacentYears(snapshot: ForeignSnapshot): string[] {
-  const years = regionalYears(snapshot);
-  const warnings: string[] = [];
-  const codes: Array<'KR' | RegionCode> = ['KR', ...REGION_ORDER];
-  for (let index = 1; index < years.length; index += 1) {
-    const previousYear = years[index - 1];
-    const currentYear = years[index];
-    if (previousYear === undefined || currentYear === undefined || currentYear !== previousYear + 1)
-      continue;
-    const previous = new Map(
-      regionalRows(snapshot, previousYear).map((record) => [record.regionCode, record]),
-    );
-    const current = new Map(
-      regionalRows(snapshot, currentYear).map((record) => [record.regionCode, record]),
-    );
-    const identical = codes.every((code) => {
-      const left = previous.get(code);
-      const right = current.get(code);
-      return (
-        left !== undefined &&
-        right !== undefined &&
-        left.foreignStudentCount === right.foreignStudentCount &&
-        left.enrolledStudentCount === right.enrolledStudentCount &&
-        left.foreignStudentRateComputed === right.foreignStudentRateComputed
-      );
-    });
-    if (!identical) continue;
-    warnings.push(`${previousYear}=${currentYear}`);
-    for (const code of codes) {
-      const left = previous.get(code);
-      const right = current.get(code);
-      if (left !== undefined && !left.notes.includes(X12_NOTE)) left.notes.push(X12_NOTE);
-      if (right !== undefined && !right.notes.includes(X12_NOTE)) right.notes.push(X12_NOTE);
-    }
-  }
-  return warnings;
 }
 
 export function validateForeignSnapshot(
@@ -240,7 +199,7 @@ export function validateForeignSnapshot(
   );
   results.push(
     result(
-      'X3',
+      'F6',
       '음수 수치·비율 범위 금지',
       'block',
       negativeValues.length === 0 && invalidRates.length === 0,
@@ -258,7 +217,7 @@ export function validateForeignSnapshot(
   );
   results.push(
     result(
-      'X5',
+      'F7',
       '외국인 학생 수가 재적 학생 수를 초과하지 않음',
       'block',
       countExceedsEnrolled.length === 0,
@@ -275,7 +234,7 @@ export function validateForeignSnapshot(
   });
   results.push(
     result(
-      'X9',
+      'F8',
       '결측과 0 구분 유지',
       'block',
       missingZeroViolations.length === 0,
@@ -301,7 +260,7 @@ export function validateForeignSnapshot(
     entries.every((entry) => typeof entry.retrievedAt === 'string' && entry.retrievedAt.length > 0);
   results.push(
     result(
-      'X10',
+      'F9',
       '통계표 ID 누락 금지',
       'block',
       missingSourceIds.length === 0,
@@ -312,7 +271,7 @@ export function validateForeignSnapshot(
   );
   results.push(
     result(
-      'X11',
+      'F10',
       '조회일 누락 금지',
       'block',
       hasRetrievedAt,
@@ -343,19 +302,29 @@ export function validateForeignSnapshot(
     ),
   );
 
-  const identicalYears = annotateIdenticalAdjacentYears(snapshot);
-  const unknownIdenticalYears = identicalYears.filter(
-    (pair) => !KNOWN_IDENTICAL_YEAR_PAIRS.includes(pair),
+  // 동일 연도 구간은 검증기가 찾기만 하고 표식은 빌드 단계가 단다 (검증기는 입력을 바꾸지 않는다).
+  // 찾은 구간과 레코드의 표식(sourceDuplicateOf)이 어긋나면 화면이 잘못 안내하므로 차단한다.
+  const identicalPairs = findIdenticalAdjacentYears(snapshot.records);
+  const expectedMark = new Map<number, number>();
+  for (const [earlier, later] of identicalPairs) {
+    expectedMark.set(earlier, later);
+    expectedMark.set(later, earlier);
+  }
+  const markMismatches = snapshot.records.filter(
+    (record) => (expectedMark.get(record.year) ?? null) !== record.sourceDuplicateOf,
   );
+  const pairLabels = identicalPairs.map(([earlier, later]) => `${earlier}=${later}`);
   results.push(
     result(
-      'X12',
+      'F11',
       '연속 연도 전량 동일 탐지',
-      unknownIdenticalYears.length > 0 ? 'block' : 'warn',
-      identicalYears.length === 0,
-      identicalYears.length === 0
-        ? '인접한 두 연도의 모든 지역 값이 동일한 구간이 없습니다.'
-        : `확인 필요 구간: ${identicalYears.join(', ')}${unknownIdenticalYears.length > 0 ? ` — 화면 문구가 전제하지 않은 구간(${unknownIdenticalYears.join(', ')})이라 검토 전까지 차단합니다` : ''}`,
+      markMismatches.length > 0 ? 'block' : 'warn',
+      identicalPairs.length === 0 && markMismatches.length === 0,
+      markMismatches.length > 0
+        ? `동일 구간 표식 불일치 ${markMismatches.length}건 (탐지 구간: ${pairLabels.join(', ') || '없음'}) — build-foreign 으로 다시 생성하세요.`
+        : identicalPairs.length === 0
+          ? '인접한 두 연도의 모든 지역 값이 동일한 구간이 없습니다.'
+          : `확인 필요 구간: ${pairLabels.join(', ')} (표식 일치 — 화면에 "자료 확인 필요"로 표시)`,
     ),
   );
 

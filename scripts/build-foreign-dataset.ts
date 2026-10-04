@@ -2,6 +2,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { codeFromOfficial, REGION_BY_CODE, REGION_ORDER } from '../src/lib/constants/regions.js';
+import { ko } from '../src/content/ko.js';
+import { fillTemplate } from '../src/content/template.js';
+import { markIdenticalAdjacentYears } from '../src/lib/data/foreign-duplicates.js';
 import { assertContiguousYears, retainHistoricalYears } from '../src/lib/data/years.js';
 import type { KosisCell } from './lib/kosis.js';
 import { redact } from './lib/redact.js';
@@ -235,6 +238,7 @@ function makeRegionalRecords(raw: KosisRaw): ForeignStudentStat[] {
         enrolledStudentCount,
         foreignStudentRateComputed,
         notes,
+        sourceDuplicateOf: null,
       });
     }
   }
@@ -368,6 +372,12 @@ function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${redact(JSON.stringify(value, null, 2))}\n`, 'utf8');
 }
 
+// 동일 연도 구간 주석 — 화면 안내와 같은 템플릿(ko.ts)으로 만든다.
+const DUPLICATE_NOTE_TEMPLATE = ko.foreignStudents.trend.sourceDuplicateNote;
+const DUPLICATE_NOTE_PATTERN = new RegExp(
+  `^${DUPLICATE_NOTE_TEMPLATE.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace('{year}', '\\d{4}')}$`,
+);
+
 function readPreviousSnapshot(): ForeignSnapshot | null {
   if (!existsSync(SNAPSHOT_PATH)) return null;
   return parseForeignSnapshot(readJson(SNAPSHOT_PATH));
@@ -383,6 +393,12 @@ export function runBuildForeignDataset(): ForeignSnapshot {
   // 업스트림이 오래된 연도를 빼도 공개 데이터는 줄지 않게 이전 검증 스냅숏에서 보존한다.
   const previous = readPreviousSnapshot();
   const regional = retainHistoricalYears(makeRegionalRecords(kosis), previous?.records ?? []);
+  // 인접 연도 값이 전부 같은 구간에 표식을 단다 (DL-009). 검증(F11)은 표식 일치를 확인한다.
+  const regionalRecords = markIdenticalAdjacentYears(
+    regional.records,
+    (year) => fillTemplate(DUPLICATE_NOTE_TEMPLATE, { year }),
+    (note) => DUPLICATE_NOTE_PATTERN.test(note),
+  );
   const nationwide = retainHistoricalYears(enara.rows, previous?.nationwide ?? []);
   for (const [label, retained] of [
     ['시도별', regional.retainedYears],
@@ -397,12 +413,12 @@ export function runBuildForeignDataset(): ForeignSnapshot {
     schemaVersion: 1,
     retrievedAt: [kosis.retrievedAt, enara.retrievedAt].sort().at(-1),
     coverage: {
-      years: uniqueYears(regional.records),
+      years: uniqueYears(regionalRecords),
       nationwideYears: uniqueYears(nationwide.records),
       regionCount: REGION_ORDER.length,
     },
     rateFormula: 'foreignStudentRateComputed = foreignStudentCount / enrolledStudentCount * 100',
-    records: regional.records,
+    records: regionalRecords,
     nationwide: nationwide.records,
   });
   const sourceMeta = makeSourceMetadata(kosis, enara, snapshot);
