@@ -22,13 +22,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # 버전을 여기에 적지 않는다. package.json 의 `packageManager` 가 단일 출처이며,
       # 양쪽에 적으면 action 이 모호성을 이유로 거부한다 (ERR_PNPM_BAD_PM_VERSION 예방).
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -105,6 +105,6 @@ jobs:
         run: npx tsx scripts/security/scan-secrets.ts
 
       - if: inputs.upload-pages-artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: out
