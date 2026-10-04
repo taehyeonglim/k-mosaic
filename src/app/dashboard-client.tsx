@@ -168,9 +168,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
   );
   const mapScale = useMemo(
     () =>
-      filters.metric === 'count'
-        ? createCountScale(scaleValues, 'light')
-        : createRateScale(scaleValues, 'light'),
+      filters.metric === 'count' ? createCountScale(scaleValues) : createRateScale(scaleValues),
     [filters.metric, scaleValues],
   );
   const mapRanks = useMemo(

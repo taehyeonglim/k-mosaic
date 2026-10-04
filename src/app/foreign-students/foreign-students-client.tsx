@@ -141,9 +141,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
   );
   const mapScale = useMemo(() => {
     const values = payload.regionalRecords.map((record) => valueForMetric(record, filters.metric));
-    return filters.metric === 'count'
-      ? createCountScale(values, 'light')
-      : createRateScale(values, 'light');
+    return filters.metric === 'count' ? createCountScale(values) : createRateScale(values);
   }, [filters.metric, payload.regionalRecords]);
   const mapRanks = useMemo(
     () =>

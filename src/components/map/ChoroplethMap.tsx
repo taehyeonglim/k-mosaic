@@ -13,6 +13,7 @@ import {
 import { ko } from '@/content/ko';
 import {
   createKoreaProjectionLayout,
+  remoteIslandGroups,
   splitKoreaGeo,
   toD3Winding,
 } from '@/lib/visualization/projection';
@@ -130,6 +131,13 @@ export function ChoroplethMap({
     () => new Set(geoParts.inset.features.map((feature) => feature.properties?.regionCode ?? '')),
     [geoParts],
   );
+  const islandGroups = useMemo(() => remoteIslandGroups(geoParts.inset), [geoParts]);
+  // 겹쳐 그리는 외곽선(호버·선택·포커스)용 경로. 지역 path 뒤에 그려야 이웃 지역에 가리지 않는다.
+  const outlinePath = (code: string | null): string => {
+    if (code === null) return '';
+    const feature = mainFeatureByCode.get(code);
+    return feature === undefined ? '' : (pathGenerator(feature) ?? '');
+  };
   const activeRegion = hoveredRegion ?? focusedRegion;
   const activeFeature = features.find((feature) => feature.properties?.regionCode === activeRegion);
   const activeCode = activeFeature?.properties?.regionCode ?? null;
@@ -202,7 +210,6 @@ export function ChoroplethMap({
             const label = regionLabels[code] ?? feature.properties?.nameKo ?? code;
             const rank = ranks[code] ?? null;
             const selected = selectedRegion === code;
-            const focused = focusedRegion === code;
             const mainFeature = mainFeatureByCode.get(code);
             const pathData = mainFeature === undefined ? '' : (pathGenerator(mainFeature) ?? '');
             const ariaValue = value === null ? missingLabel : formatValue(value);
@@ -210,43 +217,66 @@ export function ChoroplethMap({
             const insetNote = insetFeatureCodes.has(code) ? ko.map.insetAriaNote : '';
 
             return (
-              <g key={code}>
-                <path
-                  d={pathData}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`${label}, ${metricLabel}: ${ariaValue}, ${ko.filters.year} ${year}, ${ko.ranking.rank} ${ariaRank}${insetNote}`}
-                  aria-pressed={selected}
-                  aria-describedby={activeCode === code ? tooltipId : undefined}
-                  fill={value === null ? `url(#${patternId})` : scale.color(value)}
-                  stroke={
-                    selected
-                      ? 'var(--km-color-accent-strong, currentColor)'
-                      : 'var(--km-color-border, currentColor)'
-                  }
-                  strokeWidth={selected ? 2.5 : 0.8}
-                  onClick={() => onSelectRegion(selected ? null : code)}
-                  onKeyDown={(event) => handleKeyDown(event, code)}
-                  onMouseEnter={() => setHoveredRegion(code)}
-                  onMouseLeave={() => setHoveredRegion(null)}
-                  onFocus={() => setFocusedRegion(code)}
-                  onBlur={() => setFocusedRegion(null)}
-                  style={{ cursor: 'pointer' }}
-                />
-                {focused ? (
-                  <path
-                    d={pathData}
-                    fill="none"
-                    stroke="var(--km-color-focus, currentColor)"
-                    strokeWidth="4"
-                    strokeLinejoin="round"
-                    pointerEvents="none"
-                    aria-hidden="true"
-                  />
-                ) : null}
-              </g>
+              <path
+                key={code}
+                d={pathData}
+                tabIndex={0}
+                role="button"
+                aria-label={`${label}, ${metricLabel}: ${ariaValue}, ${ko.filters.year} ${year}, ${ko.ranking.rank} ${ariaRank}${insetNote}`}
+                aria-pressed={selected}
+                aria-describedby={activeCode === code ? tooltipId : undefined}
+                fill={value === null ? `url(#${patternId})` : scale.color(value)}
+                stroke="var(--km-color-surface)"
+                strokeWidth={1}
+                strokeLinejoin="round"
+                onClick={() => onSelectRegion(selected ? null : code)}
+                onKeyDown={(event) => handleKeyDown(event, code)}
+                onMouseEnter={() => setHoveredRegion(code)}
+                onMouseLeave={() => setHoveredRegion(null)}
+                // 포커스 링은 키보드 포커스에만 그린다 — 마우스로 누른 뒤에는 선택 링이 보여야 한다.
+                onFocus={(event) => {
+                  if (event.currentTarget.matches(':focus-visible')) setFocusedRegion(code);
+                }}
+                onBlur={() => setFocusedRegion(null)}
+                style={{ cursor: 'pointer', outline: 'none' }}
+              />
             );
           })}
+        </g>
+        {/* 겹쳐 그리는 외곽선 — 장식이므로 보조기술에 노출하지 않고 클릭을 가로채지 않는다.
+            강조 보라만으로는 가장 짙은 단계 위에서 1.9:1 이라, 표면색 헤일로를 먼저 깐다. */}
+        <g aria-hidden="true" fill="none" pointerEvents="none" strokeLinejoin="round">
+          {hoveredRegion !== null && hoveredRegion !== selectedRegion ? (
+            <path d={outlinePath(hoveredRegion)} stroke="var(--km-color-text)" strokeWidth={1.5} />
+          ) : null}
+          {selectedRegion !== null ? (
+            <>
+              <path
+                aria-hidden="true"
+                d={outlinePath(selectedRegion)}
+                data-map-selection="halo"
+                stroke="var(--km-color-surface)"
+                strokeWidth={6}
+              />
+              <path
+                aria-hidden="true"
+                d={outlinePath(selectedRegion)}
+                data-map-selection="ring"
+                stroke="var(--km-color-accent2)"
+                strokeWidth={2.5}
+              />
+            </>
+          ) : null}
+          {focusedRegion !== null ? (
+            <>
+              <path
+                d={outlinePath(focusedRegion)}
+                stroke="var(--km-color-surface)"
+                strokeWidth={7}
+              />
+              <path d={outlinePath(focusedRegion)} stroke="var(--km-color-focus)" strokeWidth={3} />
+            </>
+          ) : null}
         </g>
         {projectionLayout.insetBox !== null && insetPathGenerator !== null ? (
           <g role="group" aria-label={ko.map.insetGroupLabel} pointerEvents="none">
@@ -256,18 +286,17 @@ export function ChoroplethMap({
               y={projectionLayout.insetBox.y}
               width={projectionLayout.insetBox.width}
               height={projectionLayout.insetBox.height}
-              rx="4"
-              fill="var(--km-color-surface, white)"
-              stroke="var(--km-color-border, currentColor)"
-              strokeWidth="1.2"
-              strokeDasharray="4 3"
+              rx="8"
+              fill="var(--km-color-surface-muted)"
+              stroke="var(--km-color-border)"
+              strokeWidth="1"
             />
             <text
               x={projectionLayout.insetBox.x + 8}
               y={projectionLayout.insetBox.y + 15}
-              fill="var(--km-color-text, currentColor)"
-              fontSize="11"
-              fontWeight="600"
+              fill="var(--km-color-text-muted)"
+              fontSize="10.5"
+              fontWeight="500"
             >
               <tspan x={projectionLayout.insetBox.x + 8} dy="0">
                 {ko.map.insetTitle}
@@ -285,10 +314,41 @@ export function ChoroplethMap({
                   key={`inset-${code}`}
                   d={insetPath}
                   fill={value === null ? `url(#${patternId})` : scale.color(value)}
-                  stroke="var(--km-color-border, currentColor)"
-                  strokeWidth="1"
                   aria-hidden="true"
                 />
+              );
+            })}
+            {/* 섬 이름표 — 섬이 작아 상자가 비어 보이므로 무엇이 그려져 있는지 적는다.
+                독도는 1px 이 안 되어 표식(점)을 함께 둔다. */}
+            {islandGroups.map((group) => {
+              const [[left, top], [right, bottom]] = insetPathGenerator.bounds(group.geometry);
+              const centerX = (left + right) / 2;
+              const centerY = (top + bottom) / 2;
+              const code = geoParts.inset.features[0]?.properties?.regionCode ?? '';
+              const value = dataByCode.get(code) ?? null;
+              const isDokdo = group.id === 'dokdo';
+              return (
+                <g key={group.id}>
+                  {isDokdo ? (
+                    <circle
+                      aria-hidden="true"
+                      cx={centerX}
+                      cy={centerY}
+                      r={2.5}
+                      fill={value === null ? 'var(--km-color-missing-stroke)' : scale.color(value)}
+                    />
+                  ) : null}
+                  <text
+                    x={isDokdo ? centerX - 6 : right + 5}
+                    y={centerY + 3.5}
+                    fill="var(--km-color-text)"
+                    fontSize="10.5"
+                    fontWeight="600"
+                    textAnchor={isDokdo ? 'end' : 'start'}
+                  >
+                    {ko.map.insetIslands[group.id]}
+                  </text>
+                </g>
               );
             })}
           </g>
@@ -299,9 +359,9 @@ export function ChoroplethMap({
         <div
           id={tooltipId}
           role="tooltip"
-          className="pointer-events-none absolute left-2 top-2 z-10 max-w-[calc(100%-1rem)] rounded border border-[var(--km-color-border)] bg-[var(--km-color-surface)] px-3 py-2 text-sm shadow-sm"
+          className="pointer-events-none absolute left-2 top-2 z-10 max-w-[calc(100%-1rem)] rounded-[var(--km-radius-md)] border border-border bg-surface px-3 py-2 text-sm shadow-floating"
         >
-          <div className="font-medium">{activeLabel}</div>
+          <div className="font-semibold">{activeLabel}</div>
           <div className="tabular-nums">
             {metricLabel}: {activeValue === null ? missingLabel : formatValue(activeValue)}
           </div>
