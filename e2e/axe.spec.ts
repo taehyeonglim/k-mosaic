@@ -6,6 +6,12 @@ const pages = [
   { name: '/', path: '/', readyHeading: '전국 개요', readyHeadingCount: 1 },
   { name: '/sources', path: '/sources/', readyHeading: '출처 및 계산식', readyHeadingCount: 3 },
   {
+    name: '/regions/36',
+    path: '/regions/36/',
+    readyHeading: '세종특별자치시 다문화학생',
+    readyHeadingCount: 1,
+  },
+  {
     name: '/foreign-students',
     path: '/foreign-students/',
     readyHeading: '외국인 유학생 출처 및 계산식',

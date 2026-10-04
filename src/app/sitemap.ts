@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 
+import { REGION_ORDER } from '@/lib/constants/regions';
 import { absoluteUrl } from '@/lib/site';
 
 // 정적 내보내기에서 sitemap.xml 로 생성된다.
@@ -8,5 +9,10 @@ import { absoluteUrl } from '@/lib/site';
 export const dynamic = 'force-static';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ['', 'foreign-students/', 'sources/'].map((path) => ({ url: absoluteUrl(path) }));
+  return [
+    '',
+    'foreign-students/',
+    'sources/',
+    ...REGION_ORDER.map((code) => `regions/${code}/`),
+  ].map((path) => ({ url: absoluteUrl(path) }));
 }
