@@ -11,6 +11,9 @@ import type {
 } from './index';
 
 const X12_NOTE = '출처에서 2022년과 값이 동일함 — 확인 필요';
+// X12 주석·화면 문구는 이 구간을 전제로 쓰였다. 다른 구간이 나오면 문구가 틀리므로
+// 사람이 검토할 때까지 차단한다 (개선계획 P11 에서 연도 무관 표식으로 교체 예정).
+const KNOWN_IDENTICAL_YEAR_PAIRS = ['2022=2023'];
 const EXPECTED_SOURCE_TABLE_IDS = ['DT_1963003_010_S', '153401'] as const;
 
 function result(
@@ -330,7 +333,7 @@ export function validateForeignSnapshot(
     result(
       'F5',
       '연도 커버리지 유지',
-      'warn',
+      'block',
       lostYears.length === 0,
       previous === null
         ? '이전 스냅숏이 없어 커버리지 비교를 건너뛰었습니다.'
@@ -341,15 +344,18 @@ export function validateForeignSnapshot(
   );
 
   const identicalYears = annotateIdenticalAdjacentYears(snapshot);
+  const unknownIdenticalYears = identicalYears.filter(
+    (pair) => !KNOWN_IDENTICAL_YEAR_PAIRS.includes(pair),
+  );
   results.push(
     result(
       'X12',
       '연속 연도 전량 동일 탐지',
-      'warn',
+      unknownIdenticalYears.length > 0 ? 'block' : 'warn',
       identicalYears.length === 0,
       identicalYears.length === 0
         ? '인접한 두 연도의 모든 지역 값이 동일한 구간이 없습니다.'
-        : `확인 필요 구간: ${identicalYears.join(', ')}`,
+        : `확인 필요 구간: ${identicalYears.join(', ')}${unknownIdenticalYears.length > 0 ? ` — 화면 문구가 전제하지 않은 구간(${unknownIdenticalYears.join(', ')})이라 검토 전까지 차단합니다` : ''}`,
     ),
   );
 

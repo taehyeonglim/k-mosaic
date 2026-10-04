@@ -17,6 +17,7 @@ import { MetricCardRow } from '@/components/dashboard/MetricCardRow';
 import { SelectField } from '@/components/ui/SelectField';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ko } from '@/content/ko';
+import { fillTemplate, formatYearRange } from '@/content/template';
 import { toForeignCsv, type ForeignRankingRow, type ForeignTrendSeries } from '@/lib/data/foreign';
 import type { ForeignNationwideStat, ForeignStudentStat } from '@/lib/schema/foreign-student';
 import { metricKeySchema, regionCodeSchema, type MetricKey, type RegionCode } from '@/lib/schema';
@@ -219,6 +220,12 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
   const selectedTrend = useMemo(
     () => payload.regionalTrend.filter((series) => filters.regions.includes(series.regionCode)),
     [filters.regions, payload.regionalTrend],
+  );
+  // 수록 기간 문구는 스냅숏 연도에서 채운다 (시도별: payload.years, 전국 장기: nationwideTrend).
+  const regionalRange = useMemo(() => formatYearRange(payload.years), [payload.years]);
+  const nationwideRange = useMemo(
+    () => formatYearRange(payload.nationwideTrend.map((row) => row.year)),
+    [payload.nationwideTrend],
   );
   const duplicateYears = useMemo(
     () =>
@@ -480,7 +487,12 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
       <section id="foreign-trend" aria-label={ko.foreignStudents.trend.title}>
         <Card
           title={ko.foreignStudents.trend.title}
-          description={ko.foreignStudents.trend.coverageNote}
+          description={fillTemplate(ko.foreignStudents.trend.coverageNote, {
+            regionalStart: regionalRange.start,
+            regionalEnd: regionalRange.end,
+            nationwideStart: nationwideRange.start,
+            nationwideEnd: nationwideRange.end,
+          })}
         >
           {duplicateYears.length > 0 ? (
             <div className="mb-6 space-y-3" role="note">
@@ -493,7 +505,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
           <div className="grid min-w-0 gap-8 lg:grid-cols-2">
             <section className="min-w-0 space-y-3" aria-labelledby="foreign-nationwide-trend-title">
               <h3 id="foreign-nationwide-trend-title" className="text-base font-medium">
-                {ko.foreignStudents.trend.nationwideTitle}
+                {fillTemplate(ko.foreignStudents.trend.nationwideTitle, nationwideRange)}
               </h3>
               <TrendChart
                 series={nationwideTrendSeries}
@@ -503,7 +515,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
             </section>
             <section className="min-w-0 space-y-3" aria-labelledby="foreign-regional-trend-title">
               <h3 id="foreign-regional-trend-title" className="text-base font-medium">
-                {ko.foreignStudents.trend.regionalTitle}
+                {fillTemplate(ko.foreignStudents.trend.regionalTitle, regionalRange)}
               </h3>
               {selectedTrend.length > 0 ? (
                 <TrendChart
@@ -537,8 +549,8 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
             sources={payload.sources}
             rateFormula={payload.rateFormula}
             notes={[
-              ko.foreignStudents.sources.regionalNote,
-              ko.foreignStudents.sources.nationwideNote,
+              fillTemplate(ko.foreignStudents.sources.regionalNote, regionalRange),
+              fillTemplate(ko.foreignStudents.sources.nationwideNote, nationwideRange),
               ko.foreignStudents.trend.duplicateYearNotice,
             ]}
           />

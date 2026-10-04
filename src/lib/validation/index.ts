@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { MULTICULTURAL_TABLE_IDS } from '../constants/sources';
+import { integerRoundedYears } from '../data/years';
 import type { MulticulturalStudentStat, Snapshot } from '../schema/index';
 
 export type ValidationSeverity = 'block' | 'warn';
@@ -287,11 +288,19 @@ export function validateSnapshot(s: Snapshot, context: ValidationContext = {}): 
     ),
   );
 
+  // 공표 비율이 정수로 반올림된 연도(2025년 등)는 대조할 수 없으므로 제외한다.
+  // 연도를 리터럴로 두면 2026년 이후 공표치가 대조에서 조용히 빠진다 — 자료 모양으로 판별한다.
+  const roundedYears = integerRoundedYears(
+    s.records.map((record) => ({
+      year: record.year,
+      published: record.multiculturalStudentRatePublished,
+    })),
+  );
   const rateMismatches: string[] = [];
   let rateComparisons = 0;
   for (const record of s.records) {
     if (
-      record.year < 2025 &&
+      !roundedYears.includes(record.year) &&
       record.multiculturalStudentRateComputed !== null &&
       record.multiculturalStudentRatePublished !== null
     ) {
@@ -314,7 +323,7 @@ export function validateSnapshot(s: Snapshot, context: ValidationContext = {}): 
       'block',
       rateComparisons > 0 && rateMismatches.length === 0,
       rateMismatches.length === 0
-        ? `2024년 이전 비교 ${rateComparisons}건이 모두 ±0.1%p 이내입니다.`
+        ? `비교 ${rateComparisons}건이 모두 ±0.1%p 이내입니다${roundedYears.length > 0 ? ` (정수 반올림 공표 연도 ${roundedYears.join(', ')} 제외)` : ''}.`
         : rateMismatches.join(', '),
     ),
   );
@@ -379,7 +388,9 @@ export function validateSnapshot(s: Snapshot, context: ValidationContext = {}): 
     result(
       'V8',
       '연도 커버리지 유지',
-      'warn',
+      // 공개 데이터의 연도가 줄면 차단한다. 업스트림 창이 밀린 경우는 normalize 단계가
+      // 이전 스냅숏에서 과거 연도를 보존하므로, 여기서 축소가 보이면 이상 신호다.
+      'block',
       coverageNotReduced,
       previousYears === null
         ? '이전 스냅숏이 없어 커버리지 비교를 건너뛰었습니다.'

@@ -16,6 +16,15 @@ function snapshotYears(): number[] {
   return snapshot.coverage.years;
 }
 
+function foreignCoverage(): { years: number[]; nationwideYears: number[] } {
+  const snapshot = JSON.parse(
+    readFileSync(resolve(process.cwd(), 'data/snapshots/foreign-students.v1.json'), 'utf8'),
+  ) as { coverage: { years: number[]; nationwideYears: number[] } };
+  return snapshot.coverage;
+}
+
+const range = (years: number[]) => `${Math.min(...years)}~${Math.max(...years)}`;
+
 test.describe('회귀 방지', () => {
   for (const path of ['/', '/sources/']) {
     test(`${path} 다문화학생 출처에 외국인 유학생 통계표가 섞이지 않는다`, async ({ page }) => {
@@ -47,6 +56,18 @@ test.describe('회귀 방지', () => {
 
     await expect(
       page.getByText(`${Math.min(...years)}~${Math.max(...years)}년을 제공합니다.`),
+    ).toBeVisible();
+  });
+
+  test('외국인 유학생 페이지의 수록 기간 문구는 스냅숏 연도와 일치한다', async ({ page }) => {
+    await page.goto('/foreign-students/', { waitUntil: 'networkidle' });
+    const coverage = foreignCoverage();
+
+    await expect(
+      page.getByRole('heading', { name: `전국 장기 추세 (${range(coverage.nationwideYears)})` }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: `시도별 추세 (${range(coverage.years)})` }),
     ).toBeVisible();
   });
 });
