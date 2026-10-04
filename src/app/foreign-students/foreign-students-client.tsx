@@ -276,10 +276,8 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
   return (
     <div className="space-y-8">
       <section id="foreign-overview" aria-label={ko.foreignStudents.overview.title}>
-        <Card
-          title={ko.foreignStudents.overview.title}
-          description={ko.foreignStudents.populationNotice}
-        >
+        {/* 모집단 안내는 페이지 맨 위에 한 번만 둔다 (여기서 되풀이하지 않는다). */}
+        <Card title={ko.foreignStudents.overview.title}>
           <MetricCardRow
             items={[
               {
@@ -309,7 +307,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
 
       <section id="foreign-filters" aria-label={ko.foreignStudents.filters.title}>
         <Card title={ko.foreignStudents.filters.title}>
-          <div className="grid min-w-0 gap-5 sm:grid-cols-2">
+          <div className="flex min-w-0 flex-wrap items-end gap-x-5 gap-y-4">
             <SelectField
               id="foreign-filter-year"
               label={ko.foreignStudents.filters.year}
@@ -404,7 +402,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
               ))}
             </div>
           ) : null}
-          <div className="grid min-w-0 gap-8 lg:grid-cols-2">
+          <div className="grid min-w-0 gap-8 lg:grid-cols-2 lg:items-end">
             <section className="min-w-0 space-y-3" aria-labelledby="foreign-nationwide-trend-title">
               <h3 id="foreign-nationwide-trend-title" className="text-base font-medium">
                 {fillTemplate(ko.foreignStudents.trend.nationwideTitle, nationwideRange)}
@@ -447,7 +445,9 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
 
       <section id="foreign-sources" aria-label={ko.foreignStudents.sources.title}>
         <Card title={ko.foreignStudents.sources.title}>
+          {/* 패널 제목이 이미 '외국인 유학생 출처 및 계산식'이다 — 안쪽 제목을 되풀이하지 않는다. */}
           <SourcePanel
+            heading={false}
             sources={payload.sources}
             rateFormula={payload.rateFormula}
             notes={[

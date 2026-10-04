@@ -6,7 +6,10 @@ import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { PageShell } from '@/components/layout/PageShell';
 import { MetricCardRow } from '@/components/dashboard/MetricCardRow';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
+import { Icon } from '@/components/ui/Icon';
 import { DataTable } from '@/components/ui/DataTable';
 import { ko } from '@/content/ko';
 import { fillTemplate, formatYearRange } from '@/content/template';
@@ -110,66 +113,69 @@ export default async function RegionPage({ params }: { params: Promise<{ code: s
       />
       <PageShell>
         <div className="space-y-8">
-          <nav aria-label={ko.regionPage.navigationLabel} className="flex flex-wrap gap-2">
-            <Link className="btn inline-flex" href="/">
-              {ko.regionPage.backToDashboard}
-            </Link>
-            <Link className="btn inline-flex" href={`/?regions=${code}`}>
-              {ko.regionPage.compareInDashboard}
-            </Link>
-          </nav>
+          <PageHeader
+            title={fillTemplate(ko.regionPage.heading, { region })}
+            description={fillTemplate(ko.regionPage.subtitle, { year, ...range })}
+            actions={
+              <nav
+                aria-label={ko.regionPage.navigationLabel}
+                className="flex flex-wrap items-center gap-2"
+              >
+                <Link className="btn inline-flex" href="/">
+                  <Icon name="arrow-left" />
+                  {ko.regionPage.backToDashboard}
+                </Link>
+                <Link className="btn inline-flex" href={`/?regions=${code}`}>
+                  {ko.regionPage.compareInDashboard}
+                </Link>
+              </nav>
+            }
+          />
 
-          <header className="space-y-2">
-            <h2 className="text-2xl font-semibold">
-              {fillTemplate(ko.regionPage.heading, { region })}
-            </h2>
-            <p className="text-small text-[var(--km-color-text-muted)]">
-              {fillTemplate(ko.regionPage.subtitle, { year, ...range })}
-            </p>
-          </header>
-
-          <section
-            aria-label={fillTemplate(ko.regionPage.summaryTitle, { year })}
-            className="space-y-3"
-          >
-            <MetricCardRow
-              items={[
-                {
-                  key: 'student-count',
-                  label: ko.overview.studentCount,
-                  value: detail.count,
-                  unit: 'count',
-                  delta: detail.deltaAbs,
-                  deltaPct: detail.deltaPct,
-                },
-                {
-                  key: 'student-rate',
-                  label: ko.regionPage.rateLabel,
-                  value: detail.rate,
-                  unit: 'percent',
-                  note: ko.overview.computedRate,
-                },
-                {
-                  key: 'nationwide-difference',
-                  label: ko.regionPage.nationwideDifferenceLabel,
-                  value: detail.diffFromNational,
-                  unit: 'percent',
-                  display: 'delta',
-                  note: fillTemplate(ko.regionPage.nationwideDifferenceNote, {
-                    rate: formatRate(national ?? null, ko.missing.value),
-                  }),
-                },
-              ]}
-            />
-            <p className="text-small" data-key="region-rank">
-              {ko.regionPage.rankLabel}:{' '}
-              {rankRow === undefined
-                ? ko.missing.label
-                : `${rankRow.isTied ? `${ko.regionPage.rankTied} ` : ''}${fillTemplate(ko.regionPage.rankValue, { rank: rankRow.rank })}`}
-            </p>
-            <p className="text-small text-[var(--km-color-text-muted)]">
-              {ko.ranking.interpretationNote}
-            </p>
+          {/* 요약 — 통계 타일은 캔버스가 아니라 패널 위에 둔다 (타일의 면이 캔버스와 거의 같다). */}
+          <section aria-label={fillTemplate(ko.regionPage.summaryTitle, { year })}>
+            <Card>
+              <div className="space-y-4">
+                <MetricCardRow
+                  items={[
+                    {
+                      key: 'student-count',
+                      label: ko.overview.studentCount,
+                      value: detail.count,
+                      unit: 'count',
+                      delta: detail.deltaAbs,
+                      deltaPct: detail.deltaPct,
+                    },
+                    {
+                      key: 'student-rate',
+                      label: ko.regionPage.rateLabel,
+                      value: detail.rate,
+                      unit: 'percent',
+                      note: ko.overview.computedRate,
+                    },
+                    {
+                      key: 'nationwide-difference',
+                      label: ko.regionPage.nationwideDifferenceLabel,
+                      value: detail.diffFromNational,
+                      unit: 'percent',
+                      display: 'delta',
+                      note: fillTemplate(ko.regionPage.nationwideDifferenceNote, {
+                        rate: formatRate(national ?? null, ko.missing.value),
+                      }),
+                    },
+                  ]}
+                />
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <p className="text-sm font-medium" data-key="region-rank">
+                    {ko.regionPage.rankLabel}:{' '}
+                    {rankRow === undefined
+                      ? ko.missing.label
+                      : `${rankRow.isTied ? `${ko.regionPage.rankTied} ` : ''}${fillTemplate(ko.regionPage.rankValue, { rank: rankRow.rank })}`}
+                  </p>
+                  <Badge tone="info">{ko.ranking.interpretationNote}</Badge>
+                </div>
+              </div>
+            </Card>
           </section>
 
           <Card title={ko.regionDetail.schoolLevelComposition}>
@@ -219,12 +225,15 @@ export default async function RegionPage({ params }: { params: Promise<{ code: s
             <p>{ko.ethics.noCausalInterpretation}</p>
           </section>
 
-          <nav aria-label={ko.regionPage.otherRegions} className="space-y-2">
-            <h3 className="text-base font-medium">{ko.regionPage.otherRegions}</h3>
+          <nav aria-label={ko.regionPage.otherRegions} className="space-y-3">
+            <h3 className="text-sm font-semibold">{ko.regionPage.otherRegions}</h3>
             <ul className="flex flex-wrap gap-2">
               {REGION_ORDER.filter((other) => other !== code).map((other) => (
                 <li key={other}>
-                  <Link className="btn btn-ghost inline-flex" href={`/regions/${other}/`}>
+                  <Link
+                    className="btn inline-flex min-h-9 rounded-full px-3.5"
+                    href={`/regions/${other}/`}
+                  >
                     {REGION_BY_CODE[other].short}
                   </Link>
                 </li>

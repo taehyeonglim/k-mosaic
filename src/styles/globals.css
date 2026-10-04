@@ -391,9 +391,11 @@
     padding: 1rem;
   }
 
+  /* 통계 타일 줄 — 타일 수가 몇이든 줄을 가득 채운다 (2개면 2열, 3개면 3열).
+     칸 최소 폭보다 좁으면 한 열로 쌓인다. */
   .viz-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
     gap: 0.75rem;
     min-width: 0;
   }
@@ -711,10 +713,6 @@
 }
 
 @media (min-width: 640px) {
-  .viz-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .mosaic-tile {
     min-height: 5.25rem;
     padding: 0.625rem;
@@ -723,12 +721,6 @@
 
   .mosaic-tile-name {
     font-size: 0.8125rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .viz-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

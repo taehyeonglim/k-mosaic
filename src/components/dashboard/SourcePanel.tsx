@@ -19,6 +19,8 @@ export interface SourcePanelProps {
   rateFormula: string;
   notes: string[];
   showCommonMeta?: boolean;
+  /** 바깥 패널이 이미 같은 제목을 갖고 있으면 false — 안쪽 제목을 되풀이하지 않는다. */
+  heading?: boolean;
 }
 
 function sharedSourceValue<T>(
@@ -37,6 +39,7 @@ export function SourcePanel({
   rateFormula,
   notes,
   showCommonMeta = true,
+  heading = true,
 }: SourcePanelProps) {
   const sharedRetrievedAt = showCommonMeta
     ? sharedSourceValue(sources, (source) => source.retrievedAt)
@@ -54,10 +57,16 @@ export function SourcePanel({
     );
 
   return (
-    <section className="space-y-5" aria-labelledby="source-panel-title">
-      <h2 id="source-panel-title" className="panel-title">
-        {ko.sources.title}
-      </h2>
+    <section
+      className="space-y-5"
+      aria-label={heading ? undefined : ko.sources.title}
+      aria-labelledby={heading ? 'source-panel-title' : undefined}
+    >
+      {heading ? (
+        <h2 id="source-panel-title" className="panel-title">
+          {ko.sources.title}
+        </h2>
+      ) : null}
 
       {hasCommonMeta ? (
         <dl className="grid gap-3 rounded-[var(--km-radius-md)] bg-surface-muted p-4 text-sm sm:grid-cols-3">

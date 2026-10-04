@@ -10,6 +10,8 @@ export type IconName =
   | 'arrow-up'
   | 'arrow-down'
   | 'arrow-right'
+  | 'arrow-left'
+  | 'close'
   | 'external'
   | 'download'
   | 'refresh';
@@ -31,6 +33,8 @@ const SHAPES: Record<IconName, ReactNode> = {
   'arrow-up': <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" />,
   'arrow-down': <path d="M12 5v14M5.5 12.5 12 19l6.5-6.5" />,
   'arrow-right': <path d="M5 12h14M12.5 5.5 19 12l-6.5 6.5" />,
+  'arrow-left': <path d="M19 12H5M11.5 5.5 5 12l6.5 6.5" />,
+  close: <path d="M6 6l12 12M18 6 6 18" />,
   external: <path d="M8 16 17 7M9 7h8v8" />,
   download: <path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />,
   refresh: <path d="M20 11a8 8 0 0 0-14.6-4M4 4v4h4M4 13a8 8 0 0 0 14.6 4M20 20v-4h-4" />,
