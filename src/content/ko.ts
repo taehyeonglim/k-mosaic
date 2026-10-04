@@ -3,6 +3,11 @@ export const ko = {
     title: 'K-MOSAIC',
     subtitle: '대한민국 다문화학생 교육통계 시각화·분석 플랫폼',
     tagline: '여러 언어와 문화를 지닌 학생이 우리 교육에 얼마나 함께하고 있는지 살펴봅니다.',
+    // 공유 카드·검색 결과용. 페이지 제목은 '%s — K-MOSAIC' 형식으로 붙는다.
+    metaTitle: 'K-MOSAIC — 대한민국 다문화학생 교육통계',
+    metaDescription:
+      '17개 시·도 다문화학생 수와 비율을 지도·순위·시계열로 탐색합니다. 모든 수치에 출처·통계표 ID·계산식을 표시합니다.',
+    ogImageAlt: 'K-MOSAIC — 전국 다문화학생 수와 비율, 17개 시·도 단계구분도',
   },
   nav: {
     overview: '전국 개요',
@@ -96,6 +101,8 @@ export const ko = {
   },
   sources: {
     title: '출처 및 계산식',
+    metaDescription:
+      '다문화학생 통계의 출처(e-나라지표·KOSIS 교육기본통계), 통계표 ID, 비율 계산식, 결측·반올림 처리 방법.',
     tableName: '통계표명',
     tableNameValue: '시도별 다문화학생 수 및 다문화학생 비율',
     tableId: '통계표 ID',
@@ -160,7 +167,7 @@ export const ko = {
     noCausalInterpretation: '수치의 차이를 정책 효과나 인과관계로 해석하지 않습니다.',
   },
   foreignStudents: {
-    metaTitle: 'K-MOSAIC — 대학 외국인 유학생 통계',
+    metaTitle: '대학 외국인 유학생 통계',
     metaDescription: '고등교육기관(대학) 재적 외국인 학생의 시도별 현황과 전국 장기 추세를 확인합니다.',
     appSubtitle: '고등교육기관(대학) 외국인 유학생 통계 시각화·분석 페이지',
     mainLink: '대학 외국인 유학생 통계 보기',

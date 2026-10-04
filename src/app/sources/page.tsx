@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { AppFooter } from '@/components/layout/AppFooter';
@@ -14,6 +15,13 @@ import {
   selectSourceMeta,
 } from '@/lib/data/selectors';
 import { loadSnapshot } from '@/lib/data/snapshot';
+import { pageMetadata } from '@/lib/site';
+
+export const metadata: Metadata = pageMetadata({
+  title: ko.sources.title,
+  description: ko.sources.metaDescription,
+  path: 'sources/',
+});
 
 const GEO_ATTRIBUTION =
   '행정경계: 통계청 통계지리정보서비스(SGIS) — 공공누리 제1유형 · 가공: vuski/admdongkor — CC BY 4.0';

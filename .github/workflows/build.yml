@@ -99,6 +99,28 @@ jobs:
           fi
           echo "내부 링크 basePath 검사 통과"
 
+      # 공유 카드·canonical·sitemap 의 절대 URL 이 프로젝트 경로(/<repo>/)를 포함하는지,
+      # 공유 이미지 파일이 실제로 배포되는지 검사한다 (src/lib/site.ts 의 SITE_URL).
+      - name: 공유 메타데이터 검사
+        env:
+          SITE_PREFIX: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: |
+          SITE_HOST="${SITE_PREFIX%/*/}"
+          BAD=$(grep -rhoE "${SITE_HOST//./\\.}/[^\"<]*" out --include='*.html' --include='sitemap.xml' \
+            | grep -v "^${SITE_PREFIX}" | sort -u || true)
+          if [ -n "$BAD" ]; then
+            echo "::error::프로젝트 경로가 빠진 절대 URL — NEXT_PUBLIC_SITE_URL 또는 src/lib/site.ts 확인"
+            echo "$BAD"
+            exit 1
+          fi
+          for page in out/index.html out/sources/index.html out/foreign-students/index.html; do
+            grep -q "<meta property=\"og:image\" content=\"${SITE_PREFIX}og.png\"" "$page" \
+              || { echo "::error::$page 에 og:image 가 없다"; exit 1; }
+          done
+          test -f out/og.png || { echo "::error::out/og.png 가 없다"; exit 1; }
+          test -f out/sitemap.xml || { echo "::error::out/sitemap.xml 이 없다"; exit 1; }
+          echo "공유 메타데이터 검사 통과"
+
       # 빌드 산출물에 비밀정보가 없는지 확인한다.
       # 이 워크플로에는 키가 없으므로 통상 무의미하지만, 실수로 커밋된 키를 잡는 최후 방어선이다.
       - name: 비밀정보 스캔
