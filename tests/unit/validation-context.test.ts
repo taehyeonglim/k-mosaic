@@ -81,11 +81,30 @@ describe('분모 연도 누락 (V9)', () => {
 });
 
 describe('검증 입력 주입 — 외국인 유학생', () => {
-  it('주입한 출처 항목에 153401 이 없으면 X10 이 실패한다', () => {
+  it('주입한 출처 항목에 153401 이 없으면 F9 가 실패한다', () => {
     const entries = committedSources().filter((entry) => entry.tableId !== '153401');
     const report = validateForeignSnapshot(foreignSnapshot(), { sourceEntries: entries });
 
-    expect(rule(report, 'X10').passed).toBe(false);
+    expect(rule(report, 'F9').passed).toBe(false);
+  });
+
+  it('동일 연도 구간의 표식이 빠지면 F11 이 차단한다 (화면 안내 누락 방지)', () => {
+    const snapshot = foreignSnapshot();
+    const unmarked = {
+      ...snapshot,
+      records: snapshot.records.map((record) => ({ ...record, sourceDuplicateOf: null })),
+    };
+    const report = validateForeignSnapshot(unmarked, { previousSnapshot: null });
+
+    expect(rule(report, 'F11').severity).toBe('block');
+    expect(report.passed).toBe(false);
+  });
+
+  it('검증기는 입력 스냅숏을 바꾸지 않는다', () => {
+    const snapshot = foreignSnapshot();
+    const before = JSON.stringify(snapshot);
+    validateForeignSnapshot(snapshot, { previousSnapshot: null });
+    expect(JSON.stringify(snapshot)).toBe(before);
   });
 
   it('비교 기준의 전국 장기 시계열 연도가 빠지면 F5 가 실패한다', () => {

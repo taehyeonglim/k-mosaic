@@ -217,9 +217,10 @@ export const ko = {
       selectPrompt: '지역을 선택하면 시도별 추세가 표시됩니다.',
       missingSegment: '결측 구간은 선을 연결하지 않습니다.',
       periodNote: '시도별 자료와 전국 장기 자료는 수록 기간과 출처가 다릅니다.',
-      sourceDuplicateNote: '출처에서 2022년과 값이 동일함 — 확인 필요',
+      // 연도는 스냅숏의 표식(sourceDuplicateOf)에서 채운다. 레코드 주석도 이 템플릿으로 만든다.
+      sourceDuplicateNote: '출처에서 {year}년과 값이 동일함 — 확인 필요',
       duplicateYearNotice:
-        '2023년 수치가 출처에서 2022년과 동일하게 제공됩니다. 실제 변화가 없었다는 뜻이 아니라 출처 자료의 확인이 필요한 사항입니다.',
+        '{later}년 수치가 출처에서 {earlier}년과 동일하게 제공됩니다. 실제 변화가 없었다는 뜻이 아니라 출처 자료의 확인이 필요한 사항입니다.',
       duplicateMarker: '자료 확인 필요',
     },
     sources: {
