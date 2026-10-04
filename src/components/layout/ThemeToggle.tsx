@@ -2,14 +2,17 @@
 
 import { useEffect, useLayoutEffect, useState } from 'react';
 
+import { Icon, type IconName } from '@/components/ui/Icon';
+import { ko } from '@/content/ko';
+
 type ThemePreference = 'light' | 'dark' | 'system';
 
 const THEME_STORAGE_KEY = 'k-mosaic-theme';
 const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
-const themeOptions: { value: ThemePreference; icon: string }[] = [
-  { value: 'light', icon: '☀' },
-  { value: 'system', icon: '◐' },
-  { value: 'dark', icon: '☾' },
+const themeOptions: { value: ThemePreference; icon: IconName }[] = [
+  { value: 'light', icon: 'sun' },
+  { value: 'system', icon: 'system' },
+  { value: 'dark', icon: 'moon' },
 ];
 
 function readStoredTheme(): ThemePreference {
@@ -51,15 +54,19 @@ export function ThemeToggle({}: ThemeToggleProps) {
   }, []);
 
   return (
-    <div className="inline-flex max-w-full rounded-[var(--km-radius-md)] border border-border bg-surface-muted p-1">
+    <div
+      aria-label={ko.theme.groupLabel}
+      className="inline-flex max-w-full rounded-full border border-border bg-ink-raised p-1"
+      role="group"
+    >
       {themeOptions.map((option) => (
         <button
           aria-label={option.value}
           aria-pressed={theme === option.value}
-          className={`inline-flex size-9 items-center justify-center rounded-[var(--km-radius-sm)] text-base transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+          className={`inline-flex size-8 items-center justify-center rounded-full transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
             theme === option.value
-              ? 'bg-surface font-semibold text-text shadow-sm ring-1 ring-border'
-              : 'text-text-muted hover:bg-surface/70 hover:text-text'
+              ? 'bg-surface-muted text-text ring-1 ring-border-strong'
+              : 'text-text-muted hover:bg-surface-muted hover:text-text'
           }`}
           key={option.value}
           onClick={() => {
@@ -70,7 +77,7 @@ export function ThemeToggle({}: ThemeToggleProps) {
           title={option.value}
           type="button"
         >
-          <span aria-hidden="true">{option.icon}</span>
+          <Icon name={option.icon} />
         </button>
       ))}
     </div>

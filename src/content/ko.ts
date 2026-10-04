@@ -23,6 +23,15 @@ export const ko = {
     trend: '시계열',
     sources: '데이터 출처',
     download: '다운로드',
+    // 헤더의 주요 메뉴. 대시보드 항목은 통계 대상을 이름으로 쓴다 — '대학 외국인 유학생'과
+    // 서로 다른 학생 집단임이 메뉴에서부터 드러나야 한다.
+    primaryLabel: '주요 메뉴',
+    multicultural: '다문화학생',
+    foreignStudents: '대학 외국인 유학생',
+    skipToContent: '본문으로 건너뛰기',
+  },
+  theme: {
+    groupLabel: '화면 테마',
   },
   overview: {
     title: '전국 개요',
@@ -214,9 +223,6 @@ export const ko = {
     metaDescription:
       '고등교육기관(대학) 재적 외국인 학생의 시도별 현황과 전국 장기 추세를 확인합니다.',
     appSubtitle: '고등교육기관(대학) 외국인 유학생 통계 시각화·분석 페이지',
-    mainLink: '대학 외국인 유학생 통계 보기',
-    backToOverview: '메인 화면으로 돌아가기',
-    navigationLabel: '페이지 이동',
     sourceLink: '외국인 유학생 출처',
     populationNoticeLabel: '모집단 안내',
     populationNotice:
@@ -287,6 +293,7 @@ export const ko = {
   footer: {
     repoLabel: 'GitHub 저장소',
     developerLabel: '개발',
+    fontLabel: '서체',
     externalLinkHint: '(새 창)',
   },
   errors: {

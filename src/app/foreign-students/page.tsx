@@ -8,7 +8,6 @@ import geoJson from '../../../public/geo/sido.geo.json';
 import { AppFooter } from '@/components/layout/AppFooter';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { PageShell } from '@/components/layout/PageShell';
-import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ko } from '@/content/ko';
@@ -25,10 +24,7 @@ import {
 import { selectSourceMeta } from '@/lib/data/selectors';
 import { REGION_BY_CODE, REGION_ORDER } from '@/lib/constants/regions';
 import type { SourcePanelSource } from '@/components/dashboard/SourcePanel';
-import {
-  ForeignStudentsClient,
-  type ForeignStudentsPayload,
-} from './foreign-students-client';
+import { ForeignStudentsClient, type ForeignStudentsPayload } from './foreign-students-client';
 
 export const metadata: Metadata = pageMetadata({
   title: ko.foreignStudents.metaTitle,
@@ -44,22 +40,21 @@ function formattedDate(value: string): string {
 }
 
 function sourcePanelSources(): SourcePanelSource[] {
-  return selectSourceMeta('foreign')
-    .map((source) => ({
-      role:
-        source.tableId === 'DT_1963003_010_S'
-          ? ko.foreignStudents.sources.regionalRole
-          : ko.foreignStudents.sources.nationwideRole,
-      provider: source.provider,
-      organization: source.organization,
-      statisticsName: source.statisticsName,
-      tableId: source.tableId,
-      tableName: source.tableName,
-      sourceUrl: source.sourceUrl,
-      retrievedAt: formattedDate(source.retrievedAt),
-      referenceDate: source.referenceDate,
-      isProvisional: source.isProvisional,
-    }));
+  return selectSourceMeta('foreign').map((source) => ({
+    role:
+      source.tableId === 'DT_1963003_010_S'
+        ? ko.foreignStudents.sources.regionalRole
+        : ko.foreignStudents.sources.nationwideRole,
+    provider: source.provider,
+    organization: source.organization,
+    statisticsName: source.statisticsName,
+    tableId: source.tableId,
+    tableName: source.tableName,
+    sourceUrl: source.sourceUrl,
+    retrievedAt: formattedDate(source.retrievedAt),
+    referenceDate: source.referenceDate,
+    isProvisional: source.isProvisional,
+  }));
 }
 
 function buildPayload(): ForeignStudentsPayload {
@@ -117,9 +112,8 @@ export default function ForeignStudentsPage() {
         brandName={ko.app.title}
         brandSubtitle={ko.foreignStudents.appSubtitle}
         dataYear={latestYear}
+        current="foreignStudents"
         lastUpdated={payload.retrievedAtLabel}
-        sourceLabel={ko.foreignStudents.sourceLink}
-        sourceHref="#foreign-sources"
       />
       <PageShell>
         <div className="space-y-8">
@@ -134,20 +128,14 @@ export default function ForeignStudentsPage() {
               <Badge tone="caution">{ko.foreignStudents.populationNoticeLabel}</Badge>
             </div>
             <p className="max-w-4xl text-sm leading-6">{ko.foreignStudents.populationNotice}</p>
-          </section>
-
-          <nav
-            aria-label={ko.foreignStudents.navigationLabel}
-            className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
-          >
+            {/* 해시 전용 href 도 next/link 가 처리한다 (basePath 유지). */}
             <Link
-              className="btn inline-flex"
-              href="/"
+              className="inline-flex text-sm font-medium text-text underline decoration-border-strong underline-offset-4 hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              href="#foreign-sources"
             >
-              {ko.foreignStudents.backToOverview}
+              {ko.foreignStudents.sourceLink}
             </Link>
-            <ThemeToggle />
-          </nav>
+          </section>
 
           <Suspense fallback={<ForeignStudentsFallback />}>
             <ForeignStudentsClient payload={payload} />
