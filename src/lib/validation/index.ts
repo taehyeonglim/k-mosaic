@@ -18,6 +18,19 @@ export interface ValidationReport {
   results: ValidationResult[];
 }
 
+/**
+ * 검증 입력 주입. 생략한 항목은 커밋된 파일(data/metadata, data/snapshots)에서 읽는다.
+ *
+ * - sourceEntries: 기록 예정인 출처 메타데이터. build 스크립트는 메타데이터를 디스크에
+ *   쓰기 전에 이 값으로 검증해야 한다 — 쓰고 나서 검증하면 실패해도 오염된 메타가 남는다.
+ * - previousSnapshot: 비교 기준이 되는 이전 검증 스냅숏(원시 JSON). PR 검사는 base 브랜치의
+ *   스냅숏을 넘겨 커버리지 축소(V8)를 실제로 잡는다. null 이면 비교를 건너뛴다.
+ */
+export interface ValidationContext {
+  sourceEntries?: readonly Record<string, unknown>[];
+  previousSnapshot?: unknown;
+}
+
 const SCHOOL_LEVELS = ['elementary', 'middle', 'high', 'other'] as const;
 const EXPECTED_SOURCE_TABLE_IDS = MULTICULTURAL_TABLE_IDS;
 const SURGE_THRESHOLD_PCT = 50;
@@ -50,11 +63,15 @@ function slice(snapshot: Snapshot, year: number, schoolLevel: string): Multicult
   );
 }
 
-function sourceMetadata(): {
+function sourceMetadata(injected?: readonly Record<string, unknown>[]): {
   raw: unknown;
   entries: Record<string, unknown>[];
   retrievedAt: string | null;
 } {
+  if (injected !== undefined) {
+    const entries = injected.filter(isRecord);
+    return { raw: { sources: entries }, entries, retrievedAt: null };
+  }
   const path = resolve(process.cwd(), 'data/metadata/sources.v1.json');
   if (!existsSync(path)) return { raw: null, entries: [], retrievedAt: null };
   try {
@@ -129,31 +146,31 @@ function hasSourceLineage(raw: unknown, entries: Record<string, unknown>[]): boo
   );
 }
 
-function previousCoverageYears(): number[] | null {
+function committedSnapshot(): unknown {
   const path = resolve(process.cwd(), 'data/snapshots/multicultural-students.v1.json');
   if (!existsSync(path)) return null;
   try {
-    const raw: unknown = JSON.parse(readFileSync(path, 'utf8'));
-    if (!isRecord(raw) || !isRecord(raw.coverage) || !Array.isArray(raw.coverage.years))
-      return null;
-    return raw.coverage.years.map(Number).filter(Number.isInteger);
+    return JSON.parse(readFileSync(path, 'utf8')) as unknown;
   } catch {
     return null;
   }
 }
 
-function previousSnapshotWithoutRetrievedAt(): string | null {
-  const path = resolve(process.cwd(), 'data/snapshots/multicultural-students.v1.json');
-  if (!existsSync(path)) return null;
-  try {
-    const raw: unknown = JSON.parse(readFileSync(path, 'utf8'));
-    if (!isRecord(raw)) return null;
-    const copy = { ...raw };
-    delete copy.retrievedAt;
-    return JSON.stringify(copy);
-  } catch {
+function previousCoverageYears(previous: unknown): number[] | null {
+  if (
+    !isRecord(previous) ||
+    !isRecord(previous.coverage) ||
+    !Array.isArray(previous.coverage.years)
+  )
     return null;
-  }
+  return previous.coverage.years.map(Number).filter(Number.isInteger);
+}
+
+function previousSnapshotWithoutRetrievedAt(previous: unknown): string | null {
+  if (!isRecord(previous)) return null;
+  const copy = { ...previous };
+  delete copy.retrievedAt;
+  return JSON.stringify(copy);
 }
 
 function rounded4(value: number): number {
@@ -164,10 +181,12 @@ function uniqueKey(record: MulticulturalStudentStat): string {
   return `${record.year}|${record.regionCode}|${record.schoolLevel}|${record.studentType}`;
 }
 
-export function validateSnapshot(s: Snapshot): ValidationReport {
+export function validateSnapshot(s: Snapshot, context: ValidationContext = {}): ValidationReport {
   const years = allYears(s);
   const levels = allLevels(s);
-  const source = sourceMetadata();
+  const source = sourceMetadata(context.sourceEntries);
+  const previous =
+    context.previousSnapshot === undefined ? committedSnapshot() : context.previousSnapshot;
   const results: ValidationResult[] = [];
 
   const missingRegionSlices: string[] = [];
@@ -334,7 +353,7 @@ export function validateSnapshot(s: Snapshot): ValidationReport {
     ),
   );
 
-  const previousSnapshot = previousSnapshotWithoutRetrievedAt();
+  const previousSnapshot = previousSnapshotWithoutRetrievedAt(previous);
   const currentSnapshot: Record<string, unknown> = { ...s };
   delete currentSnapshot.retrievedAt;
   const stableRecords =
@@ -353,7 +372,7 @@ export function validateSnapshot(s: Snapshot): ValidationReport {
     ),
   );
 
-  const previousYears = previousCoverageYears();
+  const previousYears = previousCoverageYears(previous);
   const coverageNotReduced =
     previousYears === null || previousYears.every((year) => years.includes(year));
   results.push(

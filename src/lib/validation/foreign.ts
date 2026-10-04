@@ -3,7 +3,12 @@ import { resolve } from 'node:path';
 import { REGION_ORDER } from '../constants/regions';
 import type { ForeignSnapshot, ForeignStudentStat } from '../schema/foreign-student';
 import type { RegionCode } from '../schema/dimensions';
-import type { ValidationReport, ValidationResult, ValidationSeverity } from './index';
+import type {
+  ValidationContext,
+  ValidationReport,
+  ValidationResult,
+  ValidationSeverity,
+} from './index';
 
 const X12_NOTE = '출처에서 2022년과 값이 동일함 — 확인 필요';
 const EXPECTED_SOURCE_TABLE_IDS = ['DT_1963003_010_S', '153401'] as const;
@@ -32,7 +37,10 @@ function regionalRows(snapshot: ForeignSnapshot, year: number): ForeignStudentSt
   return snapshot.records.filter((record) => record.year === year);
 }
 
-function readSourceEntries(): Record<string, unknown>[] {
+function readSourceEntries(
+  injected?: readonly Record<string, unknown>[],
+): Record<string, unknown>[] {
+  if (injected !== undefined) return injected.filter(isRecord);
   const path = resolve(process.cwd(), 'data/metadata/sources.v1.json');
   if (!existsSync(path)) return [];
   try {
@@ -47,6 +55,22 @@ function readSourceEntries(): Record<string, unknown>[] {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function committedForeignSnapshot(): unknown {
+  const path = resolve(process.cwd(), 'data/snapshots/foreign-students.v1.json');
+  if (!existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, 'utf8').replace(/^\uFEFF/, '')) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function coverageList(previous: unknown, key: 'years' | 'nationwideYears'): number[] | null {
+  if (!isRecord(previous) || !isRecord(previous.coverage)) return null;
+  const list = previous.coverage[key];
+  return Array.isArray(list) ? list.map(Number).filter(Number.isInteger) : null;
 }
 
 function sourceTableId(entry: Record<string, unknown>): string | null {
@@ -92,8 +116,13 @@ function annotateIdenticalAdjacentYears(snapshot: ForeignSnapshot): string[] {
   return warnings;
 }
 
-export function validateForeignSnapshot(snapshot: ForeignSnapshot): ValidationReport {
+export function validateForeignSnapshot(
+  snapshot: ForeignSnapshot,
+  context: ValidationContext = {},
+): ValidationReport {
   const years = regionalYears(snapshot);
+  const previous =
+    context.previousSnapshot === undefined ? committedForeignSnapshot() : context.previousSnapshot;
   const results: ValidationResult[] = [];
   const expectedCodes = new Set(REGION_ORDER);
   const missingRegions = years.flatMap((year) => {
@@ -253,7 +282,7 @@ export function validateForeignSnapshot(snapshot: ForeignSnapshot): ValidationRe
     ),
   );
 
-  const entries = readSourceEntries();
+  const entries = readSourceEntries(context.sourceEntries);
   const missingSourceIds = EXPECTED_SOURCE_TABLE_IDS.filter(
     (tableId) =>
       !entries.some(
@@ -287,6 +316,27 @@ export function validateForeignSnapshot(snapshot: ForeignSnapshot): ValidationRe
       hasRetrievedAt
         ? '스냅숏과 출처 메타데이터의 조회일이 있습니다.'
         : '스냅숏 또는 출처 메타데이터의 조회일이 없습니다.',
+    ),
+  );
+
+  // 이전 스냅숏의 연도가 사라지면 안 된다 — 업스트림이 오래된 연도를 빼도 공개 데이터는
+  // 줄어들지 않아야 한다 (다문화 V8 과 같은 원칙).
+  const lostYears = (['years', 'nationwideYears'] as const).flatMap((key) => {
+    const before = coverageList(previous, key);
+    const after = new Set(snapshot.coverage[key]);
+    return (before ?? []).filter((year) => !after.has(year)).map((year) => `${key}:${year}`);
+  });
+  results.push(
+    result(
+      'F5',
+      '연도 커버리지 유지',
+      'warn',
+      lostYears.length === 0,
+      previous === null
+        ? '이전 스냅숏이 없어 커버리지 비교를 건너뛰었습니다.'
+        : lostYears.length === 0
+          ? '이전 스냅숏의 모든 연도가 유지됩니다.'
+          : `이전 스냅숏 대비 누락된 연도: ${lostYears.join(', ')}`,
     ),
   );
 
