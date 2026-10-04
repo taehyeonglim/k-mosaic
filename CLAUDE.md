@@ -131,6 +131,7 @@ pnpm geo:build                              # 시도 경계 GeoJSON 재생성 (g
 | 문자열 | `src/content/` 사전 경유. JSX에 한글 리터럴 금지 |
 | 숫자 | 저장은 소수 4자리, 표시는 1자리. 저장 단계에서 반올림 금지 |
 | 시각화 | SVG만. Canvas는 접근성 요구와 충돌 |
+| 디자인 토큰 | `globals.css`의 세 블록(라이트 · 다크/잉크 띠 · 시스템 다크)에 함께 넣는다. 대비는 `tests/unit/tokens.test.ts`가 강제 |
 | 로그 | `redact()` 미경유 문자열을 로그·에러에 넣지 않는다 |
 
 ---
@@ -166,3 +167,4 @@ data/metadata/    ✅ 커밋
 3. [docs/adr/001-data-ingestion-architecture.md](docs/adr/001-data-ingestion-architecture.md) — 왜 정적 스냅숏인지
 4. [docs/data-dictionary-draft.md](docs/data-dictionary-draft.md) — 스키마·검증 규칙
 5. [docs/implementation-roadmap.md](docs/implementation-roadmap.md) — 작업 순서와 수용 기준
+6. [docs/design-system.md](docs/design-system.md) — 화면을 고칠 때: 색·서체·차트 규칙과 금지 표현

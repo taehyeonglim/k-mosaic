@@ -17,8 +17,8 @@
 </div>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-map-dark.png">
-  <img alt="Choropleth map of multicultural students across 17 provinces with regional ranking" src="docs/images/dashboard-map-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-hero-dark.png">
+  <img alt="Landing view with the national count and a tile mosaic of the 17 provinces" src="docs/images/dashboard-hero-light.png">
 </picture>
 
 An interactive explorer for the number and share of **multicultural students** (다문화학생) in Korea's 17 provinces — as a map, rankings and time series.
@@ -55,6 +55,7 @@ flowchart LR
 
 ## Features
 
+- **National overview & tile mosaic** — the landing view shows the national figures and a tile per province; tiles link to province pages, and the headline numbers are in the static HTML so they read without JavaScript
 - **Choropleth map** — count/share toggle, keyboard navigation, scale fixed across years, hatched missing regions, table alternative
 - **Four rankings** — count, share, absolute change, growth rate; ties share a rank, with a note that rankings do not measure educational quality
 - **Time series & comparison** — ten-year national trend (2016–) plus up to three regions (2020–), gaps not interpolated
@@ -65,7 +66,12 @@ flowchart LR
 - **Accessibility** — automated WCAG 2.1 A/AA checks (axe), light/dark themes, 360 px mobile
 
 <details>
-<summary>Time series · international students page</summary>
+<summary>Map & ranking · time series · international students page</summary>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-map-dark.png">
+  <img alt="Choropleth map of multicultural students across 17 provinces with regional ranking" src="docs/images/dashboard-map-light.png">
+</picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-trend-dark.png">

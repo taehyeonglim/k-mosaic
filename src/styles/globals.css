@@ -70,21 +70,6 @@
   --km-series-1: #2a78d6;
   --km-series-2: #149a6c;
   --km-series-3: #4a3aa7;
-  /* 이전 이름 — 학생 수·비율이 같은 램프를 쓴다. 호출부 정리 후 제거한다 */
-  --km-map-count-1: var(--km-ramp-1);
-  --km-map-count-2: var(--km-ramp-2);
-  --km-map-count-3: var(--km-ramp-3);
-  --km-map-count-4: var(--km-ramp-4);
-  --km-map-count-5: var(--km-ramp-5);
-  --km-map-count-6: var(--km-ramp-6);
-  --km-map-count-7: var(--km-ramp-7);
-  --km-map-rate-1: var(--km-ramp-1);
-  --km-map-rate-2: var(--km-ramp-2);
-  --km-map-rate-3: var(--km-ramp-3);
-  --km-map-rate-4: var(--km-ramp-4);
-  --km-map-rate-5: var(--km-ramp-5);
-  --km-map-rate-6: var(--km-ramp-6);
-  --km-map-rate-7: var(--km-ramp-7);
   --km-font-sans:
     'Pretendard Variable', 'Pretendard Fallback', 'Noto Sans KR', 'Apple SD Gothic Neo',
     'Malgun Gothic', sans-serif;
@@ -144,20 +129,6 @@
   --color-series-1: var(--km-series-1);
   --color-series-2: var(--km-series-2);
   --color-series-3: var(--km-series-3);
-  --color-map-count-1: var(--km-map-count-1);
-  --color-map-count-2: var(--km-map-count-2);
-  --color-map-count-3: var(--km-map-count-3);
-  --color-map-count-4: var(--km-map-count-4);
-  --color-map-count-5: var(--km-map-count-5);
-  --color-map-count-6: var(--km-map-count-6);
-  --color-map-count-7: var(--km-map-count-7);
-  --color-map-rate-1: var(--km-map-rate-1);
-  --color-map-rate-2: var(--km-map-rate-2);
-  --color-map-rate-3: var(--km-map-rate-3);
-  --color-map-rate-4: var(--km-map-rate-4);
-  --color-map-rate-5: var(--km-map-rate-5);
-  --color-map-rate-6: var(--km-map-rate-6);
-  --color-map-rate-7: var(--km-map-rate-7);
   --text-hero: var(--km-text-hero);
   --text-hero--line-height: 1;
   --text-metric-lg: var(--km-text-metric-lg);
@@ -330,11 +301,15 @@
     padding: 0.5rem;
     font-size: 0.8125rem;
     line-height: 1rem;
-    transition: filter 150ms ease;
+    transition:
+      filter 150ms ease,
+      transform 150ms ease;
   }
 
+  /* 호버 — 1px 들어 올리고 살짝 밝힌다. 움직임은 여기까지 (docs/design-system.md §6.3). */
   .mosaic-tile:hover {
     filter: brightness(1.1);
+    transform: translateY(-1px);
   }
 
   .mosaic-tile:focus-visible {
@@ -733,6 +708,10 @@
   .form-check-input,
   .form-check-input::before {
     transition: none;
+  }
+
+  .mosaic-tile:hover {
+    transform: none;
   }
 }
 
