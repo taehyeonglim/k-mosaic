@@ -1,4 +1,4 @@
-import { geoMercator, geoPath } from 'd3-geo';
+import { geoMercator } from 'd3-geo';
 import type { ExtendedFeatureCollection as FeatureCollection, GeoProjection } from 'd3-geo';
 
 type Ring = [number, number][];
@@ -132,6 +132,41 @@ export function splitKoreaGeo(geo: FeatureCollection): KoreaGeoParts {
   };
 }
 
+/** 인셋에 이름표를 다는 도서 묶음. geometry 는 d3 geoPath 에 그대로 넘길 수 있다. */
+export interface RemoteIslandGroup {
+  id: 'ulleungdo' | 'dokdo';
+  geometry: { type: 'MultiPolygon'; coordinates: PolygonCoordinates[] };
+}
+
+// 울릉도(약 130.9°E)와 독도(약 131.87°E) 사이.
+const DOKDO_MIN_LONGITUDE = 131.5;
+
+/** 인셋 폴리곤을 울릉도와 독도로 나눈다 (서→동 순서). 인셋 대상이 없으면 빈 배열. */
+export function remoteIslandGroups(inset: FeatureCollection): RemoteIslandGroup[] {
+  const polygons: PolygonCoordinates[] = inset.features.flatMap((feature) => {
+    const geometry = feature.geometry;
+    if (geometry === null || geometry === undefined) return [];
+    if (geometry.type === 'Polygon') return [geometry.coordinates as unknown as PolygonCoordinates];
+    if (geometry.type === 'MultiPolygon') {
+      return geometry.coordinates as unknown as PolygonCoordinates[];
+    }
+    return [];
+  });
+  const isDokdo = (polygon: PolygonCoordinates) =>
+    polygon.every((ring) => ring.every(([longitude]) => longitude >= DOKDO_MIN_LONGITUDE));
+  const groups: RemoteIslandGroup[] = [
+    {
+      id: 'ulleungdo',
+      geometry: {
+        type: 'MultiPolygon',
+        coordinates: polygons.filter((polygon) => !isDokdo(polygon)),
+      },
+    },
+    { id: 'dokdo', geometry: { type: 'MultiPolygon', coordinates: polygons.filter(isDokdo) } },
+  ];
+  return groups.filter((group) => group.geometry.coordinates.length > 0);
+}
+
 export interface KoreaInsetBox {
   x: number;
   y: number;
@@ -172,11 +207,6 @@ function fitMainlandProjection(
   ];
   const object = mainGeo.features.length > 0 ? mainGeo : fallbackGeo;
   return geoMercator().fitExtent(extent, object);
-}
-
-function projectedWidth(projection: GeoProjection, geo: FeatureCollection): number {
-  const bounds = geoPath(projection).bounds(geo);
-  return bounds[1][0] - bounds[0][0];
 }
 
 export function createKoreaProjection(
@@ -226,12 +256,15 @@ export function createKoreaProjectionLayout(
     ],
   };
 
-  const fullMainWidth = projectedWidth(main, parts.main);
-  const reservedMainWidth = insetX - padding;
-  const mainWithInsetSpace =
-    fullMainWidth <= reservedMainWidth
-      ? fitMainlandProjection(parts.main, geo, dimensions.width, dimensions.height, insetX)
-      : main;
+  // 본토는 언제나 인셋 왼쪽 영역에 맞춘다. 전에는 자리가 모자라면 전체 폭에 맞춰
+  // 좁은 화면(360px)에서 인셋 상자가 강원도 위에 겹쳤다. 좁으면 본토가 조금 작아진다.
+  const mainWithInsetSpace = fitMainlandProjection(
+    parts.main,
+    geo,
+    dimensions.width,
+    dimensions.height,
+    insetX,
+  );
 
   return {
     main: mainWithInsetSpace,

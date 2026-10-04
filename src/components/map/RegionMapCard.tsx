@@ -35,7 +35,15 @@ export function RegionMapCard({
   ...mapProps
 }: RegionMapCardProps) {
   return (
-    <Card title={title} description={description}>
+    <Card
+      title={title}
+      description={description}
+      meta={
+        <span data-map-meta="">
+          {mapProps.metricLabel} · {mapProps.year}
+        </span>
+      }
+    >
       <ChoroplethMap {...mapProps} />
       <div className="mt-4 space-y-3">
         <MapLegend
@@ -43,7 +51,6 @@ export function RegionMapCard({
           metricLabel={mapProps.metricLabel}
           formatValue={mapProps.formatValue}
           missingLabel={mapProps.missingLabel}
-          kind={mapProps.scale.kind}
         />
         {notes.map((note) => (
           <p className="text-small text-[var(--km-color-text-muted)]" key={note}>

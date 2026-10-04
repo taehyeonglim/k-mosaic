@@ -84,6 +84,7 @@ export const ko = {
       '울릉도와 독도는 본토와 실제 위치 관계를 유지한 지도가 아니라, 식별을 위한 인셋으로 확대해 표시합니다.',
     insetTitle: '도서 인셋',
     insetSubtitle: '실제 위치 아님',
+    insetIslands: { ulleungdo: '울릉도', dokdo: '독도' },
   },
   ranking: {
     title: '지역 순위',
