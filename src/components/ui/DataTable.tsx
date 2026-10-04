@@ -16,12 +16,12 @@ export interface DataTableProps {
 export function DataTable({ caption, columns, rows, emptyLabel }: DataTableProps) {
   return (
     <table className="w-full table-fixed border-collapse text-sm text-text">
-      <caption className="mb-3 text-left text-base font-semibold text-text">{caption}</caption>
+      <caption className="mb-2 text-left text-small text-text-muted">{caption}</caption>
       <thead>
-        <tr className="border-b-2 border-border">
+        <tr className="border-b border-border-strong/60">
           {columns.map((column) => (
             <th
-              className={`break-words px-3 py-3 font-semibold ${column.numeric ? 'text-right tabular-nums' : 'text-left'}`}
+              className={`break-words px-3 py-2 text-small font-medium text-text-muted ${column.numeric ? 'text-right' : 'text-left'}`}
               key={column.key}
               scope="col"
             >
@@ -42,10 +42,13 @@ export function DataTable({ caption, columns, rows, emptyLabel }: DataTableProps
           </tr>
         ) : (
           rows.map((row, rowIndex) => (
-            <tr className="border-b border-border last:border-b-0" key={rowIndex}>
+            <tr
+              className="border-b border-border last:border-b-0 hover:bg-surface-muted"
+              key={rowIndex}
+            >
               {columns.map((column) => (
                 <td
-                  className={`break-words px-3 py-3 align-top ${column.numeric ? 'text-right tabular-nums' : 'text-left'}`}
+                  className={`break-words px-3 py-2.5 align-top ${column.numeric ? 'text-right tabular-nums' : 'text-left'}`}
                   key={column.key}
                 >
                   {row[column.key]}

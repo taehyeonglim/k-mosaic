@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/Icon';
 import { ko } from '@/content/ko';
 
 export interface SourcePanelSource {
@@ -54,24 +55,22 @@ export function SourcePanel({
 
   return (
     <section className="space-y-5" aria-labelledby="source-panel-title">
-      <h2 id="source-panel-title" className="text-title font-semibold tracking-tight">
+      <h2 id="source-panel-title" className="panel-title">
         {ko.sources.title}
       </h2>
 
       {hasCommonMeta ? (
-        <dl className="grid gap-3 rounded-[var(--km-radius-md)] border border-border bg-surface-muted/45 p-3 text-sm sm:grid-cols-3">
+        <dl className="grid gap-3 rounded-[var(--km-radius-md)] bg-surface-muted p-4 text-sm sm:grid-cols-3">
           {sharedRetrievedAt !== undefined ? (
             <div className="min-w-0">
               <dt className="text-small text-text-muted">{ko.sources.updatedAt}</dt>
-              <dd className="mt-1 break-words font-medium tabular-nums">
-                {sharedRetrievedAt}
-              </dd>
+              <dd className="mt-1 break-words font-semibold">{sharedRetrievedAt}</dd>
             </div>
           ) : null}
           {sharedReferenceDate !== undefined ? (
             <div className="min-w-0">
               <dt className="text-small text-text-muted">{ko.sources.referenceDate}</dt>
-              <dd className="mt-1 break-words font-medium tabular-nums">
+              <dd className="mt-1 break-words font-semibold">
                 {sharedReferenceDate ?? ko.sources.unknown}
               </dd>
             </div>
@@ -79,10 +78,8 @@ export function SourcePanel({
           {sharedProvisional !== undefined ? (
             <div className="min-w-0">
               <dt className="text-small text-text-muted">{ko.sources.provisional}</dt>
-              <dd className="mt-1 break-words font-medium">
-                {sharedProvisional === null
-                  ? ko.sources.unknown
-                  : sharedProvisional.toString()}
+              <dd className="mt-1 break-words font-semibold">
+                {sharedProvisional === null ? ko.sources.unknown : sharedProvisional.toString()}
               </dd>
             </div>
           ) : null}
@@ -92,7 +89,7 @@ export function SourcePanel({
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         {sources.map((source) => (
           <article
-            className="min-w-0 rounded-[var(--km-radius-md)] border border-border bg-surface-muted/25 p-4"
+            className="min-w-0 rounded-[var(--km-radius-md)] border border-border p-4"
             key={`${source.role}-${source.tableId}`}
           >
             <header className="flex min-w-0 flex-wrap items-start justify-between gap-2">
@@ -102,7 +99,7 @@ export function SourcePanel({
                   {source.statisticsName} · {source.role}
                 </p>
               </div>
-              <span className="inline-flex max-w-full shrink-0 items-center rounded-full border border-border bg-surface px-2 py-1 font-mono text-xs font-medium text-text">
+              <span className="inline-flex max-w-full shrink-0 items-center rounded-full bg-surface-muted px-2.5 py-1 font-mono text-xs font-medium text-text">
                 {source.tableId}
               </span>
             </header>
@@ -119,13 +116,13 @@ export function SourcePanel({
               {showCommonMeta && sharedRetrievedAt === undefined ? (
                 <div className="min-w-0">
                   <dt className="text-small text-text-muted">{ko.sources.updatedAt}</dt>
-                  <dd className="mt-0.5 break-words text-sm tabular-nums">{source.retrievedAt}</dd>
+                  <dd className="mt-0.5 break-words text-sm">{source.retrievedAt}</dd>
                 </div>
               ) : null}
               {showCommonMeta && sharedReferenceDate === undefined ? (
                 <div className="min-w-0">
                   <dt className="text-small text-text-muted">{ko.sources.referenceDate}</dt>
-                  <dd className="mt-0.5 break-words text-sm tabular-nums">
+                  <dd className="mt-0.5 break-words text-sm">
                     {source.referenceDate ?? ko.sources.unknown}
                   </dd>
                 </div>
@@ -148,7 +145,9 @@ export function SourcePanel({
               rel="noreferrer"
               target="_blank"
             >
-              {ko.sources.originalLinkAction}
+              {ko.sources.originalLinks}
+              <Icon name="external" size={14} />
+              <span className="sr-only">{ko.footer.externalLinkHint}</span>
             </a>
           </article>
         ))}
@@ -158,7 +157,7 @@ export function SourcePanel({
         <div className="min-w-0">
           <dt className="text-small text-text-muted">{ko.sources.formula}</dt>
           <dd className="mt-1">
-            <code className="block overflow-x-auto rounded border border-border bg-surface-muted p-3 text-sm">
+            <code className="block overflow-x-auto rounded-[var(--km-radius-md)] bg-surface-muted p-3 font-mono text-sm">
               {rateFormula}
             </code>
           </dd>

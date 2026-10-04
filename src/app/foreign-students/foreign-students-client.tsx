@@ -376,6 +376,7 @@ export function ForeignStudentsClient({ payload }: ForeignStudentsClientProps) {
                     : ko.foreignStudents.ranking.rateCaption
                 }
                 disclaimer={ko.ranking.missingNote}
+                highlightRegions={filters.regions}
               />
             </div>
           </Card>

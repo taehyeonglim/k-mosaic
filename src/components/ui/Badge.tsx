@@ -7,14 +7,14 @@ export interface BadgeProps {
 
 const toneClassNames = {
   neutral: 'border-border bg-surface-muted text-text',
-  info: 'border-accent/45 bg-accent/10 text-accent-strong',
+  info: 'border-transparent bg-accent/10 text-accent-strong',
   caution: 'viz-badge',
 } satisfies Record<BadgeProps['tone'], string>;
 
 export function Badge({ tone, children }: BadgeProps) {
   return (
     <span
-      className={`inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-xs font-medium leading-5 ${toneClassNames[tone]}`}
+      className={`inline-flex max-w-full items-center rounded-full border px-2.5 py-0.5 text-xs font-medium leading-5 ${toneClassNames[tone]}`}
       data-tone={tone}
     >
       {children}

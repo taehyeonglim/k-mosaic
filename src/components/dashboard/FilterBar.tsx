@@ -52,12 +52,12 @@ export function FilterBar({
 
   return (
     <section className="space-y-4" aria-labelledby="filter-bar-title">
-      <h2 id="filter-bar-title" className="text-lg font-medium">
+      <h2 id="filter-bar-title" className="panel-title">
         {ko.filters.title}
       </h2>
 
-      <div className="viz-controls">
-        <label className="form-label" htmlFor="filter-year">
+      <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-4 sm:flex sm:flex-wrap sm:items-end sm:gap-x-5">
+        <label className="form-label sm:w-32" htmlFor="filter-year">
           {ko.filters.year}
           <select
             id="filter-year"
@@ -73,7 +73,7 @@ export function FilterBar({
           </select>
         </label>
 
-        <label className="form-label" htmlFor="filter-school-level">
+        <label className="form-label sm:w-40" htmlFor="filter-school-level">
           {ko.filters.schoolLevel}
           <select
             id="filter-school-level"
@@ -89,12 +89,12 @@ export function FilterBar({
           </select>
         </label>
 
-        <fieldset className="space-y-1">
-          <legend className="form-label">{ko.filters.metric}</legend>
-          <div className="inline-flex" role="group" aria-label={ko.filters.metric}>
+        <fieldset className="col-span-2 min-w-0">
+          <legend className="form-label mb-1.5">{ko.filters.metric}</legend>
+          <div className="segmented" role="group" aria-label={ko.filters.metric}>
             <button
               type="button"
-              className="btn rounded-r-none"
+              className="segmented-item"
               aria-pressed={metric === 'count'}
               onClick={() => onMetricChange('count')}
             >
@@ -102,7 +102,7 @@ export function FilterBar({
             </button>
             <button
               type="button"
-              className="btn -ml-px rounded-l-none"
+              className="segmented-item"
               aria-pressed={metric === 'rate'}
               onClick={() => onMetricChange('rate')}
             >
@@ -115,14 +115,11 @@ export function FilterBar({
       <fieldset className="space-y-2" aria-describedby="region-selection-note">
         <legend className="form-label inline-flex flex-row flex-wrap items-baseline gap-2">
           {ko.filters.regions}
-          <span
-            id="region-selection-note"
-            className="text-small font-normal text-[var(--km-color-text-muted)]"
-          >
+          <span id="region-selection-note" className="font-normal">
             {ko.filters.maxRegions}
           </span>
         </legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="flex flex-wrap gap-2">
           {regions.map((region) => {
             const inputId = `filter-region-${region.value}`;
             return (

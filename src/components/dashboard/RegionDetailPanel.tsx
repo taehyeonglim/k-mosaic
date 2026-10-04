@@ -68,7 +68,8 @@ export function RegionDetailPanel({ detail, onClose, nationalLabel }: RegionDeta
         </button>
       </div>
 
-      <dl className="viz-grid">
+      {/* 타일 3개 — 4열 격자(.viz-grid)에 넣으면 칸이 좁아 숫자가 넘친다. */}
+      <dl className="grid min-w-0 gap-3 sm:grid-cols-3">
         <div className="card viz-stat">
           <dt className="text-small text-[var(--km-color-text-muted)]">
             {ko.regionDetail.currentCount}

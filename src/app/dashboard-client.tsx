@@ -19,6 +19,7 @@ import { RegionMapCard } from '@/components/map/RegionMapCard';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Icon } from '@/components/ui/Icon';
 import { useUrlQuery } from '@/hooks/use-url-query';
 import { ko } from '@/content/ko';
 import { triggerDownload } from '@/lib/browser/download';
@@ -451,6 +452,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
               rows={rankingRows}
               excludedRegions={[]}
               caption={ko.filters.metrics[filters.metric]}
+              highlightRegions={filters.regions}
             />
             <div className="grid min-w-0 gap-5">
               {(['deltaAbs', 'deltaPct'] as const).map((rankingMetric) => (
@@ -465,6 +467,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
                     caption={
                       rankingMetric === 'deltaAbs' ? ko.ranking.deltaAbs : ko.ranking.deltaPct
                     }
+                    highlightRegions={filters.regions}
                   />
                 </section>
               ))}
@@ -602,6 +605,7 @@ export function DashboardClient({ payload }: DashboardClientProps) {
           />
           <div className="mt-3 flex flex-wrap gap-3">
             <button type="button" className="btn" onClick={downloadAllJson}>
+              <Icon name="download" />
               {ko.download.fullJson}
             </button>
           </div>
